@@ -1,0 +1,2 @@
+npx jsr publish
+
