@@ -18,9 +18,9 @@ interface ResultError {
     readonly message: string;
 }
 
-export type Result<T> = ResultLoading | ResultReady<T> | ResultError;
+export type ResourceResult<T> = ResultLoading | ResultReady<T> | ResultError;
 
-const send = <T>(loadValue: () => Promise<T>): Promise<Result<T>> => {
+const send = <T>(loadValue: () => Promise<T>): Promise<ResourceResult<T>> => {
     return new Promise(async (resolve) => {
         setTimeout(() => {
             resolve({
@@ -50,9 +50,9 @@ const send = <T>(loadValue: () => Promise<T>): Promise<Result<T>> => {
 class Request<T> {
     private isInit: boolean = false;
     public readonly whenReady: PromiseBox<void>;
-    public readonly value: Value<Result<T>>;
+    public readonly value: Value<ResourceResult<T>>;
 
-    public constructor(private readonly getValue: () => Promise<T>, private readonly prevValue: Result<T> | null) {        
+    public constructor(private readonly getValue: () => Promise<T>, private readonly prevValue: ResourceResult<T> | null) {        
         this.whenReady = new PromiseBox<void>();
 
         this.value = new Value({
@@ -81,7 +81,7 @@ class Request<T> {
         }, 0);
     }
 
-    public get(): Result<T> {
+    public get(): ResourceResult<T> {
         const current = this.value.getValue();
 
         if (current.type !== 'loading') {
@@ -103,7 +103,7 @@ export class Resource<T> {
         this.request = new Value(new Request(this.loadValue, null));
     }
 
-    public get(): Result<T> {
+    public get(): ResourceResult<T> {
         const request = this.request.getValue();
         request.init();
         return request.get();
