@@ -1,5 +1,5 @@
-import { createAtom, IAtom } from "mobx";
-import { assertNever } from "./assertNever";
+import { createAtom, IAtom } from "npm:mobx@6.12.3";
+import { assertNever } from "./assertNever.ts";
 
 type UnsubscrbeType = () => void;
 type ConnectType<T> = (setValue: (newValue: T) => void) => UnsubscrbeType;
@@ -69,7 +69,7 @@ export class Value<T> {
         } | {
             type: 'on->off',
             unsubscribe: UnsubscrbeType,
-            timer: NodeJS.Timeout,
+            timer: ReturnType<typeof setTimeout>,
         } = {
             type: 'off',
         };

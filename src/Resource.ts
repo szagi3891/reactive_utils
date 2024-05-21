@@ -1,5 +1,5 @@
-import { PromiseBox } from './PromiseBox';
-import { Value } from './Value';
+import { PromiseBox } from './PromiseBox.ts';
+import { Value } from './Value.ts';
 
 const TIMEOUT = 10000;
 
