@@ -1,5 +1,5 @@
 {
   "dependencies": {
-    "mobx": "^6"
+    "mobx": "^*"
   }
 }
