@@ -7,3 +7,4 @@ export { AutoMap, autoMapKeyAsString } from './src/AutoMap.ts';
 export { AutoWeakMap, autoWeakMapKey } from './src/AutoWeakMap.ts';
 export { registerNetworRequest, whenIdle, ssrReactLazy, ResourceSSR } from './src/Idle.ts';
 export { EventEmitter, ValueEmitter } from './src/EventEmitter.ts';
+export { timeout } from './src/timeout.ts';
