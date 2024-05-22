@@ -78,3 +78,36 @@ test('refresh on initialized resource should send one request', async () => {
     await inst.refresh();
     expect(execCounter).toBe(5);
 });
+
+test('error catch', async () => {
+    let execCounter: number = 0;
+
+    const inst = new Resource<number>(async () => {
+        const value = execCounter;
+        execCounter++;
+
+        if (value === 2) {
+            throw Error('fail fetch data');
+        }
+
+        await timeout(100);
+        return value;
+    });
+
+    inst.getReady();
+    expect(execCounter).toBe(1);
+
+    await timeout(200);
+
+    expect(inst.getReady()).toBe(0);
+
+    await inst.refresh();
+
+    expect(inst.getReady()).toBe(1);
+
+    await inst.refresh();
+    expect(inst.get()).toEqual({ type: 'error', message: 'Error: fail fetch data'});
+
+    await inst.refresh();
+    expect(inst.getReady()).toBe(3);
+});
