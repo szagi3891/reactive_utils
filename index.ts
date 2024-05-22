@@ -5,4 +5,4 @@ export type { ResourceResult } from './src/Resource.ts';
 export { PromiseBox } from './src/PromiseBox.ts';
 export { AutoMap, autoMapKeyAsString } from './src/AutoMap.ts';
 export { AutoWeakMap, autoWeakMapKey } from './src/AutoWeakMap.ts';
-
+export { registerNetworRequest, whenIddle, ssrReactLazy, ResourceSSR } from './src/Idle.ts';
