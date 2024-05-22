@@ -75,7 +75,7 @@ export class Value<T> {
         };
 
         return new Value(value, (setValue: (value: T) => void): (() => void) => {
-
+        
             if (state.type === 'off') {
                 state = {
                     type: 'on',
@@ -104,6 +104,9 @@ export class Value<T> {
 
                     const timer = setTimeout(() => {
                         unsubscribe();
+                        state = {
+                            type: 'off',
+                        };
                     }, timeMs);
 
                     state = {
