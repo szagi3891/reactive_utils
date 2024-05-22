@@ -1,4 +1,4 @@
-import { createAtom, IAtom } from "npm:mobx@6.12.3";
+import { createAtom, IAtom } from "mobx";
 import { assertNever } from "./assertNever.ts";
 
 type UnsubscrbeType = () => void;
