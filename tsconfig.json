@@ -7,10 +7,6 @@
         "lib": ["dom", "es6", "esnext", "WebWorker"],
         "allowSyntheticDefaultImports": true,
         "esModuleInterop": true,
-        // "jsx": "react",
-        "jsx": "preserve",
-        "jsxImportSource": "@emotion/react",
-        "types": ["vite/client"],
         "noEmit": true,
         "noUncheckedIndexedAccess": true,
         "noUnusedLocals": true,
@@ -21,9 +17,5 @@
         "noFallthroughCasesInSwitch": true,
         "baseUrl": ".",
         "allowImportingTsExtensions": true
-    },
-    "exclude": [
-        "testy/mobxrender",
-        "src/server/tests"
-    ]
+    }
 }

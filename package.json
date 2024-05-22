@@ -1,7 +1,17 @@
 {
   "dependencies": {
+    "@types/react": "^*",
     "mobx": "^*",
     "react": "^*",
-    "@types/react": "^*"
+    "zod": "^*"
+  },
+  "devDependencies": {
+    "@types/node": "^20.12.12",
+    "typescript": "^5.4.5",
+    "vitest": "^1.6.0"
+  },
+  "scripts": {
+    "ts-check": "tsc",
+    "test": "vitest --run"
   }
 }
