@@ -30,7 +30,7 @@ const main = async (): Promise<void> => {
 
     await fs.promises.writeFile('./jsr.json', JSON.stringify(content, null, 4));
 
-    console.info(`git commit -am "version ${nextVersion}" && npx jsr publish`);
+    console.info(`git add . && git commit -am "version ${nextVersion}" && npx jsr publish`);
 };
 
 main().then(() => {
