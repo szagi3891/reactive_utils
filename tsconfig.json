@@ -5,6 +5,7 @@
         "module": "ESNext",
         "moduleResolution": "node",
         "lib": ["dom", "es6", "esnext", "WebWorker"],
+        "jsx": "preserve",
         "allowSyntheticDefaultImports": true,
         "esModuleInterop": true,
         "noEmit": true,
