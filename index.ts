@@ -10,5 +10,4 @@ export { EventEmitter, ValueEmitter } from './src/EventEmitter.ts';
 export { timeout } from './src/timeout.ts';
 export { getValueCache } from './src/getValueCache.ts';
 export { Result, ResultOk, ResultError } from './src/Result.ts';
-export { Iframe } from './src/Iframe.tsx';
 
