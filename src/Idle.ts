@@ -41,7 +41,7 @@ class Idle {
         };
     };
 
-    public whenIddle = (callback: Callback): UnsubscribeType => {
+    public whenIdle = (callback: Callback): UnsubscribeType => {
         const id: Id = {};
         this.callback.set(id, callback);
 
@@ -74,7 +74,7 @@ const idle: Idle = new Idle();
 
 export const registerNetworRequest = idle.registerNetworRequest;
 
-export const whenIddle = idle.whenIddle;
+export const whenIdle = idle.whenIdle;
 
 export const ssrReactLazy = <T>(load: () => Promise<React.ComponentType<T>>): React.LazyExoticComponent<React.ComponentType<T>> => {
     return React.lazy(async () => {
