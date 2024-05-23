@@ -13,6 +13,6 @@
   },
   "scripts": {
     "ts-check": "tsc",
-    "test": "vitest --run"
+    "test": "node --expose-gc ./node_modules/.bin/vitest --run"
   }
 }
