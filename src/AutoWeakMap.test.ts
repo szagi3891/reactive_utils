@@ -66,7 +66,13 @@ test('AutoWeakMap.create', async () => {
     }
 
     class Model {
-        constructor(private readonly common: Common, private readonly id1: string, private readonly id2: number) {}
+        public static get = AutoWeakMap.create((common: Common, id1: string, id2: number) => {
+            const model = new Model(common, id1, id2);
+            memoryHelper.register(model, `${common.name}-${id1}-${id2}`);
+            return model;
+        });
+
+        private constructor(private readonly common: Common, private readonly id1: string, private readonly id2: number) {}
 
         get name(): string {
             return `Model - ${this.common.name} - ${this.id1} - ${this.id2}`;
@@ -75,23 +81,18 @@ test('AutoWeakMap.create', async () => {
 
     const memoryHelper = new MemoryHelper();
 
-    const map = AutoWeakMap.create((common: Common, id1: string, id2: number) => {
-        const model = new Model(common, id1, id2);
-        memoryHelper.register(model, `${common.name}-${id1}-${id2}`);
-        return model;
-    });
 
     (() => {
         const common = new Common('CommonI');
         memoryHelper.register(common, 'CommonI');
 
-        const model1 = map(common, 'aaa', 111);
+        const model1 = Model.get(common, 'aaa', 111);
         expect(model1.name).toBe('Model - CommonI - aaa - 111');
 
-        const model2 = map(common, 'bbb', 222);
+        const model2 = Model.get(common, 'bbb', 222);
         expect(model2.name).toBe('Model - CommonI - bbb - 222');
 
-        const model3 = map(common, 'ccc', 555);
+        const model3 = Model.get(common, 'ccc', 555);
         expect(model3.name).toBe('Model - CommonI - ccc - 555');
     })();
 
@@ -107,13 +108,13 @@ test('AutoWeakMap.create', async () => {
         const common = new Common('CommonII');
         memoryHelper.register(common, 'CommonII');
 
-        const model1 = map(common, 'aaa', 111);
+        const model1 = Model.get(common, 'aaa', 111);
         expect(model1.name).toBe('Model - CommonII - aaa - 111');
 
-        const model2 = map(common, 'bbb', 222);
+        const model2 = Model.get(common, 'bbb', 222);
         expect(model2.name).toBe('Model - CommonII - bbb - 222');
 
-        const model3 = map(common, 'ccc', 555);
+        const model3 = Model.get(common, 'ccc', 555);
         expect(model3.name).toBe('Model - CommonII - ccc - 555');
     })();
 
