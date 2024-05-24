@@ -130,4 +130,33 @@ test('AutoWeakMap.create', async () => {
     await memoryHelper.whenRemoved('CommonII-bbb-222');
     await memoryHelper.whenRemoved('CommonII-ccc-555');
     expect(memoryHelper.removedLength).toBe(8);
+
+
+    (() => {
+        const common1 = new Common('CommonIII');
+        memoryHelper.register(common1, 'CommonIII');
+        AutoWeakMap.register(common1);
+
+        const model1 = Model.get(common1, 'aaa', 111);
+        expect(model1.name).toBe('Model - CommonIII - aaa - 111');
+
+        const common2 = new Common('CommonIV');
+        memoryHelper.register(common2, 'CommonIV');
+        AutoWeakMap.register(common2);
+
+        const model2 = Model.get(common2, 'aaa', 111);
+        expect(model2.name).toBe('Model - CommonIV - aaa - 111');
+
+        AutoWeakMap.unregister(common1);
+        AutoWeakMap.unregister(common2);
+    })();
+
+    global.gc();
+    
+    await memoryHelper.whenRemoved('CommonIII');
+    await memoryHelper.whenRemoved('CommonIII-aaa-111');
+    await memoryHelper.whenRemoved('CommonIV');
+    await memoryHelper.whenRemoved('CommonIV-aaa-111');
+
+    expect(memoryHelper.removedLength).toBe(12);
 });
