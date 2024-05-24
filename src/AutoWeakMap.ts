@@ -27,3 +27,28 @@ export class AutoWeakMap {
     };
 
 }
+
+/*
+Pasowałoby zrobić tak, zeby automapa, potrafiła pobrać element, zarówno jak podejemy CommonRef, jak równiez gdy podajemy Common
+
+
+const ref2common = new WeakMap<CommonRef, Common>();
+const common2ref = new WeakMap<Common, CommonRef>();
+
+class CommonRef {
+
+}
+class Common {
+
+}
+*/
+
+//mając common, niech za pomoca WekMapy, odwołamy się do tego obiektu "adresujacego" wekMap
+
+/*
+    ContextRef
+        ma referencję do Context wewnętrzneg
+
+    mając kontekst wewnętrzny, móc się odwołąć do kontekstu zewnętrznego
+        WekMap, która trzyma WekRef na kontekst
+*/
