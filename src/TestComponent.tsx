@@ -16,7 +16,7 @@ class State {
     }
 }
 
-export const TestComponent = observer(() => {
+export const TestComponent: (() => JSX.Element) = observer(() => {
     const [ state ] = React.useState(() => new State());
 
     return (
