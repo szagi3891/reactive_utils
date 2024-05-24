@@ -3,7 +3,8 @@
     "@types/react": "^*",
     "mobx": "^*",
     "react": "^*",
-    "zod": "^*"
+    "zod": "^*",
+    "mobx-react-lite": "^*"
   },
   "devDependencies": {
     "@types/node": "^20.12.12",
