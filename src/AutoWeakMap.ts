@@ -1,18 +1,59 @@
 import { AutoMap, PrimitiveType } from "./AutoMap";
 
+class CommonRef {
+    protected nominal?: never;
+}
+
+const translate: WeakMap<WeakKey, CommonRef> = new WeakMap();
+
+const getRef = (common: WeakKey): CommonRef | null => {
+    return translate.get(common) ?? null;
+};
+
+const register = (common: WeakKey): void => {
+    const ref = getRef(common);
+    if (ref !== null) {
+        throw Error('This object was already registered');
+    }
+
+    const newRef = new CommonRef();
+    translate.set(common, newRef);
+};
+
+const unregister = (common: WeakKey): void => {
+    const ref = getRef(common);
+    if (ref === null) {
+        throw Error('this object was not registered');
+    }
+
+    translate.delete(common);
+};
+
+const getRefValue = (common: WeakKey): CommonRef => {
+    const ref = getRef(common);
+    if (ref === null) {
+        throw Error('this object is not registered');
+    }
+    return ref;
+};
+
 export const autoWeakMapKey = Symbol('AutoWeakMapKey');
 
 export class AutoWeakMap {
+
+    public static register = register;
+    public static unregister = unregister;
+
     public static create = <C extends { [autoWeakMapKey]: () => void }, K extends PrimitiveType[], V>(
         createValue: (...key: [C, ...K]) => V
     ): ((...key: [C, ...K]) => V) => {
 
-        const week = new WeakMap<C, AutoMap<K, V>>();
+        const week = new WeakMap<CommonRef, AutoMap<K, V>>();
 
         return (...key: [C, ...K]): V => {
             const [context, ...rest] = key;
 
-            const weekMap = week.get(context);
+            const weekMap = week.get(getRefValue(context));
 
             if (weekMap !== undefined) {
                 return weekMap.get(rest);
@@ -21,34 +62,9 @@ export class AutoWeakMap {
             const newAuto = new AutoMap<K, V>((key) => {
                 return createValue(context, ...key);
             });
-            week.set(context, newAuto);
+            week.set(getRefValue(context), newAuto);
             return newAuto.get(rest);
         };
     };
 
 }
-
-/*
-Pasowałoby zrobić tak, zeby automapa, potrafiła pobrać element, zarówno jak podejemy CommonRef, jak równiez gdy podajemy Common
-
-
-const ref2common = new WeakMap<CommonRef, Common>();
-const common2ref = new WeakMap<Common, CommonRef>();
-
-class CommonRef {
-
-}
-class Common {
-
-}
-*/
-
-//mając common, niech za pomoca WekMapy, odwołamy się do tego obiektu "adresujacego" wekMap
-
-/*
-    ContextRef
-        ma referencję do Context wewnętrzneg
-
-    mając kontekst wewnętrzny, móc się odwołąć do kontekstu zewnętrznego
-        WekMap, która trzyma WekRef na kontekst
-*/

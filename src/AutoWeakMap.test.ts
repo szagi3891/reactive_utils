@@ -85,6 +85,7 @@ test('AutoWeakMap.create', async () => {
     (() => {
         const common = new Common('CommonI');
         memoryHelper.register(common, 'CommonI');
+        AutoWeakMap.register(common);
 
         const model1 = Model.get(common, 'aaa', 111);
         expect(model1.name).toBe('Model - CommonI - aaa - 111');
@@ -94,6 +95,8 @@ test('AutoWeakMap.create', async () => {
 
         const model3 = Model.get(common, 'ccc', 555);
         expect(model3.name).toBe('Model - CommonI - ccc - 555');
+
+        AutoWeakMap.unregister(common);
     })();
 
     global.gc();
@@ -107,6 +110,7 @@ test('AutoWeakMap.create', async () => {
     (() => {
         const common = new Common('CommonII');
         memoryHelper.register(common, 'CommonII');
+        AutoWeakMap.register(common);
 
         const model1 = Model.get(common, 'aaa', 111);
         expect(model1.name).toBe('Model - CommonII - aaa - 111');
@@ -116,6 +120,7 @@ test('AutoWeakMap.create', async () => {
 
         const model3 = Model.get(common, 'ccc', 555);
         expect(model3.name).toBe('Model - CommonII - ccc - 555');
+        AutoWeakMap.unregister(common);
     })();
 
     global.gc();
