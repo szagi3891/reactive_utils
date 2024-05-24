@@ -53,10 +53,10 @@ export class AutoWeakMap {
         return (...key: [C, ...K]): V => {
             const [context, ...rest] = key;
 
-            const weekMap = week.get(getRefValue(context));
+            const autoMap = week.get(getRefValue(context));
 
-            if (weekMap !== undefined) {
-                return weekMap.get(rest);
+            if (autoMap !== undefined) {
+                return autoMap.get(rest);
             }
 
             const newAuto = new AutoMap<K, V>((key) => {
