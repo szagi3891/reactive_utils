@@ -5,7 +5,7 @@ export class EventEmitter<T> {
         this.events = new Set();
     }
 
-    public on(callback: (param: T) => void): (() => void) {
+    public on = (callback: (param: T) => void): (() => void) => {
         let isActive = true;
 
         const onExec = (param: T): void => {
@@ -22,7 +22,7 @@ export class EventEmitter<T> {
         };
     }
 
-    public trigger(param: T): void {
+    public trigger = (param: T): void => {
         const eventsCopy = Array.from(this.events.values());
 
         for (const itemCallbackToRun of eventsCopy) {
