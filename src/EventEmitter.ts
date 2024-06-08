@@ -1,5 +1,9 @@
 export class EventEmitter<T> {
-    private events: Set<(param: T) => void> = new Set();
+    private events: Set<(param: T) => void>;
+
+    constructor() {
+        this.events = new Set();
+    }
 
     public on(callback: (param: T) => void): (() => void) {
         let isActive = true;
