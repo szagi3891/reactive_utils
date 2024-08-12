@@ -1,3 +1,6 @@
+
+export type EventEmitterReceiver<T> = (callback: (param: T) => void) => (() => void);
+
 export class EventEmitter<T> {
     private events: Set<(param: T) => void>;
 
@@ -5,7 +8,7 @@ export class EventEmitter<T> {
         this.events = new Set();
     }
 
-    public on = (callback: (param: T) => void): (() => void) => {
+    public on: EventEmitterReceiver<T> = (callback: (param: T) => void): (() => void) => {
         let isActive = true;
 
         const onExec = (param: T): void => {
