@@ -1,5 +1,5 @@
 import { expect, test } from 'vitest';
-import { timeout } from './timeout';
+import { timeout } from '../timeout';
 import { AutoWeakMap, autoWeakMapKey } from './AutoWeakMap';
 
 class MemoryHelper {

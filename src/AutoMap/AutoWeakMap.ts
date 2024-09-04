@@ -1,4 +1,5 @@
-import { AutoMap, PrimitiveType } from "./AutoMap";
+import { AutoMap } from "./AutoMap";
+import { PrimitiveType } from "./PrimitiveType";
 
 class CommonRef {
     protected nominal?: never;
