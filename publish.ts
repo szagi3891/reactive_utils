@@ -6,6 +6,8 @@ const ContentZod = z.object({
     name: z.string(),
     version: z.string(),
     exports: z.string(),
+    license: z.string(),
+    
 });
 
 const throwNever = (): never => {
