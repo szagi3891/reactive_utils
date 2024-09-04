@@ -4,7 +4,6 @@ let nextId: number = 1;
 const refs: WeakMap<WeakKey, number> = new WeakMap();
 
 const getNextId = (value: WeakKey): number => {
-
     const idCache = refs.get(value);
 
     if (idCache !== undefined) {
@@ -19,20 +18,21 @@ const getNextId = (value: WeakKey): number => {
     return newId;
 };
 
-export class PrimitiveTypeId {
+export class PrimitiveTypeId<T extends WeakKey> {
 
     private constructor(
-        private readonly value: number,
+        public readonly value: T,
+        private readonly id: number,
     ) {
     }
 
-    public static get(value: WeakKey): PrimitiveTypeId {
+    public static get<T extends WeakKey>(value: T): PrimitiveTypeId<T> {
         const id = getNextId(value);
-        return new PrimitiveTypeId(id);
+        return new PrimitiveTypeId(value, id);
     }
 
     [autoMapKeyAsString](): number {
-        return this.value;
+        return this.id;
     }
 }
 
