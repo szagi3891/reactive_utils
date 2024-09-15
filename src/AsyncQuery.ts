@@ -43,7 +43,7 @@ export class AsyncQuery<T> {
         }
     }
 
-    private get = async (): Promise<T | null> => {
+    public get = async (): Promise<T | null> => {
         if (this.senders === null) {
             return Promise.resolve(null);
         }
