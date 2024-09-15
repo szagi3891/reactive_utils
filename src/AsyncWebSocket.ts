@@ -63,7 +63,7 @@ export class AsyncWebSocket {
             console.error(`AsyncWebSocket ${id}: Timeout connection for ${host}, timeout=${timeout}`);
             result.resolve(null);
             inst.close();
-        }), timeout;
+        }, timeout);
 
         socket.addEventListener('open', () => {
             const timeEnd = new Date();
