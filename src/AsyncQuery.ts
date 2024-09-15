@@ -18,6 +18,10 @@ export class AsyncQuery<T> {
         return this.doneBox.promise;
     }
 
+    [Symbol.dispose]() {
+        this.close();
+    }
+
     public isClose(): boolean {
         return this.senders === null;
     }
