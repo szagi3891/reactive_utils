@@ -1,6 +1,6 @@
 import { PromiseBox } from './PromiseBox';
 
-interface AsyncQueryIterator<T> {
+export interface AsyncQueryIterator<T> {
     next(): Promise<IteratorResult<T>>;
 }
 

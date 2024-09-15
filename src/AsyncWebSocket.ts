@@ -1,5 +1,5 @@
 import { PromiseBox } from './PromiseBox';
-import { AsyncQuery } from "./AsyncQuery";
+import { AsyncQuery, AsyncQueryIterator } from "./AsyncQuery";
 import { WebSocket } from 'unws';
 import { AutoId } from "./AutoId";
 
@@ -16,7 +16,7 @@ export class AsyncWebSocket {
         this.query = new AsyncQuery<MessageEvent<unknown>>();
     }
 
-    [Symbol.asyncIterator]() {
+    [Symbol.asyncIterator](): AsyncQueryIterator<MessageEvent<unknown>> {
         return this.query[Symbol.asyncIterator]();
     }
 
