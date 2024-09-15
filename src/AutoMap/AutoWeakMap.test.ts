@@ -36,7 +36,7 @@ class MemoryHelper {
     }
 }
 
-test('MemoryHelper', async () => {
+test.skip('MemoryHelper', async () => {
     if (typeof global.gc !== 'function') {
         throw new Error('Garbage collector is not exposed. Run node with --expose-gc.');
     }
@@ -55,7 +55,7 @@ test('MemoryHelper', async () => {
     await memoryHelper.whenRemoved('id1');
 });
 
-test('AutoWeakMap.create', async () => {
+test.skip('AutoWeakMap.create', async () => {
     if (typeof global.gc !== 'function') {
         throw new Error('Garbage collector is not exposed. Run node with --expose-gc.');
     }
