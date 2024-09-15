@@ -14,7 +14,9 @@ export { getValueCache } from './src/getValueCache.ts';
 export { Result } from './src/Result.ts';
 export type { ResultOk, ResultError } from './src/Result.ts';
 export { Semaphore } from './src/Semaphore.ts';
-
+export { AutoId } from './src/AutoId.ts';
+export { AsyncQuery } from './src/AsyncQuery.ts';
+export { AsyncWebSocket } from './src/AsyncWebSocket.ts';
 
 //... without jsx
 

@@ -5,7 +5,8 @@
     "mobx": "^*",
     "react": "^*",
     "zod": "^*",
-    "mobx-react-lite": "^*"
+    "mobx-react-lite": "^*",
+    "unws": "^*"
   },
   "devDependencies": {
     "@types/node": "^20.12.12",
