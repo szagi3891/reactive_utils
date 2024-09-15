@@ -8,6 +8,15 @@ export class AsyncQuery<T> {
     private receiviers: Array<Promise<T | null>> = [];
     private senders: Array<PromiseBox<T | null>> | null = []; //null - query is close
     private iteratorCreated: null | Error = null;
+    private readonly doneBox: PromiseBox<void>;
+
+    constructor() {
+        this.doneBox = new PromiseBox();
+    }
+
+    public get done(): Promise<void> {
+        return this.doneBox.promise;
+    }
 
     public isClose(): boolean {
         return this.senders === null;
@@ -32,6 +41,8 @@ export class AsyncQuery<T> {
     }
 
     public close(): void {
+        this.doneBox.resolve();
+
         if (this.senders === null) {
             return;
         }
