@@ -5,27 +5,43 @@ import { AutoId } from "./AutoId";
 
 const autoId = new AutoId();
 
-export class AsyncWebSocket {
-    private query: AsyncQuery<MessageEvent<unknown>>;
+class SocketStream {
+    constructor(
+        // public readonly socket: WebSocket,
+        public readonly query: AsyncQuery<MessageEvent<unknown>>,
+        public readonly onClose: () => void,
+        public readonly send: (data: string | BufferSource) => void
+    ) {}
 
-    private constructor(
-        public readonly id: string,
-        private readonly socket: WebSocket,
-        private readonly log: boolean
-    ) {
-        this.query = new AsyncQuery<MessageEvent<unknown>>();
-    }
-
-    [Symbol.asyncIterator](): AsyncQueryIterator<MessageEvent<unknown>> {
-        return this.query[Symbol.asyncIterator]();
-    }
-
-    [Symbol.dispose]() {
-        this.close();
+    close() {
+        this.query.close();
+        // this.socket.close();
+        this.onClose();
     }
 
     public isClose(): boolean {
         return this.query.isClose();
+    }
+}
+
+export class AsyncWebSocket {
+    private constructor(
+        public readonly id: string,
+        private readonly stream: SocketStream,
+        private readonly log: boolean
+    ) {
+    }
+
+    [Symbol.asyncIterator](): AsyncQueryIterator<MessageEvent<unknown>> {
+        return this.stream.query[Symbol.asyncIterator]();
+    }
+
+    [Symbol.dispose]() {
+        this.stream.close();
+    }
+
+    public isClose(): boolean {
+        return this.stream.isClose();
     }
 
     public close() {
@@ -33,8 +49,7 @@ export class AsyncWebSocket {
             console.info(`AsyncWebSocket.close ${this.id}`);
         }
 
-        this.query.close();
-        this.socket.close();
+        this.stream.close();
     }
 
     public send = (data: string | BufferSource): void => {
@@ -44,21 +59,33 @@ export class AsyncWebSocket {
             if (this.log) {
                 console.info(`AsyncWebSocket ${this.id}: SEND -> ${data}`);
             }
-            this.socket.send(data);
+
+            this.stream.send(data);
         }
     }
 
-    static create(host: string, timeout: number, log: boolean): Promise<AsyncWebSocket | null> {
-        const result = new PromiseBox<AsyncWebSocket | null>();
+    static create(host: string, timeout: number, log: boolean): Promise<AsyncWebSocket> {
+        const result = new PromiseBox<AsyncWebSocket>();
+        const id = autoId.get();
 
         try {
-            const id = autoId.get();
             console.info(`AsyncWebSocket ${id}: connect to ${host}`);
 
             const timeStart = new Date();
         
             const socket = new WebSocket(host);
-            const inst = new AsyncWebSocket(id, socket, log);
+
+            const stream = new SocketStream(
+                new AsyncQuery(),
+                () => {
+                    socket.close();
+                },
+                (data: string | BufferSource): void => {
+                    socket.send(data);
+                }
+            );
+
+            const returnInst = new AsyncWebSocket(id, stream, log);
 
             setTimeout(() => {
                 if (result.isFulfilled()) {
@@ -66,8 +93,8 @@ export class AsyncWebSocket {
                 }
 
                 console.error(`AsyncWebSocket ${id}: Timeout connection for ${host}, timeout=${timeout}`);
-                result.resolve(null);
-                inst.close();
+                result.resolve(returnInst);
+                stream.close();
             }, timeout);
 
             socket.addEventListener('open', () => {
@@ -75,7 +102,7 @@ export class AsyncWebSocket {
                 const timeOpening = timeEnd.getTime() - timeStart.getTime();
                 console.info(`AsyncWebSocket ${id}: connected to ${host} in ${timeOpening}ms`);
 
-                result.resolve(inst);
+                result.resolve(returnInst);
             });
 
             socket.addEventListener('message', (data) => {
@@ -86,25 +113,33 @@ export class AsyncWebSocket {
                         console.info(`AsyncWebSocket ${id}: RECEIVED -> ${typeof data.data}`);
                     }
                 }
-                inst.query.push(data);
+                stream.query.push(data);
             });
 
             socket.addEventListener('error', (data: Event) => {
                 console.error(`AsyncWebSocket ${id}: Error connection for ${host}, error=${String(data)}`, data);
-                result.resolve(null);
-                inst.close();
+                result.resolve(returnInst);
+                stream.close();
             });
 
             socket.addEventListener('close', () => {
                 if (result.isFulfilled() === false) {
                     console.error(`AsyncWebSocket ${id}: Close connection for ${host}`);
-                    result.resolve(null);
+                    result.resolve(returnInst);
                 }
-                inst.close();
+                stream.close();
             });
         } catch (err) {
             console.error(err);
-            result.resolve(null);
+
+            const stream = new SocketStream(
+                new AsyncQuery(),
+                () => {},
+                (_data: string | BufferSource): void => {}
+            );
+
+            stream.close();
+            result.resolve(new AsyncWebSocket(id, stream, log));
         }
 
         return result.promise;
