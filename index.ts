@@ -18,6 +18,7 @@ export { AutoId } from './src/AutoId.ts';
 export { AsyncQuery } from './src/AsyncQuery.ts';
 export { AsyncWebSocket } from './src/AsyncWebSocket.ts';
 export { Defer } from './src/Defer.ts';
+export { jsonParse, JSONValue } from './src/Json.ts';
 
 //... without jsx
 
