@@ -10,7 +10,7 @@ export type JSONValue =
     | { [key: string]: JSONValue };
 
 
-export const jsonParse = async <T>(text: string, validator: z.ZodType<T>): Promise<Result<T, string>> => {    
+export const jsonParse = <T>(text: string, validator: z.ZodType<T>): Result<T, string> => {    
     try {
         const json = JSON.parse(text);
         const data = validator.safeParse(json);
