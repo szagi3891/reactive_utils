@@ -20,6 +20,10 @@ export class AsyncWebSocket {
         return this.query[Symbol.asyncIterator]();
     }
 
+    [Symbol.dispose]() {
+        this.close();
+    }
+
     public isClose(): boolean {
         return this.query.isClose();
     }
