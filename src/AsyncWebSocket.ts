@@ -47,56 +47,61 @@ export class AsyncWebSocket {
     static create(host: string, timeout: number, log: boolean): Promise<AsyncWebSocket | null> {
         const result = new PromiseBox<AsyncWebSocket | null>();
 
-        const id = autoId.get();
-        console.info(`AsyncWebSocket ${id}: connect to ${host}`);
+        try {
+            const id = autoId.get();
+            console.info(`AsyncWebSocket ${id}: connect to ${host}`);
 
-        const timeStart = new Date();
-    
-        const socket = new WebSocket(host);
-        const inst = new AsyncWebSocket(id, socket, log);
+            const timeStart = new Date();
+        
+            const socket = new WebSocket(host);
+            const inst = new AsyncWebSocket(id, socket, log);
 
-        setTimeout(() => {
-            if (result.isFulfilled()) {
-                return;
-            }
-
-            console.error(`AsyncWebSocket ${id}: Timeout connection for ${host}, timeout=${timeout}`);
-            result.resolve(null);
-            inst.close();
-        }, timeout);
-
-        socket.addEventListener('open', () => {
-            const timeEnd = new Date();
-            const timeOpening = timeEnd.getTime() - timeStart.getTime();
-            console.info(`AsyncWebSocket ${id}: connected to ${host} in ${timeOpening}ms`);
-
-            result.resolve(inst);
-        });
-
-        socket.addEventListener('message', (data) => {
-            if (log) {
-                if (typeof data.data === 'string') {
-                    console.info(`AsyncWebSocket ${id}: RECEIVED -> string -> ${data.data}`);
-                } else {
-                    console.info(`AsyncWebSocket ${id}: RECEIVED -> ${typeof data.data}`);
+            setTimeout(() => {
+                if (result.isFulfilled()) {
+                    return;
                 }
-            }
-            inst.query.push(data);
-        });
 
-        socket.addEventListener('error', (data: Event) => {
-            console.error(`AsyncWebSocket ${id}: Error connection for ${host}, error=${String(data)}`, data);
-            result.resolve(null);
-            inst.close();
-        });
-
-        socket.addEventListener('close', () => {
-            if (result.isFulfilled() === false) {
-                console.error(`AsyncWebSocket ${id}: Close connection for ${host}`);
+                console.error(`AsyncWebSocket ${id}: Timeout connection for ${host}, timeout=${timeout}`);
                 result.resolve(null);
-            }
-            inst.close();
-        });
+                inst.close();
+            }, timeout);
+
+            socket.addEventListener('open', () => {
+                const timeEnd = new Date();
+                const timeOpening = timeEnd.getTime() - timeStart.getTime();
+                console.info(`AsyncWebSocket ${id}: connected to ${host} in ${timeOpening}ms`);
+
+                result.resolve(inst);
+            });
+
+            socket.addEventListener('message', (data) => {
+                if (log) {
+                    if (typeof data.data === 'string') {
+                        console.info(`AsyncWebSocket ${id}: RECEIVED -> string -> ${data.data}`);
+                    } else {
+                        console.info(`AsyncWebSocket ${id}: RECEIVED -> ${typeof data.data}`);
+                    }
+                }
+                inst.query.push(data);
+            });
+
+            socket.addEventListener('error', (data: Event) => {
+                console.error(`AsyncWebSocket ${id}: Error connection for ${host}, error=${String(data)}`, data);
+                result.resolve(null);
+                inst.close();
+            });
+
+            socket.addEventListener('close', () => {
+                if (result.isFulfilled() === false) {
+                    console.error(`AsyncWebSocket ${id}: Close connection for ${host}`);
+                    result.resolve(null);
+                }
+                inst.close();
+            });
+        } catch (err) {
+            console.error(err);
+            result.resolve(null);
+        }
 
         return result.promise;
     }
