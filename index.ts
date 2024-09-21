@@ -20,6 +20,7 @@ export { AsyncWebSocket } from './src/AsyncWebSocket.ts';
 export { Defer } from './src/Defer.ts';
 export { jsonParse } from './src/Json.ts';
 export type { JSONValue } from './src/Json.ts';
+export { throwError } from './src/throwError.ts';
 
 //... without jsx
 
