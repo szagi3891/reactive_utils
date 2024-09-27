@@ -4,7 +4,7 @@ import { FormErrorMessage, FormChildTrait, FormChildType, FormModelTrait, FormMo
 
 type FormRecordBox = Record<string, { [FormChildTrait](): FormChildType, [FormModelTrait](): FormModelType<unknown> }>;
 
-export class FormModel<V> {
+export class FormModel<V> implements FormModelType<V> {
     private getChild: () => Array<{[FormChildTrait](): FormChildType}>;
     private getValue: () => Result<V, Array<FormErrorMessage>>;
 
@@ -45,6 +45,10 @@ export class FormModel<V> {
             return errorForView(this.result.error);
         }
         return null;
+    }
+
+    public get isValid(): boolean {
+        return this.errorForView === null;
     }
 
     public setAsVisited(): void {

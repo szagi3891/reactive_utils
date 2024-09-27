@@ -3,7 +3,7 @@ import { FormBoxValue } from './FormBoxValue';
 import { FormChildTrait, FormChildType, FormErrorMessage, FormModelTrait, FormModelType } from './FormTypes';
 import { Result } from '../Result';
 
-export class FormInputState<K, M> {
+export class FormInputState<K, M> implements FormModelType<M> {
     private readonly box: FormBoxValue<K>;
     private readonly model: FormModel<M>;
 
@@ -45,6 +45,10 @@ export class FormInputState<K, M> {
 
     public get errorForView(): string | null {
         return this.model.errorForView;
+    }
+
+    public get isValid(): boolean {
+        return this.errorForView === null;
     }
 
     public setAsVisited(): void {
