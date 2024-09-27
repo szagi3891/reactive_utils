@@ -1,6 +1,6 @@
 
 import { Value } from '../Value';
-import { ChildTrait, ChildType } from './FormTypes';
+import { FormChildTrait, FormChildType } from './FormTypes';
 
 type Option<K> = {
     type: 'some',
@@ -61,7 +61,7 @@ export class FormBoxValue<K> {
         });
     }
 
-    [ChildTrait](): ChildType {
+    [FormChildTrait](): FormChildType {
         return this;
     }
 }

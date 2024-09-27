@@ -1,14 +1,14 @@
 import { Result } from '../Result';
 import { Value } from '../Value';
-import { FormErrorMessage, ChildTrait, ChildType, FormModelTrait, FormModelType, errorForView } from './FormTypes';
+import { FormErrorMessage, FormChildTrait, FormChildType, FormModelTrait, FormModelType, errorForView } from './FormTypes';
 
-type FormRecordBox = Record<string, { [ChildTrait](): ChildType, [FormModelTrait](): FormModelType<unknown> }>;
+type FormRecordBox = Record<string, { [FormChildTrait](): FormChildType, [FormModelTrait](): FormModelType<unknown> }>;
 
 export class FormModel<V> {
-    private getChild: () => Array<{[ChildTrait](): ChildType}>;
+    private getChild: () => Array<{[FormChildTrait](): FormChildType}>;
     private getValue: () => Result<V, Array<FormErrorMessage>>;
 
-    public constructor(getChild: () => Array<{[ChildTrait](): ChildType}>, getValue: () => Result<V, Array<FormErrorMessage>>) {
+    public constructor(getChild: () => Array<{[FormChildTrait](): FormChildType}>, getValue: () => Result<V, Array<FormErrorMessage>>) {
         this.getChild = getChild;
         this.getValue = getValue;
     }
@@ -49,13 +49,13 @@ export class FormModel<V> {
 
     public setAsVisited(): void {
         for (const child of this.getChild()) {
-            child[ChildTrait]().setAsVisited();
+            child[FormChildTrait]().setAsVisited();
         }
     }
 
     public isVisited(): boolean {
         for (const item of this.getChild()) {
-            if (item[ChildTrait]().isVisited() === false) {
+            if (item[FormChildTrait]().isVisited() === false) {
                 return false;
             }
         }
@@ -65,7 +65,7 @@ export class FormModel<V> {
 
     public get isModified(): boolean {
         for (const item of this.getChild()) {
-            if (item[ChildTrait]().isModified) {
+            if (item[FormChildTrait]().isModified) {
                 return true;
             }
         }
@@ -75,13 +75,13 @@ export class FormModel<V> {
 
     public reset(): void {
         for (const item of this.getChild()) {
-            item[ChildTrait]().reset();
+            item[FormChildTrait]().reset();
         }
     }
     public static group = <IN extends FormRecordBox>(fields: IN): FormModel<{
         readonly [P in keyof IN]: IN[P] extends FormModelType<infer O> ? O : never;
     }> => {
-        const fieldsValules: Array<{ [ChildTrait](): ChildType, [FormModelTrait](): FormModelType<unknown> }> = [];
+        const fieldsValules: Array<{ [FormChildTrait](): FormChildType, [FormModelTrait](): FormModelType<unknown> }> = [];
 
         for (const item of Object.values(fields)) {
             fieldsValules.push(item);
@@ -129,7 +129,7 @@ export class FormModel<V> {
         );
     };
 
-    public static groupFromArray = <K>(fieldsValue: Value<Array<{ [ChildTrait](): ChildType, [FormModelTrait](): FormModelType<K> }>>): FormModel<Array<K>> => {
+    public static groupFromArray = <K>(fieldsValue: Value<Array<{ [FormChildTrait](): FormChildType, [FormModelTrait](): FormModelType<K> }>>): FormModel<Array<K>> => {
         return new FormModel(
             () => {
                 return fieldsValue.getValue();
@@ -160,7 +160,7 @@ export class FormModel<V> {
         );
     };
 
-    [ChildTrait](): ChildType {
+    [FormChildTrait](): FormChildType {
         return this;
     }
 

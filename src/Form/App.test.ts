@@ -1,5 +1,5 @@
 import { expect, test, describe } from 'vitest';
-import { validateRange, convertToNumber } from "./validators";
+import { validateRange, validateConvertToNumber } from "./validators";
 import { FormInputState } from "./FormInputState";
 import { FormModel } from "./FormModel";
 import { FormErrorMessage } from './FormTypes';
@@ -20,7 +20,7 @@ describe('App', () => {
 
     test('grupa', () => {
         const field1 = FormInputState.new('')
-            .map(convertToNumber('Input1: Not number'))
+            .map(validateConvertToNumber('Input1: Not number'))
             .map((value): Result<number, string> => {
                 if (value > 10) {
                     return Result.error('Input1: Za duża liczba');
@@ -30,7 +30,7 @@ describe('App', () => {
             });
 
         const field2 = FormInputState.new('')
-            .map(convertToNumber('Input2: Not number'))
+            .map(validateConvertToNumber('Input2: Not number'))
             .map((value): Result<number, string> => {
                 if (value > 10) {
                     return Result.error('Input2: Za duża liczba');

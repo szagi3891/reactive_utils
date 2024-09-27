@@ -14,7 +14,7 @@ const parseNumber = (input: string): number | null => {
     return parsed;
 }
 
-export const convertToNumeric = (value: string): Result<string, string> => {
+export const validateConvertToNumeric = (value: string): Result<string, string> => {
     const newValue = value.replaceAll(',', '.');
 
     let dots = 0;
@@ -47,7 +47,7 @@ export const convertToNumeric = (value: string): Result<string, string> => {
     return Result.ok(newValue);
 };
 
-export const convertToNumber = (message: string) => (value: string): Result<number, string> => {
+export const validateConvertToNumber = (message: string) => (value: string): Result<number, string> => {
     const valueNumber = parseNumber(value);
     return valueNumber === null ? Result.error(message) : Result.ok(valueNumber);
 }

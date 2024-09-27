@@ -1,6 +1,6 @@
 import { FormModel } from './FormModel';
 import { FormBoxValue } from './FormBoxValue';
-import { ChildTrait, ChildType, FormErrorMessage, FormModelTrait, FormModelType } from './FormTypes';
+import { FormChildTrait, FormChildType, FormErrorMessage, FormModelTrait, FormModelType } from './FormTypes';
 import { Result } from '../Result';
 
 export class FormInputState<K, M> {
@@ -59,7 +59,7 @@ export class FormInputState<K, M> {
         this.box.reset();
     }
 
-    [ChildTrait](): ChildType {
+    [FormChildTrait](): FormChildType {
         return this;
     }
 

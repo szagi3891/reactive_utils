@@ -1,23 +1,23 @@
 import { Result } from '../Result';
 
-export const ChildTrait: unique symbol = Symbol();
+export const FormChildTrait: unique symbol = Symbol();
 
 export const FormModelTrait: unique symbol = Symbol();
 
-export interface ChildType {
+export interface FormChildType {
     isVisited: () => boolean;
     setAsVisited: () => void;
     get isModified(): boolean;
     reset: () => void;
 }
 
-export interface FormModelType<V> extends ChildType {
+export interface FormModelType<V> extends FormChildType {
     get result(): Result<V, Array<FormErrorMessage>>; //na tym będzie odpowiedni getter dla widoku
     get errorForView(): string | null;
 }
 
 // class AA<T> {
-//     [ChildTrait](): ChildType {
+//     [FormChildTrait](): FormChildType {
 //         throw Error('');
 //     }
 //
