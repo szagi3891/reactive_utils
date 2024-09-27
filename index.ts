@@ -21,6 +21,8 @@ export { Defer } from './src/Defer.ts';
 export { jsonParse } from './src/Json.ts';
 export type { JSONValue } from './src/Json.ts';
 export { throwError } from './src/throwError.ts';
+export { FormInputState } from './src/Form/FormInputState.ts';
+export { FormModel } from './src/Form/FormModel.ts';
 
 //... without jsx
 
