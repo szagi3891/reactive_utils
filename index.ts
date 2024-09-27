@@ -23,7 +23,7 @@ export type { JSONValue } from './src/Json.ts';
 export { throwError } from './src/throwError.ts';
 export { FormInputState } from './src/Form/FormInputState.ts';
 export { FormModel } from './src/Form/FormModel.ts';
-export { FormChildTrait, FormChildType, FormModelTrait, FormModelType } from './src/Form/FormTypes.ts';
+export type { FormChildTrait, FormChildType, FormModelTrait, FormModelType } from './src/Form/FormTypes.ts';
 export {
     validateConvertToNumeric,
     validateConvertToNumber,
