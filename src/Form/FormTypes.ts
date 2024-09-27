@@ -1,8 +1,8 @@
 import { Result } from '../Result';
 
-export const ChildTrait = Symbol();
+export const ChildTrait: symbol = Symbol();
 
-export const FormModelTrait = Symbol();
+export const FormModelTrait: symbol = Symbol();
 
 export interface ChildType {
     isVisited: () => boolean;
