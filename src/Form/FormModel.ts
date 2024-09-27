@@ -48,7 +48,7 @@ export class FormModel<V> implements FormModelType<V> {
     }
 
     public get isValid(): boolean {
-        return this.errorForView === null;
+        return this.result.type === 'ok';
     }
 
     public setAsVisited(): void {

@@ -48,7 +48,7 @@ export class FormInputState<K, M> implements FormModelType<M> {
     }
 
     public get isValid(): boolean {
-        return this.errorForView === null;
+        return this.result.type === 'ok';
     }
 
     public setAsVisited(): void {
