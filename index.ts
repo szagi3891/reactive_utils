@@ -31,6 +31,8 @@ export {
     validateRange,
     validateTemporalPlainDate,
     validateNotNull,
+    validateMinLength,
+    validateEmail
 } from './src/Form/validators.ts';
 
 //... without jsx

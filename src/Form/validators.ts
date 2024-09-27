@@ -81,3 +81,29 @@ export const validateNotNull = <T>(value: T | null): Result<T, string> => {
         return Result.ok(value);
     }
 }
+
+export const validateMinLength = (minLength: number) => (value: string): Result<string, string> => {
+    if (value.length < minLength) {
+        return Result.error(`Oczekiwano przynajmniej ${minLength} znaków`);
+    }
+
+    return Result.ok(value);
+};
+
+export const validateEmail = (value: string): Result<string, string> => {
+    const [first, second, ...rest] = value.split('@');
+
+    if (rest.length > 0) {
+        return Result.error('Oczekiwano maksymalnie jednego znaku @');
+    }
+
+    if (first === undefined || second === undefined) {
+        return Result.error('Poprawny email powinien zawierać znak @');
+    }
+
+    if (second.includes('.')) {
+        return Result.ok(value);
+    }
+
+    return Result.error('Oczekiwano formatu xxx@yyy.zzz');
+};
