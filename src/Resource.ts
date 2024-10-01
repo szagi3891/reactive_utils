@@ -49,10 +49,20 @@ const send = <T>(loadValue: () => Promise<T>): Promise<ResourceResult<T>> => {
 
 class Request<T> {
     private isInit: boolean = false;
+    private readonly getValue: () => Promise<T>;
+
     public readonly whenReady: PromiseBox<void>;
     public readonly value: Value<ResourceResult<T>>;
 
-    public constructor(private readonly getValue: () => Promise<T>, private readonly prevValue: ResourceResult<T> | null) {        
+    public constructor(getValue: () => Promise<T>, private readonly prevValue: ResourceResult<T> | null) {        
+
+        //Do not initiate on server side
+        if (typeof window === undefined) {
+            this.getValue = () => new Promise(() => {});
+        } else {
+            this.getValue = getValue;
+        }
+
         this.whenReady = new PromiseBox<void>();
 
         this.value = new Value({
