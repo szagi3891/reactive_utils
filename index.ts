@@ -7,7 +7,6 @@ export { AutoMap } from './src/AutoMap/AutoMap.ts';
 export { autoMapKeyAsString, reduceComplexSymbol } from './src/AutoMap/PrimitiveType.ts';
 export type { PrimitiveType } from './src/AutoMap/PrimitiveType.ts';
 export { AutoWeakMap, autoWeakMapKey } from './src/AutoMap/AutoWeakMap.ts';
-export { registerNetworRequest, whenIdle, ssrReactLazy, ResourceSSR } from './src/Idle.ts';
 export { EventEmitter, ValueEmitter } from './src/EventEmitter.ts';
 export { timeout } from './src/timeout.ts';
 export { getValueCache } from './src/getValueCache.ts';

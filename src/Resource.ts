@@ -49,26 +49,20 @@ const send = <T>(loadValue: () => Promise<T>): Promise<ResourceResult<T>> => {
 
 class Request<T> {
     private isInit: boolean = false;
-    private readonly getValue: () => Promise<T>;
-
     public readonly whenReady: PromiseBox<void>;
     public readonly value: Value<ResourceResult<T>>;
 
-    public constructor(getValue: () => Promise<T>, private readonly prevValue: ResourceResult<T> | null) {        
-
-        //Do not initiate on server side
-        if (typeof window === undefined) {
-            this.getValue = () => new Promise(() => {});
-        } else {
-            this.getValue = getValue;
-        }
-
+    public constructor(private readonly getValue: () => Promise<T>, private readonly prevValue: ResourceResult<T> | null) {        
         this.whenReady = new PromiseBox<void>();
 
         this.value = new Value({
             type: 'loading',
             whenReady: this.whenReady.promise,
         });
+    }
+
+    public static new() {
+
     }
 
     public isInitValue(): boolean {
@@ -109,8 +103,21 @@ class Request<T> {
 export class Resource<T> {
     private request: Value<Request<T>>;
 
-    public constructor(private readonly loadValue: () => Promise<T>) {
+    private constructor(private readonly loadValue: () => Promise<T>) {
         this.request = new Value(new Request(this.loadValue, null));
+    }
+
+    public static new<T>(loadValue: () => Promise<T>): Resource<T> {
+        return new Resource(loadValue);
+    }
+
+    public static browser<T>(loadValue: () => Promise<T>): Resource<T> {
+        //Do not initiate on server side
+        if (typeof window === 'undefined') {
+            return new Resource(() => new Promise(() => {}));
+        } else {
+            return new Resource(loadValue);
+        }
     }
 
     public get(): ResourceResult<T> {
