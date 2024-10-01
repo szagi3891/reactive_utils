@@ -107,7 +107,7 @@ export class Resource<T> {
         this.request = new Value(new Request(this.loadValue, null));
     }
 
-    public static new<T>(loadValue: () => Promise<T>): Resource<T> {
+    public static browserAndServer<T>(loadValue: () => Promise<T>): Resource<T> {
         return new Resource(loadValue);
     }
 

@@ -5,7 +5,7 @@ import { timeout } from './timeout';
 test('refresh on an uninitialized resource should not send any request', async () => {
     let execCounter: number = 0;
 
-    const inst = Resource.new<number>(async () => {
+    const inst = Resource.browserAndServer<number>(async () => {
         const value = execCounter;
         execCounter++;
 
@@ -27,7 +27,7 @@ test('refresh on an uninitialized resource should not send any request', async (
 test('refresh on initialized resource should send one request', async () => {
     let execCounter: number = 0;
 
-    const inst = Resource.new<number>(async () => {
+    const inst = Resource.browserAndServer<number>(async () => {
         const value = execCounter;
         execCounter++;
 
@@ -82,7 +82,7 @@ test('refresh on initialized resource should send one request', async () => {
 test('error catch', async () => {
     let execCounter: number = 0;
 
-    const inst = Resource.new<number>(async () => {
+    const inst = Resource.browserAndServer<number>(async () => {
         const value = execCounter;
         execCounter++;
 
