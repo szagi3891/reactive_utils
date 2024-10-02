@@ -33,6 +33,7 @@ export {
     validateMinLength,
     validateEmail
 } from './src/Form/validators.ts';
+export { sort } from './src/sort.ts';
 
 //... without jsx
 
