@@ -76,9 +76,8 @@ class Request<T> {
 
         this.isInit = true;
 
-        const valuePromise = send(this.getValue);
-
         setTimeout(async () => {
+            const valuePromise = send(this.getValue);
             const value = await valuePromise;
             this.value.setValue(value);
             this.whenReady.resolve();

@@ -95,6 +95,11 @@ test('error catch', async () => {
     });
 
     inst.getReady();
+    
+    expect(execCounter).toBe(0);
+    await timeout(0);
+
+    //exec in next tick
     expect(execCounter).toBe(1);
 
     await timeout(200);
