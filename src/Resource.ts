@@ -18,6 +18,22 @@ interface ResultError {
     readonly message: string;
 }
 
+export namespace ResourceResult {
+    export const ok = <T>(value: T): ResultReady<T> => {
+        return {
+            type: 'ready',
+            value
+        };
+    }
+  
+    export const error = (message: string): ResultError => {
+        return {
+            type: 'error',
+            message,
+        };
+    }
+}
+
 export type ResourceResult<T> = ResultLoading | ResultReady<T> | ResultError;
 
 const send = <T>(loadValue: () => Promise<T>): Promise<ResourceResult<T>> => {
