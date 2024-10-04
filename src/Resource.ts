@@ -151,7 +151,18 @@ export class Resource<T> {
         return null;
     }
 
-    public async refresh(): Promise<void> {
+    private applyOptimisticUpdate(
+        prevValue: ResourceResult<T>,
+        optimisticUpdate?: (prevValue: T) => T
+    ): ResourceResult<T> {
+        if (prevValue.type === 'ready' && optimisticUpdate !== undefined) {
+            return ResourceResult.ok(optimisticUpdate(prevValue.value));
+        }
+
+        return prevValue;
+    }
+
+    public async refresh(optimisticUpdate?: (prevValue: T) => T): Promise<void> {
         if (this.request.getValue().isInitValue() === false) {
             return;
         }
@@ -162,7 +173,10 @@ export class Resource<T> {
         }
 
         const prevValue = this.get();
-        const request = new Request(this.loadValue, prevValue);
+        const request = new Request(
+            this.loadValue,
+            this.applyOptimisticUpdate(prevValue, optimisticUpdate),
+        );
         request.init();
 
         this.request.setValue(request);
