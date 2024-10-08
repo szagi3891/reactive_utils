@@ -1,6 +1,7 @@
 import { expect, test } from 'vitest';
 import { timeout } from '../timeout';
 import { AutoWeakMap, autoWeakMapKey } from './AutoWeakMap';
+import { gc } from '../gc';
 
 class MemoryHelper {
     private registry: FinalizationRegistry<unknown>;
@@ -36,10 +37,12 @@ class MemoryHelper {
     }
 }
 
-test.skip('MemoryHelper', async () => {
-    if (typeof global.gc !== 'function') {
-        throw new Error('Garbage collector is not exposed. Run node with --expose-gc.');
-    }
+test('MemoryHelper', async () => {
+    gc();
+
+    // if (typeof global.gc !== 'function') {
+    //     throw new Error('Garbage collector is not exposed. Run node with --expose-gc.');
+    // }
 
     const data = new WeakMap();
 
@@ -51,14 +54,14 @@ test.skip('MemoryHelper', async () => {
         memoryHelper.register(obj, 'id1');
     })();
 
-    global.gc();
+    gc();
     await memoryHelper.whenRemoved('id1');
 });
 
-test.skip('AutoWeakMap.create', async () => {
-    if (typeof global.gc !== 'function') {
-        throw new Error('Garbage collector is not exposed. Run node with --expose-gc.');
-    }
+test('AutoWeakMap.create', async () => {
+    // if (typeof global.gc !== 'function') {
+    //     throw new Error('Garbage collector is not exposed. Run node with --expose-gc.');
+    // }
 
     class Common {
         [autoWeakMapKey](): void {}
@@ -99,7 +102,7 @@ test.skip('AutoWeakMap.create', async () => {
         AutoWeakMap.unregister(common);
     })();
 
-    global.gc();
+    gc();
     
     await memoryHelper.whenRemoved('CommonI');
     await memoryHelper.whenRemoved('CommonI-aaa-111');
@@ -123,7 +126,7 @@ test.skip('AutoWeakMap.create', async () => {
         AutoWeakMap.unregister(common);
     })();
 
-    global.gc();
+    gc();
 
     await memoryHelper.whenRemoved('CommonII');
     await memoryHelper.whenRemoved('CommonII-aaa-111');
@@ -151,7 +154,7 @@ test.skip('AutoWeakMap.create', async () => {
         AutoWeakMap.unregister(common2);
     })();
 
-    global.gc();
+    gc();
     
     await memoryHelper.whenRemoved('CommonIII');
     await memoryHelper.whenRemoved('CommonIII-aaa-111');
