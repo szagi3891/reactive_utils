@@ -22,6 +22,16 @@ export class FormInputState<K, M> implements FormModelType<M> {
         return new FormInputState(box, model);
     }
 
+    public static fromModel<K>(getValue: () => K): FormInputState<K, K> {
+        const box = new FormBoxValue<K>(getValue);
+        const model = new FormModel(
+            () => [box],
+            (): Result<K, Array<FormErrorMessage>> => Result.ok(box.getValue())
+        );
+
+        return new FormInputState(box, model);
+    }
+
     public setValue(value: K): void {
         this.box.setValue(value);
     }
