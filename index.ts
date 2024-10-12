@@ -1,5 +1,6 @@
 export { assertNever } from './src/assertNever.ts';
 export { Value } from './src/Value.ts';
+export { ValueLocalStorage } from './src/ValueLocalStorage.ts';
 export { Resource } from './src/Resource.ts';
 export { ResourceResult } from './src/Resource.ts';
 export { PromiseBox } from './src/PromiseBox.ts';
