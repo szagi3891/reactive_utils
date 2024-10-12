@@ -1,3 +1,4 @@
+import { autorun } from 'mobx';
 import { PromiseBox } from './PromiseBox.ts';
 import { Value } from './Value.ts';
 
@@ -133,6 +134,36 @@ export class Resource<T> {
         } else {
             return new Resource(loadValue);
         }
+    }
+
+    public async getAsync(): Promise<T> {
+        const result = new PromiseBox<T>();
+
+        const dispose = autorun((dispose) => {
+            const data = this.get();
+
+            if (data.type === 'loading') {
+                return;
+            }
+
+            if (data.type === 'error') {
+                result.reject(data.message);
+                dispose.dispose();
+                return;
+            }
+
+            result.resolve(data.value);
+            dispose.dispose();
+        });
+
+        const timeout = new Error('Timeout');
+
+        setTimeout(() => {
+            result.reject(timeout);
+            dispose();
+        }, 10_000);
+
+        return result.promise;
     }
 
     public get(): ResourceResult<T> {
