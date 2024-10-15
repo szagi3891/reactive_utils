@@ -91,7 +91,7 @@ export class Value<T> {
                     unsubscribe: state.unsubscribe,
                 };
             } else {
-                assertNever('withKeepAlive -> connect -> assert', state);
+                assertNever(state);
             }
 
             return () => {
@@ -115,7 +115,7 @@ export class Value<T> {
                         timer
                     }
                 } else {
-                    assertNever('withKeepAlive -> disconnect -> assert', state);
+                    assertNever(state);
                 }
             };
         });

@@ -1,5 +1,5 @@
 
-export const assertNever = (lebel: string, value: never): never => {
+export const assertNever = (value: never): never => {
     console.error(value);
-    throw Error(`assert never: ${lebel}`);
+    throw Error('assert never');
 }
