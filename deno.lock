@@ -5,12 +5,10 @@
     "jsr:@std/expect@*": "1.0.5",
     "jsr:@std/internal@^1.0.4": "1.0.4",
     "npm:@js-temporal/polyfill@*": "0.4.4",
-    "npm:@types/node@^20.12.12": "20.16.2",
     "npm:@types/react@*": "18.3.11",
     "npm:mobx-react-lite@*": "4.0.7_mobx@6.13.4_react@18.3.1",
     "npm:mobx@^6.13.2": "6.13.4",
     "npm:react@*": "18.3.1",
-    "npm:typescript@^5.4.5": "5.6.3",
     "npm:unws@*": "0.2.4_ws@8.18.0",
     "npm:zod@*": "3.23.8"
   },
@@ -38,12 +36,6 @@
       "dependencies": [
         "jsbi",
         "tslib"
-      ]
-    },
-    "@types/node@20.16.2": {
-      "integrity": "sha512-91s/n4qUPV/wg8eE9KHYW1kouTfDk2FPGjXbBMfRWP/2vg1rCXNQL1OCabwGs0XSdukuK+MwCDXE30QpSeMUhQ==",
-      "dependencies": [
-        "undici-types"
       ]
     },
     "@types/prop-types@15.7.13": {
@@ -91,12 +83,6 @@
     "tslib@2.8.0": {
       "integrity": "sha512-jWVzBLplnCmoaTr13V9dYbiQ99wvZRd0vNWaDRg+aVYRcjDF3nDksxFDE/+fkXnKhpnUUkmx5pK/v8mCtLVqZA=="
     },
-    "typescript@5.6.3": {
-      "integrity": "sha512-hjcS1mhfuyi4WW8IWtjP7brDrG2cuDZukyrYrSauoXGNgx0S7zceP07adYkJycEr56BOUTNPzbInooiN3fn1qw=="
-    },
-    "undici-types@6.19.8": {
-      "integrity": "sha512-ve2KP6f/JnbPBFyobGHuerC9g1FYGn/F8n1LWTwNxCEzd6IfqTwUQcNXgEtmmQ6DlRrC1hrSrBnCZPokRrDHjw=="
-    },
     "unws@0.2.4_ws@8.18.0": {
       "integrity": "sha512-/N1ajiqrSp0A/26/LBg7r10fOcPtGXCqJRJ61sijUFoGZMr6ESWGYn7i0cwr7fR7eEECY5HsitqtjGHDZLAu2w==",
       "dependencies": [
@@ -120,12 +106,10 @@
     "packageJson": {
       "dependencies": [
         "npm:@js-temporal/polyfill@*",
-        "npm:@types/node@^20.12.12",
         "npm:@types/react@*",
         "npm:mobx-react-lite@*",
         "npm:mobx@^6.13.2",
         "npm:react@*",
-        "npm:typescript@^5.4.5",
         "npm:unws@*",
         "npm:zod@*"
       ]
