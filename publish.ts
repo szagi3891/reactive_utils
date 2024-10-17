@@ -7,8 +7,7 @@ const ContentZod = z.object({
     version: z.string(),
     exports: z.string(),
     license: z.string(),
-    
-});
+}).passthrough();
 
 const throwNever = (): never => {
     throw Error('Never ...');
@@ -33,6 +32,10 @@ const main = async (): Promise<void> => {
     await fs.promises.writeFile('./jsr.json', JSON.stringify(content, null, 4));
 
     console.info(`git add . && git commit -am "version ${nextVersion}" && npx jsr publish && git push origin main:main`);
+
+    const contentDenoJson = ContentZod.parse(JSON.parse((await fs.promises.readFile('./deno.json')).toString()));
+    contentDenoJson.version = nextVersion;
+    await fs.promises.writeFile('./deno.json', JSON.stringify(content, null, 4));
 };
 
 main().then(() => {

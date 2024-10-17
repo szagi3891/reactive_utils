@@ -1,10 +1,6 @@
 {
     "name": "@reactive/utils",
-    "version": "0.5.85",
+    "version": "0.5.87",
     "exports": "./index.ts",
-    "license": "MIT",
-    "compilerOptions": {
-        "noUncheckedIndexedAccess": true,
-        "noPropertyAccessFromIndexSignature": true
-    }
+    "license": "MIT"
 }
