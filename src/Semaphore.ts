@@ -1,4 +1,4 @@
-import { PromiseBox } from './PromiseBox';
+import { PromiseBox } from './PromiseBox.ts';
 
 export class Semaphore {
     private currentTask: number = 0;

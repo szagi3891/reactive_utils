@@ -1,9 +1,9 @@
 
-import { expect, test } from 'vitest';
-import { Defer } from './Defer';
-import { timeout } from './timeout';
+import { expect } from "jsr:@std/expect";
+import { Defer } from './Defer.ts';
+import { timeout } from './timeout.ts';
 
-test('Defer', async () => {
+Deno.test('Defer', async () => {
     const out: Array<string> = [];
 
     const main22 = async (): Promise<void> => {

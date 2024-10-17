@@ -1,5 +1,5 @@
 // console.info('podbijam wersję ');
-import fs from 'fs';
+import fs from 'node:fs';
 import { z } from 'zod';
 
 const ContentZod = z.object({

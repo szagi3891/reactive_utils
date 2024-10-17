@@ -1,6 +1,6 @@
-import { Result } from '../Result';
-import { Value } from '../Value';
-import { FormErrorMessage, FormChildTrait, FormChildType, FormModelTrait, FormModelType, errorForView } from './FormTypes';
+import { Result } from '../Result.ts';
+import { Value } from '../Value.ts';
+import { FormErrorMessage, FormChildTrait, FormChildType, FormModelTrait, FormModelType, errorForView } from './FormTypes.ts';
 
 type FormRecordBox = Record<string, { [FormChildTrait](): FormChildType, [FormModelTrait](): FormModelType<unknown> }>;
 

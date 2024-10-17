@@ -1,5 +1,5 @@
 import z from 'zod';
-import { Value } from './Value';
+import { Value } from './Value.ts';
 import { autorun } from 'mobx';
 
 type UnsubscrbeType = () => void;

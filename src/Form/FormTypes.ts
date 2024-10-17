@@ -1,4 +1,4 @@
-import { Result } from '../Result';
+import { Result } from '../Result.ts';
 
 export const FormChildTrait: unique symbol = Symbol();
 

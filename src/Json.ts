@@ -1,5 +1,5 @@
 import { z } from 'zod';
-import { Result } from './Result';
+import { Result } from './Result.ts';
 
 export type JSONValue = 
     | string 
@@ -20,7 +20,7 @@ export const jsonParse = <T>(text: string, validator: z.ZodType<T>): Result<T, s
         }
 
         return Result.error(`Validation (zod) -> error=${data.error.toString()} data=${JSON.stringify(text, null, 4)}`);
-    } catch (error) {
+    } catch (_error) {
         return Result.error(`Parsing error json data=${JSON.stringify(text, null, 4)}`);
     }
 };

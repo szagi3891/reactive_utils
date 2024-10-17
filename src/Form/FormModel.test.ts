@@ -1,12 +1,12 @@
-import { expect, test } from 'vitest';
-import { FormInputState } from './FormInputState';
-import { FormErrorMessage } from './FormTypes';
-import { Result } from '../Result';
+import { expect } from "jsr:@std/expect";
+import { FormInputState } from './FormInputState.ts';
+import { FormErrorMessage } from './FormTypes.ts';
+import { Result } from '../Result.ts';
 
 const errorMessage = 'Przynajmnie dwa znaki wprowadz';
 const createError = (): Result<string, string> => Result.error(errorMessage);
 
-test('Visited', () => {
+Deno.test('Visited', () => {
     const field = FormInputState.new('').map((value: string): Result<string, string> => {
         if (value.length < 2) {
             return createError();

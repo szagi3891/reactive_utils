@@ -1,7 +1,7 @@
-import { PromiseBox } from './PromiseBox';
-import { AsyncQuery, AsyncQueryIterator } from "./AsyncQuery";
+import { PromiseBox } from './PromiseBox.ts';
+import { AsyncQuery, AsyncQueryIterator } from "./AsyncQuery.ts";
 import { WebSocket } from 'unws';
-import { AutoId } from "./AutoId";
+import { AutoId } from "./AutoId.ts";
 
 const autoId = new AutoId();
 

@@ -11,12 +11,11 @@
   },
   "devDependencies": {
     "@types/node": "^20.12.12",
-    "@vitest/coverage-v8": "^2.1.1",
-    "typescript": "^5.4.5",
-    "vitest": "^2.1.1"
+    "typescript": "^5.4.5"
   },
   "scripts": {
     "ts-check": "tsc",
-    "test": "vitest --run"
+    "_test": "vitest --run",
+    "test": "deno test  --allow-hrtime --v8-flags=\"--expose-gc\" --trace-leaks"
   }
 }

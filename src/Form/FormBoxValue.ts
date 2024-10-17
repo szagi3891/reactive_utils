@@ -1,6 +1,6 @@
 
-import { Value } from '../Value';
-import { FormChildTrait, FormChildType } from './FormTypes';
+import { Value } from '../Value.ts';
+import { FormChildTrait, FormChildType } from './FormTypes.ts';
 
 type Option<K> = {
     type: 'some',

@@ -1,4 +1,4 @@
-import { PrimitiveType, reduceComplexSymbol } from "./PrimitiveType";
+import { PrimitiveType, reduceComplexSymbol } from "./PrimitiveType.ts";
 
 class AutoMapSerialized<K, V> {
     private data: Map<string, V>;

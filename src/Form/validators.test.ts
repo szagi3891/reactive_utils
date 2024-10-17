@@ -1,14 +1,14 @@
-import { expect, test } from 'vitest';
-import { validateConvertToNumber, validateConvertToNumeric } from './validators';
+import { expect } from "jsr:@std/expect";
+import { validateConvertToNumber, validateConvertToNumeric } from './validators.ts';
 
-test('validators', () => {
+Deno.test('validators', () => {
     expect(validateConvertToNumber('oczekiwano liczby')('44')).toEqual({
         type: 'ok',
         value: 44
     });
 });
 
-test('', () => {
+Deno.test('validators2', () => {
     expect(validateConvertToNumeric('aa')).toEqual({
         type: 'error',
         error: 'Nieprawidłowy znak a'

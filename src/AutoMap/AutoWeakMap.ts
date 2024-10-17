@@ -1,5 +1,5 @@
-import { AutoMap } from "./AutoMap";
-import { PrimitiveType } from "./PrimitiveType";
+import { AutoMap } from "./AutoMap.ts";
+import { PrimitiveType } from "./PrimitiveType.ts";
 
 class CommonRef {
     protected nominal?: never;

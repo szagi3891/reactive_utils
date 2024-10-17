@@ -39,7 +39,7 @@ export type ResourceResult<T> = ResultLoading | ResultReady<T> | ResultError;
 
 const send = <T>(loadValue: () => Promise<T>): Promise<ResourceResult<T>> => {
     return new Promise(async (resolve) => {
-        setTimeout(() => {
+        const timer = setTimeout(() => {
             resolve({
                 type: 'error',
                 message: 'timeout',
@@ -49,6 +49,7 @@ const send = <T>(loadValue: () => Promise<T>): Promise<ResourceResult<T>> => {
         try {
             const loadedValue = await loadValue();
 
+            clearTimeout(timer);
             resolve({
                 type: 'ready',
                 value: loadedValue,
@@ -56,6 +57,7 @@ const send = <T>(loadValue: () => Promise<T>): Promise<ResourceResult<T>> => {
         } catch (err) {
             console.error(err);
 
+            clearTimeout(timer);
             resolve({
                 type: 'error',
                 message: String(err),

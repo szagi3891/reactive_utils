@@ -1,5 +1,5 @@
 import { Temporal } from "@js-temporal/polyfill";
-import { Result } from '../Result';
+import { Result } from '../Result.ts';
 
 const parseNumber = (input: string): number | null => {
     // Próbujemy sparsować ciąg do liczby

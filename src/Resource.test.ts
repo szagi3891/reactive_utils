@@ -1,8 +1,8 @@
-import { expect, test } from 'vitest';
-import { Resource } from './Resource';
-import { timeout } from './timeout';
+import { expect } from "jsr:@std/expect";
+import { Resource } from './Resource.ts';
+import { timeout } from './timeout.ts';
 
-test('refresh on an uninitialized resource should not send any request', async () => {
+Deno.test('refresh on an uninitialized resource should not send any request', async () => {
     let execCounter: number = 0;
 
     const inst = Resource.browserAndServer<number>(async () => {
@@ -24,7 +24,7 @@ test('refresh on an uninitialized resource should not send any request', async (
     expect(execCounter).toBe(0);
 });
 
-test('refresh on initialized resource should send one request', async () => {
+Deno.test('refresh on initialized resource should send one request', async () => {
     let execCounter: number = 0;
 
     const inst = Resource.browserAndServer<number>(async () => {
@@ -79,7 +79,7 @@ test('refresh on initialized resource should send one request', async () => {
     expect(execCounter).toBe(5);
 });
 
-test('error catch', async () => {
+Deno.test('error catch', async () => {
     let execCounter: number = 0;
 
     const inst = Resource.browserAndServer<number>(async () => {

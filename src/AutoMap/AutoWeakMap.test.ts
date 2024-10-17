@@ -1,7 +1,7 @@
-import { expect, test } from 'vitest';
-import { timeout } from '../timeout';
-import { AutoWeakMap, autoWeakMapKey } from './AutoWeakMap';
-import { gc } from '../gc';
+import { timeout } from '../timeout.ts';
+import { AutoWeakMap, autoWeakMapKey } from './AutoWeakMap.ts';
+import { gc } from '../gc.ts';
+import { expect } from "jsr:@std/expect";
 
 class MemoryHelper {
     private registry: FinalizationRegistry<unknown>;
@@ -37,7 +37,7 @@ class MemoryHelper {
     }
 }
 
-test('MemoryHelper', async () => {
+Deno.test('MemoryHelper', async () => {
     gc();
 
     // if (typeof global.gc !== 'function') {
@@ -58,7 +58,7 @@ test('MemoryHelper', async () => {
     await memoryHelper.whenRemoved('id1');
 });
 
-test('AutoWeakMap.create', async () => {
+Deno.test('AutoWeakMap.create', async () => {
     // if (typeof global.gc !== 'function') {
     //     throw new Error('Garbage collector is not exposed. Run node with --expose-gc.');
     // }

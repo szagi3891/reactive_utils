@@ -1,4 +1,4 @@
-import { PromiseBox } from './PromiseBox';
+import { PromiseBox } from './PromiseBox.ts';
 
 export interface AsyncQueryIterator<T> {
     next(): Promise<IteratorResult<T>>;

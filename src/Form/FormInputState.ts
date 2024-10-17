@@ -1,7 +1,7 @@
-import { FormModel } from './FormModel';
-import { FormBoxValue } from './FormBoxValue';
-import { FormChildTrait, FormChildType, FormErrorMessage, FormModelTrait, FormModelType } from './FormTypes';
-import { Result } from '../Result';
+import { FormModel } from './FormModel.ts';
+import { FormBoxValue } from './FormBoxValue.ts';
+import { FormChildTrait, FormChildType, FormErrorMessage, FormModelTrait, FormModelType } from './FormTypes.ts';
+import { Result } from '../Result.ts';
 
 export class FormInputState<K, M> implements FormModelType<M> {
     private readonly box: FormBoxValue<K>;
@@ -24,12 +24,12 @@ export class FormInputState<K, M> implements FormModelType<M> {
 
     public static fromModel<K>(getValue: () => K): FormInputState<K, K> {
         const box = new FormBoxValue<K>(getValue);
-        const model = new FormModel(
+        const model = new FormModel<K>(
             () => [box],
             (): Result<K, Array<FormErrorMessage>> => Result.ok(box.getValue())
         );
 
-        return new FormInputState(box, model);
+        return new FormInputState<K, K>(box, model);
     }
 
     public setValue(value: K): void {

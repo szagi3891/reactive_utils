@@ -1,17 +1,17 @@
-import { expect, test } from 'vitest';
+import { expect } from "jsr:@std/expect";
 // import { timeout } from './timeout';
-import { Value } from './Value';
+import { Value } from './Value.ts';
 import { autorun } from 'mobx';
-import { timeout } from './timeout';
+import { timeout } from './timeout.ts';
 
-test('basic', async () => {
+Deno.test('basic', async () => {
     const value = new Value<number>(1);
     expect(value.getValue()).toBe(1);
     value.setValue(444);
     expect(value.getValue()).toBe(444);
 });
 
-test('observed', async () => {
+Deno.test('observed', async () => {
     const value = new Value<number>(1);
 
     expect(value.isObserved()).toBe(false);
@@ -25,7 +25,7 @@ test('observed', async () => {
     expect(value.isObserved()).toBe(false);
 });
 
-test('connect', () => {
+Deno.test('connect', () => {
     let connect: boolean = false;
     let set: ((value: number) => void) = () => {};
 
@@ -64,7 +64,7 @@ test('connect', () => {
     expect(value.getValue()).toBe(99);
 });
 
-test('withKeepAlive', async () => {
+Deno.test('withKeepAlive', async () => {
     let connectCount: number = 0;
     let connect: boolean = false;
     let set: ((value: number) => void) = () => {};
@@ -142,4 +142,7 @@ test('withKeepAlive', async () => {
     expect(connect).toBe(true);
 
     dispose3();
+
+    //Po to żeby timer się wyczyścił
+    await timeout(500);
 });
