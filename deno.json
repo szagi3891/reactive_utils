@@ -1,4 +1,7 @@
 {
+    "name": "@reactive/utils",
+    "version": "0.5.85",
+    "exports": "./index.ts",
     "compilerOptions": {
         "noUncheckedIndexedAccess": true,
         "noPropertyAccessFromIndexSignature": true
