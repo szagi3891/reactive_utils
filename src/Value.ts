@@ -1,4 +1,5 @@
-import { createAtom, IAtom } from "mobx";
+import { createAtom } from "mobx";
+import type { IAtom } from "mobx";
 import { assertNever } from "./assertNever.ts";
 
 type UnsubscrbeType = () => void;

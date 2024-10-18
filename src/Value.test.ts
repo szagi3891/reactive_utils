@@ -4,14 +4,14 @@ import { Value } from './Value.ts';
 import { autorun } from 'mobx';
 import { timeout } from './timeout.ts';
 
-Deno.test('basic', async () => {
+Deno.test('basic', () => {
     const value = new Value<number>(1);
     expect(value.getValue()).toBe(1);
     value.setValue(444);
     expect(value.getValue()).toBe(444);
 });
 
-Deno.test('observed', async () => {
+Deno.test('observed', () => {
     const value = new Value<number>(1);
 
     expect(value.isObserved()).toBe(false);
