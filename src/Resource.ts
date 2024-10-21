@@ -1,6 +1,6 @@
 import { autorun } from 'mobx';
 import { PromiseBox } from './PromiseBox.ts';
-import { Value } from './Value.ts';
+import { Value, type ConnectType } from './Value.ts';
 
 const TIMEOUT = 10000;
 
@@ -38,19 +38,21 @@ export namespace ResourceResult {
 export type ResourceResult<T> = ResultLoading | ResultReady<T> | ResultError;
 
 const send = <T>(loadValue: () => Promise<T>): Promise<ResourceResult<T>> => {
-    return new Promise(async (resolve) => {
-        const timer = setTimeout(() => {
-            resolve({
-                type: 'error',
-                message: 'timeout',
-            });
-        }, TIMEOUT);
+    const response = new PromiseBox<ResourceResult<T>>();
 
+    const timer = setTimeout(() => {
+        response.resolve({
+            type: 'error',
+            message: 'timeout',
+        });
+    }, TIMEOUT);
+
+    (async () => {
         try {
             const loadedValue = await loadValue();
 
             clearTimeout(timer);
-            resolve({
+            response.resolve({
                 type: 'ready',
                 value: loadedValue,
             });
@@ -58,12 +60,14 @@ const send = <T>(loadValue: () => Promise<T>): Promise<ResourceResult<T>> => {
             console.error(err);
 
             clearTimeout(timer);
-            resolve({
+            response.resolve({
                 type: 'error',
                 message: String(err),
             });
         }
-    });
+    })();
+
+    return response.promise;
 };
 
 class Request<T> {
@@ -121,8 +125,11 @@ class Request<T> {
 export class Resource<T> {
     private request: Value<Request<T>>;
 
-    private constructor(private readonly loadValue: () => Promise<T>) {
-        this.request = new Value(new Request(this.loadValue, null));
+    private constructor(private readonly loadValue: () => Promise<T>, onConnect?: ConnectType<Request<T>>) {
+        this.request = new Value(
+            new Request(this.loadValue, null),
+            onConnect
+        );
     }
 
     public static browserAndServer<T>(loadValue: () => Promise<T>): Resource<T> {
@@ -138,7 +145,7 @@ export class Resource<T> {
         }
     }
 
-    public async getAsync(): Promise<T> {
+    public getAsync(): Promise<T> {
         const result = new PromiseBox<T>();
 
         const dispose = autorun((dispose) => {

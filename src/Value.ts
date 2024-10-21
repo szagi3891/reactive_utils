@@ -3,7 +3,7 @@ import type { IAtom } from "mobx";
 import { assertNever } from "./assertNever.ts";
 
 type UnsubscrbeType = () => void;
-type ConnectType<T> = (setValue: (newValue: T) => void) => UnsubscrbeType;
+export type ConnectType<T> = (setValue: (newValue: T) => void) => UnsubscrbeType;
 
 export class Value<T> {
     private value: T;
