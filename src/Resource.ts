@@ -132,16 +132,16 @@ export class Resource<T> {
         );
     }
 
-    public static browserAndServer<T>(loadValue: () => Promise<T>): Resource<T> {
-        return new Resource(loadValue);
+    public static browserAndServer<T>(loadValue: () => Promise<T>, onConnect?: ConnectType<Request<T>>): Resource<T> {
+        return new Resource(loadValue, onConnect);
     }
 
-    public static browser<T>(loadValue: () => Promise<T>): Resource<T> {
+    public static browser<T>(loadValue: () => Promise<T>, onConnect?: ConnectType<Request<T>>): Resource<T> {
         //Do not initiate on server side
         if (typeof window === 'undefined') {
             return new Resource(() => new Promise(() => {}));
         } else {
-            return new Resource(loadValue);
+            return new Resource(loadValue, onConnect);
         }
     }
 
