@@ -44,3 +44,22 @@ export class PromiseBox<T> {
         return this.isFull;
     }
 }
+
+export class PromiseBoxOptimistic<T> {
+    private readonly box: PromiseBox<T>;
+    constructor() {
+        this.box = new PromiseBox();
+    }
+
+    public resolve(value: T): void {
+        this.box.resolve(value);
+    }
+
+    public get promise(): Promise<T> {
+        return this.box.promise;
+    }
+
+    public isFulfilled(): boolean {
+        return this.box.isFulfilled();
+    }
+}

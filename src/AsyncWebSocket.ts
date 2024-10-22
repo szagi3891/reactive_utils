@@ -1,4 +1,4 @@
-import { PromiseBox } from './PromiseBox.ts';
+import { PromiseBox, PromiseBoxOptimistic } from './PromiseBox.ts';
 import { AsyncQuery, AsyncQueryIterator } from "./AsyncQuery.ts";
 import { WebSocket } from 'unws';
 import { AutoId } from "./AutoId.ts";
@@ -65,7 +65,7 @@ export class AsyncWebSocket {
     }
 
     static create(host: string, timeout: number, log: boolean): Promise<AsyncWebSocket> {
-        const result = new PromiseBox<AsyncWebSocket>();
+        const result = new PromiseBoxOptimistic<AsyncWebSocket>();
         const id = autoId.get();
 
         try {

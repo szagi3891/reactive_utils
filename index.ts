@@ -3,7 +3,7 @@ export { Value } from './src/Value.ts';
 export { ValueLocalStorage } from './src/ValueLocalStorage.ts';
 export { Resource } from './src/Resource.ts';
 export { ResourceResult } from './src/Resource.ts';
-export { PromiseBox } from './src/PromiseBox.ts';
+export { PromiseBox, PromiseBoxOptimistic } from './src/PromiseBox.ts';
 export { AutoMap } from './src/AutoMap/AutoMap.ts';
 export { autoMapKeyAsString, reduceComplexSymbol } from './src/AutoMap/PrimitiveType.ts';
 export type { PrimitiveType } from './src/AutoMap/PrimitiveType.ts';
