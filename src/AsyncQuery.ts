@@ -1,11 +1,12 @@
 import { AbortBox } from "./AbortBox.ts";
 import { PromiseBox } from "./PromiseBox.ts";
+import { Result } from "./Result.ts";
 
 export class AsyncQueryIterator<T> {
     private isSubscribe: boolean = true;
-    private currentBox: PromiseBox<T | null> | null = null;
+    private currentBox: PromiseBox<Result<T, null>> | null = null;
 
-    constructor(private readonly get: () => PromiseBox<T | null>) {}
+    constructor(private readonly get: () => PromiseBox<Result<T, null>>) {}
 
     [Symbol.asyncIterator](): { next: () => Promise<IteratorResult<T>> } {
         const next = async (): Promise<IteratorResult<T>> => {
@@ -22,7 +23,7 @@ export class AsyncQueryIterator<T> {
             const value = await box.promise;
             
             
-            if (value === null) {
+            if (value.type === 'error') {
                 return {
                     value: undefined,
                     done: true,
@@ -30,7 +31,7 @@ export class AsyncQueryIterator<T> {
             }
 
             return {
-                value,
+                value: value.value,
                 done: false,
             };
         }
@@ -43,14 +44,16 @@ export class AsyncQueryIterator<T> {
     unsubscribe() {
         if (this.isSubscribe === true) {
             this.isSubscribe = false;
-            this.currentBox?.resolve(null);
+            this.currentBox?.resolve(Result.error(null));
         }
     }
 }
 
+// const dd: Result<string, string> = Result.ok('a');
+
 export class AsyncQuery<T> {
-    private receiviers: Array<PromiseBox<T | null>> = [];
-    private senders: Array<PromiseBox<T | null>> | null = []; //null - query is close
+    private receiviers: Array<PromiseBox<Result<T, null>>> = [];
+    private senders: Array<PromiseBox<Result<T, null>>> | null = []; //null - query is close
     private readonly abort: AbortBox = new AbortBox();
     public onAbort = this.abort.onAbort;
 
@@ -79,14 +82,14 @@ export class AsyncQuery<T> {
             const first = this.senders.shift();
 
             if (first === undefined) {
-                const box = new PromiseBox<T | null>();
+                const box = new PromiseBox<Result<T, null>>();
                 this.receiviers.push(box);
-                box.resolve(value);
+                box.resolve(Result.ok(value));
                 return;
             }
 
             if (first.isFulfilled() === false) {
-                first.resolve(value);
+                first.resolve(Result.ok(value));
                 return;
             }
         }
@@ -102,21 +105,21 @@ export class AsyncQuery<T> {
         this.senders = null;
 
         for (const sender of senders) {
-            sender.resolve(null);
+            sender.resolve(Result.error(null));
         }
     }
 
-    private get = (): PromiseBox<T | null> => {
+    private get = (): PromiseBox<Result<T, null>> => {
         if (this.senders === null) {
-            const box = new PromiseBox<T | null>();
-            box.resolve(null);
+            const box = new PromiseBox<Result<T, null>>();
+            box.resolve(Result.error(null));
             return box;
         }
 
         const first = this.receiviers.shift();
 
         if (first === undefined) {
-            const box = new PromiseBox<T | null>();
+            const box = new PromiseBox<Result<T, null>>();
             this.senders.push(box);
             return box;
         }
@@ -126,5 +129,9 @@ export class AsyncQuery<T> {
 
     public subscribe(): AsyncQueryIterator<T> {
         return new AsyncQueryIterator(this.get);
+    }
+
+    public resetAndSubscribe(): AsyncQueryIterator<T> {
+        throw Error('TODO');
     }
 }

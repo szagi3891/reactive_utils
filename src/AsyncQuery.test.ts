@@ -2,7 +2,7 @@ import { AsyncQuery, AsyncQueryIterator } from "./AsyncQuery.ts";
 import { expect } from "jsr:@std/expect";
 import { timeout } from "./timeout.ts";
 
-const subscribeTo = (query: AsyncQuery<number>, result: Array<number>): AsyncQueryIterator<number> => {
+const subscribeTo = <K>(query: AsyncQuery<K>, result: Array<K>): AsyncQueryIterator<K> => {
     const iterator = query.subscribe();
 
     (async () => {
@@ -136,6 +136,32 @@ Deno.test('multi', async () => {
 });
 
 
+Deno.test('with null', async () => {
+    const list: Array<string | null> = [];
+    const query = new AsyncQuery();
+
+    const _sub = subscribeTo(query, list);
+
+    expect(list).toEqual([]);
+
+    query.push('aa');
+    query.push('bb');
+    await timeout(0);
+
+    expect(list).toEqual(['aa', 'bb']);
+
+    query.push(null);
+    query.push('cc');
+    await timeout(0);
+
+    expect(list).toEqual(['aa', 'bb', null, 'cc']);
+
+    query.push('dd');
+    query.push('ee');
+    await timeout(0);
+
+    expect(list).toEqual(['aa', 'bb', null, 'cc', 'dd', 'ee']);
+});
 /*
     zrobić test z dwoma konsumerami
 */
