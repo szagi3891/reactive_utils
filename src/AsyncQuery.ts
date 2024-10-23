@@ -130,8 +130,4 @@ export class AsyncQuery<T> {
     public subscribe(): AsyncQueryIterator<T> {
         return new AsyncQueryIterator(this.get);
     }
-
-    public resetAndSubscribe(): AsyncQueryIterator<T> {
-        throw Error('TODO');
-    }
 }
