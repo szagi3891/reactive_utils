@@ -41,6 +41,10 @@ export class AsyncWebSocket {
         this.stream.close();
     }
 
+    public get abortSignal(): AbortSignal {
+        return this.stream.query.abortSignal;
+    }
+    
     public isClose(): boolean {
         return this.stream.isClose();
     }
