@@ -7,7 +7,7 @@ export class AsyncQueryIterator<T> {
 
     constructor(private readonly get: () => PromiseBox<T | null>) {}
 
-    [Symbol.asyncIterator]() {
+    [Symbol.asyncIterator](): { next: () => Promise<IteratorResult<T>> } {
         const next = async (): Promise<IteratorResult<T>> => {
             if (this.isSubscribe === false) {
                 return {
