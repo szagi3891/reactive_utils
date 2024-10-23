@@ -8,14 +8,14 @@ export class AsyncQuery<T> {
     private receiviers: Array<Promise<T | null>> = [];
     private senders: Array<PromiseBox<T | null>> | null = []; //null - query is close
     private iteratorCreated: null | Error = null;
-    private readonly doneBox: PromiseBox<void>;
+    private readonly abort: AbortController;
 
     constructor() {
-        this.doneBox = new PromiseBox();
+        this.abort = new AbortController();
     }
 
-    public get done(): Promise<void> {
-        return this.doneBox.promise;
+    public get abortSignal(): AbortSignal {
+        return this.abort.signal;
     }
 
     [Symbol.dispose]() {
@@ -49,7 +49,7 @@ export class AsyncQuery<T> {
     }
 
     public close(): void {
-        this.doneBox.resolve();
+        this.abort.abort();
 
         if (this.senders === null) {
             return;
@@ -62,7 +62,7 @@ export class AsyncQuery<T> {
         }
     }
 
-    public get = async (): Promise<T | null> => {
+    public get = (): Promise<T | null> => {
         if (this.senders === null) {
             return Promise.resolve(null);
         }
