@@ -36,8 +36,8 @@ export class AsyncWebSocket {
         this.onAbort = this.stream.query.onAbort;
     }
 
-    [Symbol.asyncIterator](): AsyncQueryIterator<MessageEvent<unknown>> {
-        return this.stream.query[Symbol.asyncIterator]();
+    subscribe(): AsyncQueryIterator<MessageEvent<unknown>> {
+        return this.stream.query.subscribe();
     }
 
     [Symbol.dispose]() {
