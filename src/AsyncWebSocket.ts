@@ -1,5 +1,6 @@
-import { PromiseBox, PromiseBoxOptimistic } from './PromiseBox.ts';
-import { AsyncQuery, AsyncQueryIterator } from "./AsyncQuery.ts";
+import { PromiseBoxOptimistic } from './PromiseBox.ts';
+import { AsyncQuery } from "./AsyncQuery.ts";
+import type { AsyncQueryIterator } from "./AsyncQuery.ts";
 import { WebSocket } from 'unws';
 import { AutoId } from "./AutoId.ts";
 
@@ -66,7 +67,7 @@ export class AsyncWebSocket {
 
     static create(host: string, timeout: number, log: boolean): Promise<AsyncWebSocket> {
         const result = new PromiseBoxOptimistic<AsyncWebSocket>();
-        const id = autoId.get();
+        const id = autoId.get().toString();
 
         try {
             console.info(`AsyncWebSocket ${id}: connect to ${host}`);
