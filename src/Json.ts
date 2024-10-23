@@ -1,4 +1,4 @@
-import type { z } from 'zod';
+import { z } from 'zod';
 import { Result } from './Result.ts';
 
 export type JSONValue = 
