@@ -26,6 +26,10 @@ export class AsyncQuery<T> {
         return this.senders === null;
     }
 
+    public isOpen(): boolean {
+        return this.isClose() === false;
+    }
+
     public push(value: T): void {
         if (this.senders === null) {
             console.warn('AsyncQuery is close');
