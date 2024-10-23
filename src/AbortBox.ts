@@ -3,8 +3,7 @@ import { EventEmitter } from "./EventEmitter.ts";
 export type AbortBoxFn = (callback: () => void) => (() => void);
 
 export class AbortBox {
-    private abortFlag: boolean = false;
-    private emmit: EventEmitter<void>;
+    private emmit: EventEmitter<void> | null;
 
     constructor() {
         this.emmit = new EventEmitter();
@@ -12,7 +11,7 @@ export class AbortBox {
 
     onAbort = (callback: () => void): (() => void) => {
 
-        if (this.abortFlag) {
+        if (this.emmit === null) {
             callback();
             return () => {};
         }
@@ -24,10 +23,10 @@ export class AbortBox {
     }
 
     abort() {
-        if (this.abortFlag) {
+        if (this.emmit === null) {
             return;
         }
-        this.abortFlag = true;
         this.emmit.trigger();
+        this.emmit = null;
     }
 }
