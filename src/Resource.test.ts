@@ -1,6 +1,8 @@
 import { expect } from "jsr:@std/expect";
 import { Resource } from './Resource.ts';
 import { timeout } from './timeout.ts';
+import { AsyncQuery } from "../index.ts";
+import { autorun } from 'mobx';
 
 Deno.test('refresh on an uninitialized resource should not send any request', async () => {
     let execCounter: number = 0;
@@ -115,4 +117,98 @@ Deno.test('error catch', async () => {
 
     await inst.refresh();
     expect(inst.getReady()).toBe(3);
+});
+
+Deno.test('refresh', async () => {
+    let execCounter: number = 0;
+
+    // const queryTriggers = new AsyncQuery<void>();
+
+    const inst = Resource.browserAndServer(
+        async () => {
+            console.info('exec ...');
+            await timeout(0);
+            execCounter += 1;
+            return 0;
+        },
+        // () => {
+
+        //     const sub = queryTriggers.subscribe();
+
+
+
+        //     return () => {
+
+        //     };
+        // }
+    );
+
+    const dispose = autorun(() => {
+        console.info('autorun ...');
+        const _data = inst.getReady();
+    });
+
+    expect(execCounter).toBe(0);
+
+    await inst.refresh();
+    await timeout(100);
+
+    expect(execCounter).toBe(1);
+
+    await inst.refresh();
+    await timeout(100);
+
+    expect(execCounter).toBe(2);
+
+    dispose();
+    await timeout(100);
+});
+
+
+Deno.test('refresh in connect', async () => {
+    let execCounter: number = 0;
+
+    const refreshTriggers = new AsyncQuery<void>();
+
+    const inst = Resource.browserAndServer(
+        async () => {
+            console.info('exec ...');
+            await timeout(0);
+            execCounter += 1;
+            return 0;
+        },
+        () => {
+
+            const sub = refreshTriggers.subscribe();
+
+            (async () => {
+                for await (const _ of sub) {
+                    await inst.refresh();
+                }
+            })();
+
+
+            return () => {
+                sub.unsubscribe();
+            };
+        }
+    );
+
+    const dispose = autorun(() => {
+        console.info('autorun ...');
+        const _data = inst.getReady();
+    });
+
+    expect(execCounter).toBe(0);
+
+    refreshTriggers.push();
+    await timeout(100);
+    expect(execCounter).toBe(1);
+
+    refreshTriggers.push();
+    await timeout(100);
+    expect(execCounter).toBe(2);
+
+    dispose();
+    await timeout(100);
 });

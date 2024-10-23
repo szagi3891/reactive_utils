@@ -35,7 +35,7 @@ const main = async (): Promise<void> => {
 
     const contentDenoJson = ContentZod.parse(JSON.parse((await fs.promises.readFile('./deno.json')).toString()));
     contentDenoJson.version = nextVersion;
-    await fs.promises.writeFile('./deno.json', JSON.stringify(content, null, 4));
+    await fs.promises.writeFile('./deno.json', JSON.stringify(contentDenoJson, null, 4));
 };
 
 main().then(() => {
