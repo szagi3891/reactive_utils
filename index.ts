@@ -36,6 +36,8 @@ export {
     validateEmail
 } from './src/Form/validators.ts';
 export { sort } from './src/sort.ts';
+export { AbortBox } from './src/AbortBox.ts';
+export type { AbortBoxFn } from './src/AbortBox.ts';
 
 //... without jsx
 

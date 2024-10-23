@@ -26,11 +26,14 @@ class SocketStream {
 }
 
 export class AsyncWebSocket {
+    public onAbort: (callback: () => void) => (() => void);
+
     private constructor(
         public readonly id: string,
         private readonly stream: SocketStream,
         private readonly log: boolean
     ) {
+        this.onAbort = this.stream.query.onAbort;
     }
 
     [Symbol.asyncIterator](): AsyncQueryIterator<MessageEvent<unknown>> {
@@ -41,9 +44,6 @@ export class AsyncWebSocket {
         this.stream.close();
     }
 
-    public get abortSignal(): AbortSignal {
-        return this.stream.query.abortSignal;
-    }
     
     public isClose(): boolean {
         return this.stream.isClose();

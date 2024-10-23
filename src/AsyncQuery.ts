@@ -1,3 +1,4 @@
+import { AbortBox } from "./AbortBox.ts";
 import { PromiseBox } from './PromiseBox.ts';
 
 export interface AsyncQueryIterator<T> {
@@ -8,14 +9,10 @@ export class AsyncQuery<T> {
     private receiviers: Array<Promise<T | null>> = [];
     private senders: Array<PromiseBox<T | null>> | null = []; //null - query is close
     private iteratorCreated: null | Error = null;
-    private readonly abort: AbortController;
+    private readonly abort: AbortBox = new AbortBox();
+    public onAbort = this.abort.onAbort;
 
     constructor() {
-        this.abort = new AbortController();
-    }
-
-    public get abortSignal(): AbortSignal {
-        return this.abort.signal;
     }
 
     [Symbol.dispose]() {
