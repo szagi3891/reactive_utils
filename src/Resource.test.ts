@@ -1,7 +1,7 @@
 import { expect } from "jsr:@std/expect";
 import { Resource } from './Resource.ts';
 import { timeout } from './timeout.ts';
-import { AsyncQuery } from "../index.ts";
+import { AsyncQuery, AutoId } from "../index.ts";
 import { autorun } from 'mobx';
 
 Deno.test('refresh on an uninitialized resource should not send any request', async () => {
@@ -212,3 +212,39 @@ Deno.test('refresh in connect', async () => {
     dispose();
     await timeout(100);
 });
+
+Deno.test('autorun', async () => {
+
+    let execAutorun: number = 0;
+    const autoid = new AutoId();
+
+    const inst = Resource.browserAndServer(
+        async (): Promise<{ id: number, }> => {
+            await timeout(100);
+            return {
+                id: autoid.get(),
+            };
+        }
+    );
+
+    const dispose = autorun(() => {
+        const _aa = inst.get();
+        execAutorun += 1;
+    });
+
+    expect(execAutorun).toBe(1);
+
+    await inst.refresh();
+
+    expect(execAutorun).toBe(2);
+
+    await timeout(100);
+    expect(execAutorun).toBe(2);
+
+    await timeout(500);
+    expect(execAutorun).toBe(2);
+
+    dispose();
+});
+
+
