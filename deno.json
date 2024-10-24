@@ -6,7 +6,8 @@
     "lint": {
         "rules": {
             "exclude": [
-                "verbatim-module-syntax"
+                "verbatim-module-syntax",
+                "no-namespace"
             ]
         }
     }

@@ -1,6 +1,7 @@
 import { autorun } from 'mobx';
 import { PromiseBox } from './PromiseBox.ts';
-import { Value, type ConnectType } from './Value.ts';
+import { Value } from './Value.ts';
+import { type ConnectType } from './ValueUnsafe.ts';
 
 const TIMEOUT = 10000;
 

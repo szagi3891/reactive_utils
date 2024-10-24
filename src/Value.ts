@@ -1,64 +1,26 @@
-import { createAtom } from "mobx";
-import type { IAtom } from "mobx";
-import { assertNever } from "./assertNever.ts";
 
-type UnsubscrbeType = () => void;
-export type ConnectType<T> = (setValue: (newValue: T) => void) => UnsubscrbeType;
+import { assertNever } from "./assertNever.ts";
+import { ValueUnsafe, type ConnectType, type UnsubscrbeType } from "./ValueUnsafe.ts";
 
 export class Value<T> {
-    private value: T;
-    private isObservedFlag: boolean;
-    private readonly atom: IAtom;
-    private unsubscribe: null | UnsubscrbeType;
+    private readonly valueUnsafe: ValueUnsafe<T>;
 
     public constructor(value: NoInfer<T>, onConnect?: ConnectType<T>) {
-        this.value = value;
-        this.isObservedFlag = false;
-        this.unsubscribe = null;
-
-        if (onConnect === undefined) {
-            this.atom = createAtom('value', () => {
-                this.isObservedFlag = true;
-            }, () => {
-                this.isObservedFlag = false;
-            });
-        } else {
-            this.atom = createAtom('valueConnect', () => {
-                this.isObservedFlag = true;
-
-                if (this.unsubscribe === null) {
-                    this.unsubscribe = onConnect((newValue) => {
-                        this.value = newValue;
-                        this.atom.reportChanged();
-                    });
-                } else {
-                    console.error('Expected null');
-                }
-            }, () => {
-                this.isObservedFlag = false;
-
-                if (this.unsubscribe === null) {
-                    console.error('Expected subscription ');
-                } else {
-                    this.unsubscribe();
-                    this.unsubscribe = null;
-                }
-            });
-        }
+        this.valueUnsafe = new ValueUnsafe(value, onConnect);
     }
 
     public setValue(value: T): void {
-        this.value = value;
-        this.atom.reportChanged();
+        this.valueUnsafe.value = value;
+        this.valueUnsafe.atom.reportChanged();
     }
 
     public getValue(): T {
-        this.atom.reportObserved();
-        return this.value;
+        this.valueUnsafe.atom.reportObserved();
+        return this.valueUnsafe.value;
     }
 
     public isObserved(): boolean {
-        return this.isObservedFlag;
+        return this.valueUnsafe.isObservedFlag;
     }
 
     public static withKeepAlive<T>(timeMs: number, value: T, onConnect: ConnectType<T>): Value<T> {
