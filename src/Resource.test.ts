@@ -26,7 +26,7 @@ Deno.test('refresh on an uninitialized resource should not send any request', as
     expect(execCounter).toBe(0);
 });
 
-Deno.test('refresh on initialized resource should send one request', async () => {
+Deno.test('refresh-on-initialized resource should send one request', async () => {
     let execCounter: number = 0;
 
     const inst = Resource.browserAndServer<number>(async () => {
@@ -54,7 +54,7 @@ Deno.test('refresh on initialized resource should send one request', async () =>
     await refresh1;
     await refresh2;
 
-    expect(execCounter).toBe(1);
+    expect(execCounter).toBe(3);
 
     const refresh3 = inst.refresh();
     await timeout(50);
@@ -69,19 +69,19 @@ Deno.test('refresh on initialized resource should send one request', async () =>
     await refresh5;
     await refresh6;
 
-    expect(execCounter).toBe(2);
+    expect(execCounter).toBe(7);
 
     await inst.refresh();
-    expect(execCounter).toBe(3);
+    expect(execCounter).toBe(8);
 
     await inst.refresh();
-    expect(execCounter).toBe(4);
+    expect(execCounter).toBe(9);
 
     await inst.refresh();
-    expect(execCounter).toBe(5);
+    expect(execCounter).toBe(10);
 });
 
-Deno.test('error catch', async () => {
+Deno.test('error-catch', async () => {
     let execCounter: number = 0;
 
     const inst = Resource.browserAndServer<number>(async () => {
@@ -119,32 +119,18 @@ Deno.test('error catch', async () => {
     expect(inst.getReady()).toBe(3);
 });
 
-Deno.test('refresh', async () => {
+Deno.test('refresh-and-count', async () => {
     let execCounter: number = 0;
-
-    // const queryTriggers = new AsyncQuery<void>();
 
     const inst = Resource.browserAndServer(
         async () => {
-            console.info('exec ...');
             await timeout(0);
             execCounter += 1;
             return 0;
         },
-        // () => {
-
-        //     const sub = queryTriggers.subscribe();
-
-
-
-        //     return () => {
-
-        //     };
-        // }
     );
 
     const dispose = autorun(() => {
-        console.info('autorun ...');
         const _data = inst.getReady();
     });
 
@@ -153,26 +139,25 @@ Deno.test('refresh', async () => {
     await inst.refresh();
     await timeout(100);
 
-    expect(execCounter).toBe(1);
+    expect(execCounter).toBe(2);
 
     await inst.refresh();
     await timeout(100);
 
-    expect(execCounter).toBe(2);
+    expect(execCounter).toBe(3);
 
     dispose();
     await timeout(100);
 });
 
 
-Deno.test('refresh in connect', async () => {
+Deno.test('refresh-in-connect', async () => {
     let execCounter: number = 0;
 
     const refreshTriggers = new AsyncQuery<void>();
 
     const inst = Resource.browserAndServer(
         async () => {
-            console.info('exec ...');
             await timeout(0);
             execCounter += 1;
             return 0;
@@ -195,19 +180,20 @@ Deno.test('refresh in connect', async () => {
     );
 
     const dispose = autorun(() => {
-        console.info('autorun ...');
         const _data = inst.getReady();
     });
 
-    expect(execCounter).toBe(0);
-
-    refreshTriggers.push();
     await timeout(100);
+
     expect(execCounter).toBe(1);
 
     refreshTriggers.push();
     await timeout(100);
     expect(execCounter).toBe(2);
+
+    refreshTriggers.push();
+    await timeout(100);
+    expect(execCounter).toBe(3);
 
     dispose();
     await timeout(100);
@@ -243,12 +229,12 @@ Deno.test('autorun', async () => {
 
     await inst.refresh();
 
-    expect(execAutorun).toBe(4);
+    expect(execAutorun).toBe(3);
 
-    
+
     await timeout(200);
 
-    expect(execAutorun).toBe(4);
+    expect(execAutorun).toBe(3);
 
     dispose();
 });

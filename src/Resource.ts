@@ -1,13 +1,12 @@
 import { autorun } from 'mobx';
 import { PromiseBox } from './PromiseBox.ts';
-import { Value } from './Value.ts';
-import { type ConnectType } from './ValueUnsafe.ts';
+import { ValueUnsafe } from './ValueUnsafe.ts';
 
 const TIMEOUT = 10000;
 
 interface ResultLoading {
     readonly type: 'loading';
-    readonly whenReady: Promise<void>;
+    // readonly whenReady: Promise<void>;
 }
 
 interface ResultReady<T> {
@@ -71,73 +70,33 @@ const send = <T>(loadValue: () => Promise<T>): Promise<ResourceResult<T>> => {
     return response.promise;
 };
 
-class Request<T> {
-    private isInit: boolean = false;
-    public readonly whenReady: PromiseBox<void>;
-    public readonly value: Value<ResourceResult<T>>;
-
-    public constructor(private readonly getValue: () => Promise<T>, private readonly prevValue: ResourceResult<T> | null) {        
-        this.whenReady = new PromiseBox<void>();
-
-        this.value = new Value({
-            type: 'loading',
-            whenReady: this.whenReady.promise,
-        });
-    }
-
-    public static new() {
-
-    }
-
-    public isInitValue(): boolean {
-        return this.isInit;
-    }
-
-    public init(): void {
-        if (this.isInit) {
-            return;
-        }
-
-        this.isInit = true;
-
-        setTimeout(async () => {
-            const valuePromise = send(this.getValue);
-            const value = await valuePromise;
-            this.value.setValue(value);
-            this.whenReady.resolve();
-        }, 0);
-    }
-
-    public get(): ResourceResult<T> {
-        const current = this.value.getValue();
-
-        if (current.type !== 'loading') {
-            return current;
-        }
-
-        if (this.prevValue !== null) {
-            return this.prevValue;
-        }
-
-        return current;
-    }
+interface ValueVersion<T> {
+    revision: number,
+    type: 'optimistic' | 'value',
+    value: ResourceResult<T>,
 }
 
 export class Resource<T> {
-    private request: Value<Request<T>>;
+    private current: ValueUnsafe<ValueVersion<T>>;
 
-    private constructor(private readonly loadValue: () => Promise<T>, onConnect?: ConnectType<Request<T>>) {
-        this.request = new Value(
-            new Request(this.loadValue, null),
+    private constructor(private readonly loadValue: () => Promise<T>, onConnect?: () => (() => void)) {
+        this.current = new ValueUnsafe(
+            {
+                revision: 0,
+                type: 'optimistic',
+                value: {
+                    type: 'loading'
+                }
+            },
             onConnect
         );
     }
 
-    public static browserAndServer<T>(loadValue: () => Promise<T>, onConnect?: ConnectType<Request<T>>): Resource<T> {
+    public static browserAndServer<T>(loadValue: () => Promise<T>, onConnect?: () => (() => void)): Resource<T> {
         return new Resource(loadValue, onConnect);
     }
 
-    public static browser<T>(loadValue: () => Promise<T>, onConnect?: ConnectType<Request<T>>): Resource<T> {
+    public static browser<T>(loadValue: () => Promise<T>, onConnect?: () => (() => void)): Resource<T> {
         //Do not initiate on server side
         if (typeof window === 'undefined') {
             return new Resource(() => new Promise(() => {}));
@@ -145,6 +104,87 @@ export class Resource<T> {
             return new Resource(loadValue, onConnect);
         }
     }
+
+    private requestData = async (revision: number): Promise<void> => {
+        const response = await send(this.loadValue);
+
+        const prevValue = this.current.value;
+
+        if (prevValue.revision <= revision) {
+            this.current.value = {
+                revision,
+                type: 'value',
+                value: response
+            };
+
+            this.current.atom.reportChanged();
+        }
+    }
+
+    private init() {
+        if (this.current.value.revision === 0) {
+            this.current.value = {
+                revision: 1,
+                type: 'optimistic',
+                value: {
+                    'type': 'loading'
+                }
+            };
+
+            setTimeout(() => {
+                this.requestData(1);
+            }, 0);
+        }
+    }
+
+    public get(): ResourceResult<T> {
+        this.init();
+
+        const value = this.current.value;
+        this.current.atom.reportObserved();
+
+        return value.value;
+    }
+
+    private applyOptimisticUpdate(
+        prevValue: ResourceResult<T>,
+        optimisticUpdate?: (prevValue: T) => T
+    ): [boolean, ResourceResult<T>] {
+
+        if (prevValue.type === 'ready' && optimisticUpdate !== undefined) {
+            return [true, ResourceResult.ok(optimisticUpdate(prevValue.value))];
+        }
+
+        return [false, prevValue];
+    }
+
+    public async refresh(optimisticUpdate?: (prevValue: T) => T): Promise<void> {
+        if (this.current.value.revision === 0) {
+            return;
+        }
+
+        const nextRevision = this.current.value.revision + 1;
+        const [needTrigger, optimisticNextValue] = this.applyOptimisticUpdate(
+            this.current.value.value,
+            optimisticUpdate
+        );
+
+        this.current.value = {
+            type: 'optimistic',
+            revision: nextRevision,
+            value: optimisticNextValue,
+        };
+
+        if (needTrigger) {
+            this.current.atom.reportChanged();
+        }
+
+        await this.requestData(nextRevision);
+    }
+
+    //---------------------------------------------------------------------------------------------------------
+    //wtórne metody bazujące na .get()
+    //---------------------------------------------------------------------------------------------------------
 
     public getAsync(): Promise<T> {
         const result = new PromiseBox<T>();
@@ -176,12 +216,6 @@ export class Resource<T> {
         return result.promise;
     }
 
-    public get(): ResourceResult<T> {
-        const request = this.request.getValue();
-        request.init();
-        return request.get();
-    }
-
     public getReady(): T | null {
         const result = this.get();
 
@@ -191,36 +225,5 @@ export class Resource<T> {
 
         return null;
     }
-
-    private applyOptimisticUpdate(
-        prevValue: ResourceResult<T>,
-        optimisticUpdate?: (prevValue: T) => T
-    ): ResourceResult<T> {
-        if (prevValue.type === 'ready' && optimisticUpdate !== undefined) {
-            return ResourceResult.ok(optimisticUpdate(prevValue.value));
-        }
-
-        return prevValue;
-    }
-
-    public async refresh(optimisticUpdate?: (prevValue: T) => T): Promise<void> {
-        if (this.request.getValue().isInitValue() === false) {
-            return;
-        }
-
-        const currentRequest = this.request.getValue().value.getValue();
-        if (currentRequest.type === 'loading') {
-            return currentRequest.whenReady;
-        }
-
-        const prevValue = this.get();
-        const request = new Request(
-            this.loadValue,
-            this.applyOptimisticUpdate(prevValue, optimisticUpdate),
-        );
-        request.init();
-
-        this.request.setValue(request);
-        await request.whenReady.promise;
-    }
 }
+
