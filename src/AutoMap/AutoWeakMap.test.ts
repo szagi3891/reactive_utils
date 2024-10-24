@@ -82,12 +82,20 @@ Deno.test('AutoWeakMap.create', async () => {
         }
     }
 
+    //symulacja, wyciekająych kontekstów do globalnej przestrzeni
+    const leakContext: Array<Common> = [];
+
+    const createContext = (name: string): Common => {
+        const inst = new Common(name);
+        leakContext.push(inst);
+        return inst;
+    }
+
     const memoryHelper = new MemoryHelper();
 
 
     (() => {
-        const common = new Common('CommonI');
-        memoryHelper.register(common, 'CommonI');
+        const common = createContext('CommonI');
         AutoWeakMap.register(common);
 
         const model1 = Model.get(common, 'aaa', 111);
@@ -104,15 +112,13 @@ Deno.test('AutoWeakMap.create', async () => {
 
     gc();
     
-    await memoryHelper.whenRemoved('CommonI');
     await memoryHelper.whenRemoved('CommonI-aaa-111');
     await memoryHelper.whenRemoved('CommonI-bbb-222');
     await memoryHelper.whenRemoved('CommonI-ccc-555');
-    expect(memoryHelper.removedLength).toBe(4);
+    expect(memoryHelper.removedLength).toBe(3);
 
     (() => {
-        const common = new Common('CommonII');
-        memoryHelper.register(common, 'CommonII');
+        const common = createContext('CommonII');
         AutoWeakMap.register(common);
 
         const model1 = Model.get(common, 'aaa', 111);
@@ -128,23 +134,20 @@ Deno.test('AutoWeakMap.create', async () => {
 
     gc();
 
-    await memoryHelper.whenRemoved('CommonII');
     await memoryHelper.whenRemoved('CommonII-aaa-111');
     await memoryHelper.whenRemoved('CommonII-bbb-222');
     await memoryHelper.whenRemoved('CommonII-ccc-555');
-    expect(memoryHelper.removedLength).toBe(8);
+    expect(memoryHelper.removedLength).toBe(6);
 
 
     (() => {
-        const common1 = new Common('CommonIII');
-        memoryHelper.register(common1, 'CommonIII');
+        const common1 = createContext('CommonIII');
         AutoWeakMap.register(common1);
 
         const model1 = Model.get(common1, 'aaa', 111);
         expect(model1.name).toBe('Model - CommonIII - aaa - 111');
 
-        const common2 = new Common('CommonIV');
-        memoryHelper.register(common2, 'CommonIV');
+        const common2 = createContext('CommonIV');
         AutoWeakMap.register(common2);
 
         const model2 = Model.get(common2, 'aaa', 111);
@@ -156,10 +159,8 @@ Deno.test('AutoWeakMap.create', async () => {
 
     gc();
     
-    await memoryHelper.whenRemoved('CommonIII');
     await memoryHelper.whenRemoved('CommonIII-aaa-111');
-    await memoryHelper.whenRemoved('CommonIV');
     await memoryHelper.whenRemoved('CommonIV-aaa-111');
 
-    expect(memoryHelper.removedLength).toBe(12);
+    expect(memoryHelper.removedLength).toBe(8);
 });

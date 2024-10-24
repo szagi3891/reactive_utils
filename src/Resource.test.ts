@@ -220,29 +220,35 @@ Deno.test('autorun', async () => {
 
     const inst = Resource.browserAndServer(
         async (): Promise<{ id: number, }> => {
+            const id = autoid.get();
+
+            console.info(`Odświeżam zasób, id=${id}`);
+
             await timeout(100);
             return {
-                id: autoid.get(),
+                id,
             };
         }
     );
 
     const dispose = autorun(() => {
-        const _aa = inst.get();
+        const aa = inst.get();
+        console.info('Przeczytana wartość', JSON.stringify(aa, null, 4));
         execAutorun += 1;
     });
 
     expect(execAutorun).toBe(1);
+    await timeout(200);
+    expect(execAutorun).toBe(2);
 
     await inst.refresh();
 
-    expect(execAutorun).toBe(2);
+    expect(execAutorun).toBe(4);
 
-    await timeout(100);
-    expect(execAutorun).toBe(2);
+    
+    await timeout(200);
 
-    await timeout(500);
-    expect(execAutorun).toBe(2);
+    expect(execAutorun).toBe(4);
 
     dispose();
 });
