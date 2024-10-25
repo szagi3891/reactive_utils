@@ -9,7 +9,7 @@ import { EventEmitter } from "./EventEmitter.ts";
 //Najlepiej żeby klucz pozwalał na posortowanie listy. Po to, żeby wyrenderować szkielet, bez zagłębiania się w 
 //jeśli klucz będzie bardziej złożony, to wtedy można wykorzystać AutoMap w celu nadania porównywalności po referencji, a potem sortować
 
-type ChangeType<ID extends JSONValue, M> = {
+export type ValueListUpdateType<ID extends JSONValue, M> = {
     type: 'set',
     id: ID,
     model: M
@@ -21,7 +21,7 @@ type ChangeType<ID extends JSONValue, M> = {
 export class ValueList<ID extends JSONValue, M> {
     private readonly listVal: ValueUnsafe<Array<ID>>;
     private readonly modelVal: MapJson<ID, ValueUnsafe<M>>;
-    private readonly events: EventEmitter<Array<ChangeType<ID, M>>>;
+    private readonly events: EventEmitter<Array<ValueListUpdateType<ID, M>>>;
 
     constructor() {
         this.listVal = new ValueUnsafe([]);
@@ -55,7 +55,7 @@ export class ValueList<ID extends JSONValue, M> {
         }
     }
 
-    onChange(callback: (data: Array<ChangeType<ID, M>>) => void): (() => void) {
+    onChange(callback: (data: Array<ValueListUpdateType<ID, M>>) => void): (() => void) {
         callback(this.dump().map(item => ({
             type: 'set',
             ...item
@@ -65,7 +65,7 @@ export class ValueList<ID extends JSONValue, M> {
     }
 
     //Metoda która pozwoli na ustawienie wielu rekordów na raz lub skasowania
-    bulkUpdate(data: Array<ChangeType<ID, M>>) {
+    bulkUpdate(data: Array<ValueListUpdateType<ID, M>>) {
         runInAction(() => {
             for (const record of data) {
                 switch (record.type) {

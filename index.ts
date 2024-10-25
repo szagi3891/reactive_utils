@@ -38,6 +38,7 @@ export {
 export { sort } from './src/sort.ts';
 export { AbortBox } from './src/AbortBox.ts';
 export type { AbortBoxFn } from './src/AbortBox.ts';
+export { ValueList, type ValueListUpdateType} from './src/ValueList.ts';
 
 //... without jsx
 
