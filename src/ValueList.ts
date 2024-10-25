@@ -18,13 +18,16 @@ export type ValueListUpdateType<ID extends JSONValue, M> = {
     id: ID
 };
 
+type UnsubscrbeType = () => void;
+type ConnectType = () => UnsubscrbeType;
+
 export class ValueList<ID extends JSONValue, M> {
     private readonly listVal: ValueUnsafe<Array<ID>>;
     private readonly modelVal: MapJson<ID, ValueUnsafe<M>>;
     private readonly events: EventEmitter<Array<ValueListUpdateType<ID, M>>>;
 
-    constructor() {
-        this.listVal = new ValueUnsafe([]);
+    constructor(onConnect?: ConnectType) {
+        this.listVal = new ValueUnsafe([], onConnect);
         this.modelVal = new MapJson();
         this.events = new EventEmitter();
     }
