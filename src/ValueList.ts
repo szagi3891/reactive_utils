@@ -12,7 +12,7 @@ import { EventEmitter } from "./EventEmitter.ts";
 type ChangeType<ID extends JSONValue, M> = {
     type: 'set',
     id: ID,
-    value: M
+    model: M
 } | {
     type: 'delete',
     id: ID
@@ -56,6 +56,11 @@ export class ValueList<ID extends JSONValue, M> {
     }
 
     onChange(callback: (data: Array<ChangeType<ID, M>>) => void): (() => void) {
+        callback(this.dump().map(item => ({
+            type: 'set',
+            ...item
+        })));
+
         return this.events.on(callback);
     }
 
@@ -65,7 +70,7 @@ export class ValueList<ID extends JSONValue, M> {
             for (const record of data) {
                 switch (record.type) {
                     case 'set': {
-                        this.setInner(record.id, record.value);
+                        this.setInner(record.id, record.model);
                         break;
                     }
                     case 'delete': {
@@ -82,11 +87,11 @@ export class ValueList<ID extends JSONValue, M> {
         });
     }
 
-    public set(id: ID, value: M) {
+    public set(id: ID, model: M) {
         this.bulkUpdate([{
             type: 'set',
             id,
-            value,
+            model,
         }]);
     }
 
@@ -115,5 +120,21 @@ export class ValueList<ID extends JSONValue, M> {
 
         model.atom.reportObserved();
         return Result.ok(model.value);
+    }
+
+    dump(): Array<{ id: ID, model: M}> {
+        const result: Array<{ id: ID, model: M}> = [];
+
+        for (const id of this.ids) {
+            const model = this.model(id);
+
+            if (model.type === 'ok') {
+                result.push({id, model: model.value});
+            } else {
+                throw Error('Nieprawidłowe odgałęzienie programu');
+            }
+        }
+
+        return result;
     }
 }

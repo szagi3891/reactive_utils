@@ -30,5 +30,55 @@ Deno.test('basic', () => {
 
     expect(list.ids).toEqual([{ eventID: 'a', subID: 'b'}, { eventID: 'c', subID: 'd'}]);
     expect(replica.ids).toEqual([{ eventID: 'a', subID: 'b'}, { eventID: 'c', subID: 'd'}]);
+
+
+    expect(list.dump()).toEqual([{
+        id: {
+            eventID: "a",
+            subID: "b",
+        },
+        model: "rrr",
+    }, {
+        id: {
+            eventID: "c",
+            subID: "d",
+        },
+        model: "ccc",
+    }]);
+
+    expect(replica.dump()).toEqual([{
+        id: {
+            eventID: "a",
+            subID: "b",
+        },
+        model: "rrr",
+    }, {
+        id: {
+            eventID: "c",
+            subID: "d",
+        },
+        model: "ccc",
+    }]);
+    
+
+    //podpięcie nowej repliki powinno sklonować stan
+    const replica2 = new ValueList<ID, Value>();
+    list.onChange(data => {
+        replica2.bulkUpdate(data);
+    });
+
+    expect(replica2.dump()).toEqual([{
+        id: {
+            eventID: "a",
+            subID: "b",
+        },
+        model: "rrr",
+    }, {
+        id: {
+            eventID: "c",
+            subID: "d",
+        },
+        model: "ccc",
+    }]);
 });
 
