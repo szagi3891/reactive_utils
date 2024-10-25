@@ -1,3 +1,5 @@
+import type { JSONValue } from "../Json.ts";
+
 export const autoMapKeyAsString = Symbol('autoMapKeyAsString');
 
 let nextId: number = 1;
@@ -37,16 +39,11 @@ export class PrimitiveTypeId<T extends WeakKey> {
 }
 
 
+export type PrimitiveType = JSONValue | { [autoMapKeyAsString]: () => string | number };
 
-
-type PrimitiveBaseType = string | number | boolean | null | undefined | PrimitiveBaseType[];
-
-export type PrimitiveType = PrimitiveBaseType | { [autoMapKeyAsString]: () => string | number } | PrimitiveType[];
-
-const reduceSymbol = (value: PrimitiveType): PrimitiveBaseType => {
+export const reduceComplexSymbol = (value: PrimitiveType): JSONValue => {
     if (
         value === null ||
-        value === undefined ||
         typeof value === 'string' ||
         typeof value === 'number' ||
         typeof value === 'boolean'
@@ -54,17 +51,9 @@ const reduceSymbol = (value: PrimitiveType): PrimitiveBaseType => {
         return value;
     }
 
-    if (Array.isArray(value)) {
-        return value.map(reduceSymbol);
+    if (autoMapKeyAsString in value) {
+        return value[autoMapKeyAsString]();
     }
-
-    return value[autoMapKeyAsString]();
-};
-
-export const reduceComplexSymbol = (value: PrimitiveType[] | PrimitiveType): PrimitiveBaseType[] | PrimitiveBaseType => {
-    if (Array.isArray(value)) {
-        return value.map(reduceSymbol);
-    }
-
-    return reduceSymbol(value);
+    
+    return value;
 };

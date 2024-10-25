@@ -1,4 +1,5 @@
 import { PrimitiveType, reduceComplexSymbol } from "./PrimitiveType.ts";
+import { stringifySort } from '../Json.ts';
 
 class AutoMapSerialized<K, V> {
     private data: Map<string, V>;
@@ -26,7 +27,7 @@ export class AutoMap<K extends PrimitiveType[] | PrimitiveType, V> {
     private data: AutoMapSerialized<K, V>;
 
     public constructor(getValue: (id: K) => V) {
-        this.data = new AutoMapSerialized((id: K) => JSON.stringify(reduceComplexSymbol(id)), getValue);
+        this.data = new AutoMapSerialized((id: K) => stringifySort(reduceComplexSymbol(id)), getValue);
     }
 
     public get(id: K): V {

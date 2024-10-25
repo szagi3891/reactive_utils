@@ -35,3 +35,30 @@ export const jsonParse = <T>(text: string, validator: z.ZodType<T>): Result<T, s
 
     return Result.error(`Validation (zod) -> error=${data.error.toString()} data=${JSON.stringify(text, null, 4)}`);
 };
+
+const recursivelyOrderKeys = (unordered: JSONValue): JSONValue => {
+    if (Array.isArray(unordered)) {
+        return unordered.map(item => recursivelyOrderKeys(item));
+    }
+
+    if (unordered === null) {
+        return unordered;
+    }
+  
+    if (typeof unordered === 'object') {
+        const ordered: Record<string, JSONValue | undefined> = {};
+        
+        Object.keys(unordered).sort().forEach((key) => {
+            const value = unordered[key];
+            ordered[key] = value === undefined ? undefined : recursivelyOrderKeys(value);
+        });
+
+        return ordered;
+    }
+  
+    return unordered;
+};
+
+export const stringifySort = (value: JSONValue): string => {
+    return JSON.stringify(recursivelyOrderKeys(value));
+};

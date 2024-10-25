@@ -20,7 +20,7 @@ export class Value<T> {
     }
 
     public isObserved(): boolean {
-        return this.valueUnsafe.isObservedFlag;
+        return this.valueUnsafe.atom.isBeingObserved;
     }
 
     public static withKeepAlive<T>(timeMs: number, value: T, onConnect: ConnectType<T>): Value<T> {
