@@ -9,6 +9,17 @@ export type JSONValue =
     | JSONValue[] 
     | { [key: string]: JSONValue | undefined };
 
+export const JSONValueZod: z.ZodType<JSONValue> = z.lazy(() =>
+    z.union([
+        z.string(),
+        z.number(),
+        z.boolean(),
+        z.null(),
+        z.array(JSONValueZod),
+        z.record(JSONValueZod.or(z.undefined()))
+    ])
+);
+
 export const jsonParseRaw = (text: string): Result<JSONValue, string> => {
     try {
         const json = JSON.parse(text);
@@ -59,6 +70,10 @@ const recursivelyOrderKeys = (unordered: JSONValue): JSONValue => {
     return unordered;
 };
 
-export const stringifySort = (value: JSONValue): string => {
+export const stringifySort = (value: JSONValue, format?: boolean): string => {
+    if (format === true) {
+        return JSON.stringify(recursivelyOrderKeys(value), null, 4);
+    }
+
     return JSON.stringify(recursivelyOrderKeys(value));
 };
