@@ -3,6 +3,7 @@ import { ValueList } from "./ValueList.ts";
 import { timeout } from "./timeout.ts";
 import { autorun } from 'mobx';
 import { FakeTime } from "jsr:@std/testing/time";
+import { stringifySort } from "./Json.ts";
 
 type ID = {
     eventID: string,
@@ -209,4 +210,14 @@ Deno.test('bulk replace', async () => {
 
 
     //TODO - Podmiana całej listy "tranzakcyjnie"
+
 })
+
+// class AA {
+
+// }
+// const aa = new AA();
+
+// stringifySort({
+//     age: aa
+// });
