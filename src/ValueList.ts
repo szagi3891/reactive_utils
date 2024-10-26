@@ -21,7 +21,7 @@ export type ValueListUpdateType<ID extends JSONValue, M> = {
 type UnsubscrbeType = () => void;
 type ConnectType = () => UnsubscrbeType;
 
-export class ValueList<ID extends JSONValue, M> {
+export class ValueList<ID extends JSONValue, M extends JSONValue> {
     private resetOnFirstUpdateFlag: boolean = false;
     private readonly listVal: ValueUnsafe<Array<ID>>;
     private modelVal: MapJson<ID, ValueUnsafe<M>>;
@@ -103,6 +103,11 @@ export class ValueList<ID extends JSONValue, M> {
 
             this.events.trigger(data);
         });
+    }
+
+    bulkReplace(data: Array<{ id: ID, model: M }>) {
+
+        throw Error('TODO');
     }
 
     public set(id: ID, model: M) {

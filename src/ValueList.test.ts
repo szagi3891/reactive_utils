@@ -204,3 +204,9 @@ Deno.test('opóźniona replikacja', async () => {
 
     sub2();
 });
+
+Deno.test('bulk replace', async () => {
+
+
+    //TODO - Podmiana całej listy "tranzakcyjnie"
+})
