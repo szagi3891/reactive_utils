@@ -22,8 +22,9 @@ type UnsubscrbeType = () => void;
 type ConnectType = () => UnsubscrbeType;
 
 export class ValueList<ID extends JSONValue, M> {
+    private resetOnFirstUpdateFlag: boolean = false;
     private readonly listVal: ValueUnsafe<Array<ID>>;
-    private readonly modelVal: MapJson<ID, ValueUnsafe<M>>;
+    private modelVal: MapJson<ID, ValueUnsafe<M>>;
     private readonly events: EventEmitter<Array<ValueListUpdateType<ID, M>>>;
 
     constructor(onConnect?: ConnectType) {
@@ -67,9 +68,23 @@ export class ValueList<ID extends JSONValue, M> {
         return this.events.on(callback);
     }
 
+    resetOnFirstUpdate() {
+        this.resetOnFirstUpdateFlag = true;
+    }
+
     //Metoda która pozwoli na ustawienie wielu rekordów na raz lub skasowania
     bulkUpdate(data: Array<ValueListUpdateType<ID, M>>) {
+        console.info('bulk update', data);
+
         runInAction(() => {
+            if (this.resetOnFirstUpdateFlag) {
+                this.resetOnFirstUpdateFlag = false;
+
+                this.listVal.value = [];
+                this.listVal.atom.reportChanged();
+                this.modelVal = new MapJson();
+            }
+
             for (const record of data) {
                 switch (record.type) {
                     case 'set': {
