@@ -155,10 +155,10 @@ interface Params<SRK extends string, SR extends SubscriptionRouter<SRK>> {
     createSubsciption: (data: CreateSubscriptionData<SRK, SR>) => () => void,
 }
 
-export const startWebsocketApi = <SRK extends string, SR extends SubscriptionRouter<SRK>>(params: Params<SRK, SR>) => {
+export const startWebsocketApi = <SRK extends string, SR extends SubscriptionRouter<SRK>>(params: Params<SRK, SR>): Deno.HttpServer<Deno.NetAddr> => {
     const { hostname, port, subscriptionRouter, createSubsciption } = params;
 
-    Deno.serve({
+    const server = Deno.serve({
         hostname,
         port,
         onListen: () => {
@@ -195,5 +195,7 @@ export const startWebsocketApi = <SRK extends string, SR extends SubscriptionRou
             return response;
         }
     });
+
+    return server;
 };
 
