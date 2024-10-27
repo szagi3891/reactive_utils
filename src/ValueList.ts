@@ -5,9 +5,37 @@ import { ValueUnsafe } from "./ValueUnsafe.ts";
 import type { JSONValue } from "../index.ts";
 import { MapJson } from "./AutoMap/MapJson.ts";
 import { EventEmitter } from "./EventEmitter.ts";
+import { stringifySort } from "./Json.ts";
 
 //Najlepiej żeby klucz pozwalał na posortowanie listy. Po to, żeby wyrenderować szkielet, bez zagłębiania się w 
 //jeśli klucz będzie bardziej złożony, to wtedy można wykorzystać AutoMap w celu nadania porównywalności po referencji, a potem sortować
+
+class SetJson<V extends JSONValue> {
+    private readonly data: Map<string, V>;
+    constructor() {
+        this.data = new Map();
+    }
+
+    public set(value: V) {
+        const idString = stringifySort(value);
+        this.data.set(idString, value);
+    }
+
+    public delete(value: V): boolean {
+        const idString = stringifySort(value);
+        return this.data.delete(idString);
+    }
+
+    public has(value: V): boolean {
+        const idString = stringifySort(value);
+        return this.data.has(idString);
+    }
+
+    values(): Array<V> {
+        const list = this.data.values();
+        return [...list];
+    }
+}
 
 export type ValueListUpdateType<ID extends JSONValue, M> = {
     type: 'set',
@@ -23,12 +51,12 @@ type ConnectType = () => UnsubscrbeType;
 
 export class ValueList<ID extends JSONValue, M extends JSONValue> {
     private resetOnFirstUpdateFlag: boolean = false;
-    private readonly listVal: ValueUnsafe<Array<ID>>;
+    private readonly listVal: ValueUnsafe<SetJson<ID>>;
     private modelVal: MapJson<ID, ValueUnsafe<M>>;
     private readonly events: EventEmitter<Array<ValueListUpdateType<ID, M>>>;
 
     constructor(onConnect?: ConnectType) {
-        this.listVal = new ValueUnsafe([], onConnect);
+        this.listVal = new ValueUnsafe(new SetJson(), onConnect);
         this.modelVal = new MapJson();
         this.events = new EventEmitter();
     }
@@ -40,7 +68,7 @@ export class ValueList<ID extends JSONValue, M extends JSONValue> {
             const newValue = new ValueUnsafe<M>(value);
             this.modelVal.set(id, newValue);
 
-            this.listVal.value.push(id);
+            this.listVal.value.set(id);
             this.listVal.atom.reportChanged();
 
             return;
@@ -53,17 +81,22 @@ export class ValueList<ID extends JSONValue, M extends JSONValue> {
     private deleteInner(id: ID) {
         this.modelVal.delete(id);
 
-        if (this.listVal.value.includes(id)) {
-            this.listVal.value = this.listVal.value.filter(item => item !== id);
+        const deleted = this.listVal.value.delete(id);
+
+        if (deleted) {
             this.listVal.atom.reportChanged();
         }
     }
 
     onChange(callback: (data: Array<ValueListUpdateType<ID, M>>) => void): (() => void) {
-        callback(this.dump().map(item => ({
+        const list: Array<ValueListUpdateType<ID, M>> = this.dump().map(item => ({
             type: 'set',
             ...item
-        })));
+        }));
+
+        if (list.length > 0) {
+            callback(list);
+        }
 
         return this.events.on(callback);
     }
@@ -74,13 +107,11 @@ export class ValueList<ID extends JSONValue, M extends JSONValue> {
 
     //Metoda która pozwoli na ustawienie wielu rekordów na raz lub skasowania
     bulkUpdate(data: Array<ValueListUpdateType<ID, M>>) {
-        console.info('bulk update', data);
-
         runInAction(() => {
             if (this.resetOnFirstUpdateFlag) {
                 this.resetOnFirstUpdateFlag = false;
 
-                this.listVal.value = [];
+                this.listVal.value = new SetJson();
                 this.listVal.atom.reportChanged();
                 this.modelVal = new MapJson();
             }
@@ -104,10 +135,31 @@ export class ValueList<ID extends JSONValue, M extends JSONValue> {
             this.events.trigger(data);
         });
     }
-
+    
     bulkReplace(data: Array<{ id: ID, model: M }>) {
+        const updateList: Array<ValueListUpdateType<ID, M>> = [];
+        const newIds = new Set(data.map(item => item.id));
 
-        throw Error('TODO');
+        for (const currentId of this.listVal.value.values()) {
+            if (newIds.has(currentId)) {
+                //ok, that remains
+            } else {
+                updateList.push({
+                    type: 'delete',
+                    id: currentId
+                });
+            }
+        }
+
+        for (const item of data) {
+            updateList.push({
+                type: 'set',
+                id: item.id,
+                model: item.model
+            });
+        }
+
+        this.bulkUpdate(updateList);
     }
 
     public set(id: ID, model: M) {
@@ -131,7 +183,7 @@ export class ValueList<ID extends JSONValue, M extends JSONValue> {
     //getter pozwalający pobrać listę idków
     get ids(): Array<ID> {
         this.listVal.atom.reportObserved();
-        return this.listVal.value;
+        return this.listVal.value.values();
     }
 
     //pobranie konkretnego modelu

@@ -1,9 +1,8 @@
 import { expect } from "jsr:@std/expect";
-import { ValueList } from "./ValueList.ts";
+import { ValueList, type ValueListUpdateType } from "./ValueList.ts";
 import { timeout } from "./timeout.ts";
 import { autorun } from 'mobx';
 import { FakeTime } from "jsr:@std/testing/time";
-import { stringifySort } from "./Json.ts";
 
 type ID = {
     eventID: string,
@@ -206,18 +205,51 @@ Deno.test('opóźniona replikacja', async () => {
     sub2();
 });
 
-Deno.test('bulk replace', async () => {
+Deno.test('bulk replace', () => {
 
+    const list = new ValueList<number, string>();
 
-    //TODO - Podmiana całej listy "tranzakcyjnie"
+    let onChangeData: ValueListUpdateType<number, string>[] | null = null;
+    let calls: number = 0;
 
-})
+    list.onChange((data) => {
+        onChangeData = data;
+        calls += 1;
+    });
 
-// class AA {
+    expect(calls).toBe(0);
 
-// }
-// const aa = new AA();
+    list.set(2, 'bb');
+    list.set(3, 'cc');
 
-// stringifySort({
-//     age: aa
-// });
+    expect(calls).toBe(2);
+    expect(list.dump()).toEqual([{
+        id: 2,
+        model: 'bb',
+    }, {
+        id: 3,
+        model: 'cc',
+    }]);
+
+    list.bulkReplace([{
+        id: 3,
+        model: 'cccc',
+    }, {
+        id: 4,
+        model: 'dd',
+    }]);
+
+    expect(onChangeData).toEqual([
+        { type: "delete", id: 2 },
+        { type: "set", id: 3, model: "cccc" },
+        { type: "set", id: 4, model: "dd" }
+    ]);
+
+    expect(list.dump()).toEqual([{
+        id: 3,
+        model: 'cccc',
+    }, {
+        id: 4,
+        model: 'dd',
+    }]);
+});
