@@ -53,20 +53,6 @@ class State {
     }
 }
 
-const iterataObject = <K extends string, OB extends Record<K, unknown>>(ob: OB): Array<[K, OB[K]]> => {
-    const result: Array<[K, OB[K]]> = [];
-
-    for (const [key, value] of Object.entries(ob)) {
-        result.push([
-            //@ts-expect-error - z powodu błędu w typowaniu na funkcij Object.entries
-            key,
-            value
-        ]);
-    }
-    
-    return result;
-}
-
 const ResourceIdZod = z.object({
     type: z.string(),
     id: JSONValueZod,

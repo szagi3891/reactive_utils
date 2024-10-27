@@ -1,6 +1,10 @@
 {
+    "version": "0.5.121",
     "name": "@reactive/utils",
-    "version": "0.5.120",
-    "exports": "./index.ts",
+    "exports": {
+        "node": "./index.ts",
+        "deno": "./index.deno.ts",
+        "default": "./index.ts"
+    },
     "license": "MIT"
 }

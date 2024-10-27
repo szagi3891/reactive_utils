@@ -3,10 +3,7 @@ import fs from 'node:fs';
 import { z } from 'zod';
 
 const ContentZod = z.object({
-    name: z.string(),
     version: z.string(),
-    exports: z.string(),
-    license: z.string(),
 }).passthrough();
 
 const throwNever = (): never => {
