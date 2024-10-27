@@ -134,7 +134,18 @@ const handleSocketMessage = <SRK extends string, SR extends SubscriptionRouter<S
     assertNever(message);
 };
 
+interface DenoInterface {
+    serve: (params: {
+        hostname: string,
+        port: number,
+        onListen: () => void,
+        handler: (req: Request) => Response,
+    }) => void,
+    upgradeWebSocket: (req: Request) => { socket: WebSocket, response: Response },
+}
+
 interface Params<SRK extends string, SR extends SubscriptionRouter<SRK>> {
+    deno: DenoInterface,
     hostname: string,
     port: number,
     subscriptionRouter: SR,
@@ -142,9 +153,10 @@ interface Params<SRK extends string, SR extends SubscriptionRouter<SRK>> {
 }
 
 export const startWebsocketApi = <SRK extends string, SR extends SubscriptionRouter<SRK>>(params: Params<SRK, SR>): void => {
-    const { hostname, port, subscriptionRouter, createSubsciption } = params;
+    const { deno, hostname, port, subscriptionRouter, createSubsciption } = params;
 
-    Deno.serve({
+    // Deno.serve({
+    deno.serve({
         hostname,
         port,
         onListen: () => {
@@ -165,7 +177,7 @@ export const startWebsocketApi = <SRK extends string, SR extends SubscriptionRou
                 // return new Response(null, { status: 501 });
             }
 
-            const { socket, response } = Deno.upgradeWebSocket(req);
+            const { socket, response } = deno.upgradeWebSocket(req);
 
             (async () => {
 
