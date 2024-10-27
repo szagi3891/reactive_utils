@@ -150,7 +150,7 @@ export const startWebsocketApi = <SRK extends string, SR extends SubscriptionRou
         onListen: () => {
             console.info(`Listening on ws://${hostname}:${port} ... (3)`);
         },
-        handler: (req) => {
+        handler: (req: Request) => {
             const isUpgrade = req.headers.get("upgrade") === "websocket";
 
             console.info(`REQUEST ${req.url} isUpgrade=${isUpgrade}`);
