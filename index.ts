@@ -40,6 +40,7 @@ export { AbortBox } from './src/AbortBox.ts';
 export type { AbortBoxFn } from './src/AbortBox.ts';
 export { ValueList, type ValueListUpdateType} from './src/ValueList.ts';
 export { Socket } from './src/websocket/client/Socket.ts';
+export { startWebsocketApi } from './src/websocket/server-deno/server.ts';
 //... without jsx
 
 
