@@ -253,3 +253,42 @@ Deno.test('bulk replace', () => {
         model: 'dd',
     }]);
 });
+
+Deno.test('subscribe', async () => {
+    using time = new FakeTime();
+
+    let subscribe: boolean = false;
+
+    const list = new ValueList(() => {
+        subscribe = true;
+        return () => {
+            subscribe = false;
+        };
+    });
+
+    expect(subscribe).toBe(false);
+
+    const sub1 = autorun(() => {
+        const _ids = list.ids;
+    })
+
+    await time.tickAsync(0);
+    expect(subscribe).toBe(true);
+
+    sub1();
+
+    await time.tickAsync(0);
+    expect(subscribe).toBe(false);
+
+    const sub2 = list.onChange((_data) => {
+
+    });
+
+    await time.tickAsync(0);
+    expect(subscribe).toBe(true);
+
+    sub2();
+
+    await time.tickAsync(0);
+    expect(subscribe).toBe(false);
+})

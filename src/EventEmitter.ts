@@ -4,7 +4,7 @@ export type EventEmitterReceiver<T> = (callback: (param: T) => void) => (() => v
 export class EventEmitter<T> {
     private events: Set<(param: T) => void>;
 
-    constructor() {
+    constructor(private readonly onChange?: (size: number) => void) {
         this.events = new Set();
     }
 
@@ -19,9 +19,17 @@ export class EventEmitter<T> {
 
         this.events.add(onExec);
 
+        if (this.onChange !== undefined) {
+            this.onChange(this.events.size);
+        }
+
         return (): void => {
             isActive = false;
             this.events.delete(onExec);
+
+            if (this.onChange !== undefined) {
+                this.onChange(this.events.size);
+            }    
         };
     }
 

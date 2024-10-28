@@ -1,4 +1,4 @@
-import { runInAction } from 'mobx';
+import { runInAction, autorun, type IReactionDisposer } from 'mobx';
 import { assertNever } from './assertNever.ts';
 import { Result } from "./Result.ts";
 import { ValueUnsafe } from "./ValueUnsafe.ts";
@@ -54,11 +54,25 @@ export class ValueList<ID extends JSONValue, M extends JSONValue> {
     private readonly listVal: ValueUnsafe<SetJson<ID>>;
     private modelVal: MapJson<ID, ValueUnsafe<M>>;
     private readonly events: EventEmitter<Array<ValueListUpdateType<ID, M>>>;
+    private eventsSubscribe: IReactionDisposer | null = null;
 
     constructor(onConnect?: ConnectType) {
         this.listVal = new ValueUnsafe(new SetJson(), onConnect);
         this.modelVal = new MapJson();
-        this.events = new EventEmitter();
+        this.events = new EventEmitter((newSize: number) => {
+            if (newSize === 0 && this.eventsSubscribe !== null) {
+                this.eventsSubscribe();
+                this.eventsSubscribe = null;
+                return;
+            }
+
+            if (newSize > 0 && this.eventsSubscribe === null) {
+                this.eventsSubscribe = autorun(() => {
+                    this.listVal.atom.reportObserved();
+                });
+                return;
+            }
+        });
     }
 
     private setInner(id: ID, value: M) {
