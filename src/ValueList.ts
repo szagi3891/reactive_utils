@@ -166,11 +166,26 @@ export class ValueList<ID extends JSONValue, M extends JSONValue> {
         }
 
         for (const item of data) {
-            updateList.push({
-                type: 'set',
-                id: item.id,
-                model: item.model
-            });
+            const current = this.modelVal.get(item.id)?.value;
+
+            if (current === undefined) {
+                updateList.push({
+                    type: 'set',
+                    id: item.id,
+                    model: item.model
+                });
+            } else {
+                const prevValue = stringifySort(current);
+                const newValue = stringifySort(item.model);
+
+                if (prevValue !== newValue) {
+                    updateList.push({
+                        type: 'set',
+                        id: item.id,
+                        model: item.model
+                    });
+                }
+            }
         }
 
         this.bulkUpdate(updateList);

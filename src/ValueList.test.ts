@@ -252,6 +252,27 @@ Deno.test('bulk replace', () => {
         id: 4,
         model: 'dd',
     }]);
+
+    list.bulkReplace([{
+        id: 4,
+        model: 'dd',
+    }, {
+        id: 5,
+        model: 'ee',
+    }]);
+
+    expect(onChangeData).toEqual([
+        { type: "delete", id: 3 },
+        { type: "set", id: 5, model: "ee" }
+    ]);
+
+    expect(list.dump()).toEqual([{
+        id: 4,
+        model: 'dd',
+    }, {
+        id: 5,
+        model: 'ee',
+    }]);
 });
 
 Deno.test('subscribe', async () => {
@@ -291,4 +312,4 @@ Deno.test('subscribe', async () => {
 
     await time.tickAsync(0);
     expect(subscribe).toBe(false);
-})
+});
