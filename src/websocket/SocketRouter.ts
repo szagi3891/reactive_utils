@@ -65,7 +65,7 @@ export class DefValueList<
         if (safeData.success) {
 
             //@ts-expect-error
-            return Result.ok(safeData.data);            //TODO - spróbować jakoś pozbyć się tego wykluczenia
+            return Result.ok(safeData.data);
         }
 
         return Result.error(null);
@@ -167,6 +167,18 @@ export type CreateSubscriptionData<SOCKET extends SubscriptionRouter<RTYPE>, RTY
 }[keyof SOCKET];
 
 
+//Zwraca typ w którym są zawarte wszystkie klucze dla konfiguracji dotyczących ValueList
+export type ResourceTypeForValueList<SOCKET extends Record<string | number | symbol, DefValue<JSONValue, JSONValue> | DefValueList<JSONValue, JSONValue, JSONValue>>> = {
+    [K in keyof SOCKET]: SOCKET[K] extends DefValueList<JSONValue, JSONValue, JSONValue> ? K : never
+}[keyof SOCKET];
+
+//Zwraca typ w którym są zawarte wszystkie klucze dla konfiguracji dotyczących Value
+export type ResourceTypeForValue<SOCKET extends Record<string | number | symbol, DefValue<JSONValue, JSONValue> | DefValueList<JSONValue, JSONValue, JSONValue>>> = {
+    [K in keyof SOCKET]: SOCKET[K] extends DefValue<JSONValue, JSONValue> ? K : never
+}[keyof SOCKET];
+
+
+
 // const SocketConfig = {
 //     user: new DefValue(
 //         z.number(), //id
@@ -203,11 +215,32 @@ export type CreateSubscriptionData<SOCKET extends SubscriptionRouter<RTYPE>, RTY
 // const post = socket.createValue('post', 'dsadsada');
 // const logs = socket.createValueList('logs', null);
 // const aaaa = socket.createValue('user', 4);
-// // export type SubscriptionRouter<K extends string> = Record<
-// //     K,
-// //     DefValue<JSONValue, JSONValue> | DefValueList<JSONValue, JSONValue, JSONValue>
-// // >;
 
+// const post1 = socket.createValueList('logs', null);
+
+// type IN = {
+//     model1: {
+//         name: string,
+//         age: number,
+//     },
+//     model2: {
+//         label: string,
+//         year: number,
+    
+//     },
+//     model3: string,
+// };
+
+// /*
+// {
+//     [K in keyof SOCKET]: {
+//         resourceId: SocketResourceId<SOCKET[K]>;
+//     }
+// }[keyof SOCKET]
+// */
+
+// type IN1 = ResourceTypeForValueList<typeof SocketConfig>;
+// type IN2 = ResourceTypeForValue<typeof SocketConfig>;
 
 // /*
 // const eee = {
