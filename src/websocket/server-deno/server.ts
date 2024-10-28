@@ -97,13 +97,13 @@ const handleSocketMessage = <RTYPE_ALL extends string, SOCKET extends Subscripti
         }
 
         
-        const safeDataId = resourceIdValidator.resourceId.safeParse(resourceIdSafe.data.id);
+        const safeDataId = resourceIdValidator.decodeResourceId(resourceIdSafe.data.id);
 
-        if (safeDataId.success) {
+        if (safeDataId.type === 'ok') {
             //@ts-expect-error
             const dispose = createSubsciption({
                 type: prefix,
-                resourceId: safeDataId.data,
+                resourceId: safeDataId.value,
                 response: (response) => {
                     state.send({
                         type: 'data',

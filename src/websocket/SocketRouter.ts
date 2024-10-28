@@ -26,8 +26,8 @@ export class DefValueList<
     M extends JSONValue
 > {
 
-    public readonly resourceId: z.ZodType<R, z.ZodTypeDef, R>;
-    public readonly resp;
+    private readonly resourceId: z.ZodType<R, z.ZodTypeDef, R>;
+    private readonly resp;
 
     //W razie problemów, tą klasę można zamienić na funkcję, po to żeby nie musieć definioać tych skoplikowanych typów zod
 
@@ -45,6 +45,16 @@ export class DefValueList<
                 id: modelId,
             }),
         ]));
+    }
+
+    decodeResourceId(data: JSONValue): Result<R, null> {
+        const safeData = this.resourceId.safeParse(data);
+
+        if (safeData.success) {
+            return Result.ok(safeData.data);
+        }
+
+        return Result.error(null);
     }
 
     decodeResp(data: JSONValue): Result<ValueListUpdateType<ID, M>, null> {
@@ -66,11 +76,20 @@ export class DefValue<
     M extends JSONValue,
 > {
     constructor(
-        public readonly resourceId: z.ZodType<R>,
+        private readonly resourceId: z.ZodType<R>,
         private readonly resp: z.ZodType<M>
     ) {
     }
 
+    decodeResourceId(data: JSONValue): Result<R, null> {
+        const safeData = this.resourceId.safeParse(data);
+
+        if (safeData.success) {
+            return Result.ok(safeData.data);
+        }
+
+        return Result.error(null);
+    }
 
     decodeResp(data: JSONValue): Result<M, null> {
 
