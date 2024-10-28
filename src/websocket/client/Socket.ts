@@ -6,7 +6,7 @@ import { EventEmitter } from "../../EventEmitter.ts";
 import { jsonParse, JSONValue, JSONValueZod, stringifySort } from "../../Json.ts";
 import { Value } from "../../Value.ts";
 import { ValueList } from "../../ValueList.ts";
-import { DefValue, DefValueList, type ResourceIdAll, type SocketValueListId, type SocketValueListModel, type SocketValueModel, type SubscriptionRouter } from "../SocketRouter.ts";
+import { DefValue, DefValueList, type ResourceIdAll, type SocketResourceId, type SocketValueListId, type SocketValueListModel, type SocketValueModel, type SubscriptionRouter } from "../SocketRouter.ts";
 
 const MessageServerZod = z.union([
     z.object({
@@ -20,11 +20,11 @@ const MessageServerZod = z.union([
     })
 ]);
 
-type SocketStateType<RTYPE_ALL extends keyof SOCKET, SOCKET extends SubscriptionRouter<RTYPE_ALL>> = {
+type SocketStateType<RTYPE_ALL extends string, SOCKET extends SubscriptionRouter<RTYPE_ALL>> = {
     type: 'connected',
     stream: WebsocketStream,
     acctiveIds: Map<number, {
-        type: RTYPE_ALL,
+        type: keyof SOCKET,
         id: ResourceIdAll<SOCKET>
     }>,
 } | {
@@ -109,8 +109,8 @@ export class Socket<RTYPE_ALL extends string, SOCKET extends SubscriptionRouter<
         return assertNever(messageDate);
     }
 
-    private on(id: number, resourceId: {
-        type: RTYPE_ALL,
+    private on<RESOURCE_TYPE extends Exclude<keyof SOCKET, symbol | number>>(id: number, resourceId: {
+        type: RESOURCE_TYPE,
         id: ResourceIdAll<SOCKET>
     }) {
         if (this.connection.type === 'idle') {
@@ -162,9 +162,9 @@ export class Socket<RTYPE_ALL extends string, SOCKET extends SubscriptionRouter<
         }
     }
 
-    createValue<RESOURCE_TYPE extends RTYPE_ALL, MODEL extends SocketValueModel<SOCKET, RESOURCE_TYPE>> (
+    createValue<RESOURCE_TYPE extends Exclude<keyof SOCKET, symbol | number>, MODEL extends SocketValueModel<SOCKET, RESOURCE_TYPE>> (
         resourceType: RESOURCE_TYPE,
-        resourceId: ResourceIdAll<SOCKET>,
+        resourceId: SocketResourceId<SOCKET[RESOURCE_TYPE]>,
     ): Value<MODEL | null> {                                                //TODO - ten null może się zemścić, lepiej wymienić go na jakiegoś enuma algebraicznego
         const id = this.autoid.get();
 
@@ -206,12 +206,14 @@ export class Socket<RTYPE_ALL extends string, SOCKET extends SubscriptionRouter<
     //TODO - spróbować tak zdefiniować typ, żeby było dozwolone podanie resourceType, tak aby wskazuwało na ValueList
 
     createValueList<
-        RESOURCE_TYPE extends RTYPE_ALL,
+        RESOURCE_TYPE extends Exclude<keyof SOCKET, symbol | number>,
         ID extends SocketValueListId<SOCKET, RESOURCE_TYPE>,
         MODEL extends SocketValueListModel<SOCKET, RESOURCE_TYPE>,
     >(
         resourceType: RESOURCE_TYPE,
-        resourceId: ResourceIdAll<SOCKET>,
+        resourceId: SocketResourceId<SOCKET[RESOURCE_TYPE]>,
+        // resourceType: RESOURCE_TYPE,
+        // resourceId: ResourceIdAll<SOCKET>,
     ): ValueList<ID, MODEL> {
         const id = this.autoid.get();
 

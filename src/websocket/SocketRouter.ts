@@ -1,6 +1,7 @@
 import { JSONValue } from "../Json.ts";
 import { z } from 'zod';
 import { Result } from "../Result.ts";
+// import { Socket } from "./client/Socket.ts";
 
 /*
     SOCKET - cała definicja
@@ -120,12 +121,12 @@ export class SocketRouter {
     };
 }
 
-export type SubscriptionRouter<K extends string | number | symbol> = Record<
+export type SubscriptionRouter<K extends string> = Record<
     K,
     DefValue<JSONValue, JSONValue> | DefValueList<JSONValue, JSONValue, JSONValue>
 >;
 
-type ResourceIdInner<T extends DefValue<JSONValue, JSONValue> | DefValueList<JSONValue, JSONValue, JSONValue>> =
+export type SocketResourceId<T extends DefValue<JSONValue, JSONValue> | DefValueList<JSONValue, JSONValue, JSONValue>> =
     T extends DefValue<infer R, JSONValue> ? R
     : T extends DefValueList<infer R, JSONValue, JSONValue> ? R
     : never;
@@ -137,7 +138,7 @@ type Resp<T extends DefValue<JSONValue, JSONValue> | DefValueList<JSONValue, JSO
 
 export type ResourceIdAll<SOCKET extends SubscriptionRouter<string>> = {
     [K in keyof SOCKET]: {
-        resourceId: ResourceIdInner<SOCKET[K]>;
+        resourceId: SocketResourceId<SOCKET[K]>;
     }
 }[keyof SOCKET]['resourceId'];
 
@@ -160,38 +161,62 @@ export type SocketValueListModel<SOCKET extends SubscriptionRouter<RTYPE>, RTYPE
 export type CreateSubscriptionData<SOCKET extends SubscriptionRouter<RTYPE>, RTYPE extends string> = {
     [K in keyof SOCKET]: {
         type: K;
-        resourceId: ResourceIdInner<SOCKET[K]>,
+        resourceId: SocketResourceId<SOCKET[K]>,
         response: (response: Resp<SOCKET[K]>) => void;
     }
 }[keyof SOCKET];
 
 
-const SocketConfig = {
-    user: new DefValue(
-        z.number(), //id
-        z.object({
-            name: z.string(),
-            age: z.number(),
-            verify: z.boolean(),
-        })
-    ),
-    post: new DefValue(
-        z.string(), //id
-        z.object({
-            title: z.string(),
-            description: z.string(),
-        })
-    ),
-    logs: new DefValueList(
-        z.null(), //id
-        z.number(),
-        z.array(z.string()),
-    )
-};
+// const SocketConfig = {
+//     user: new DefValue(
+//         z.number(), //id
+//         z.object({
+//             name: z.string(),
+//             age: z.number(),
+//             verify: z.boolean(),
+//         })
+//     ),
+//     post: new DefValue(
+//         z.string(), //id
+//         z.object({
+//             title: z.string(),
+//             description: z.string(),
+//         })
+//     ),
+//     logs: new DefValueList(
+//         z.null(), //id
+//         z.number(),
+//         z.array(z.string()),
+//     )
+// };
 
-type aaa = ResourceIdAll<typeof SocketConfig>; //number, string, null
+// type aaa = ResourceIdAll<typeof SocketConfig>; //number, string, null
 
-type bbb = SocketValueModel<typeof SocketConfig, 'post'>;
-type ccc = SocketValueListId<typeof SocketConfig, 'logs'>;
+// type bbb = SocketValueModel<typeof SocketConfig, 'post'>;
+// type ccc = SocketValueListId<typeof SocketConfig, 'logs'>;
 
-type ddd = SocketValueListModel<typeof SocketConfig, 'logs'>;
+// type ddd = SocketValueListModel<typeof SocketConfig, 'logs'>;
+
+// const socket = new Socket(SocketConfig, 'ws://127.0.0.1:9999');
+
+// //socket.createValue('user', 3);
+// const post = socket.createValue('post', 'dsadsada');
+// const logs = socket.createValueList('logs', null);
+// const aaaa = socket.createValue('user', 4);
+// // export type SubscriptionRouter<K extends string> = Record<
+// //     K,
+// //     DefValue<JSONValue, JSONValue> | DefValueList<JSONValue, JSONValue, JSONValue>
+// // >;
+
+
+// /*
+// const eee = {
+//     model1: 'ddd',
+//     model2: 44
+// };
+
+// type eee1 = typeof eee;
+
+// type eee2 = eee1['model1' | 'model2'];
+// */
+
