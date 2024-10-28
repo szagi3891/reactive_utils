@@ -132,7 +132,7 @@ type ResourceIdInner<T extends DefValue<JSONValue, JSONValue> | DefValueList<JSO
 
 type Resp<T extends DefValue<JSONValue, JSONValue> | DefValueList<JSONValue, JSONValue, JSONValue>> =
     T extends DefValue<JSONValue, infer R> ? R
-    : T extends DefValueList<JSONValue, infer MID, infer MVAL> ? ValueListUpdateType<MID, MVAL>
+    : T extends DefValueList<JSONValue, infer MID, infer MVAL> ? Array<ValueListUpdateType<MID, MVAL>>
     : never;
 
 export type ResourceIdAll<SOCKET extends SubscriptionRouter<string>> = {
