@@ -2,8 +2,10 @@ import { MessageBrowserZod, type MessageBrowserType, type MessageServerType } fr
 import { JSONValueZod, stringifySort } from '../../Json.ts';
 import { assertNever } from '../../assertNever.ts';
 import { websocketToAsyncQuery } from "./websocketToAsyncQuery.ts";
-import type { CreateSubscriptionData, SubscriptionRouter } from "../type.ts";
+// import type { CreateSubscriptionData, SubscriptionRouter } from "../type.ts";
 import { z } from 'zod';
+import type { CreateSubscriptionData, DefValue, DefValueList, SubscriptionRouter } from "../SocketRouter.ts";
+import type { JSONValue } from "../../../index.ts";
 
 class State {
     private readonly subscription: Map<number, () => void>;
@@ -58,11 +60,12 @@ const ResourceIdZod = z.object({
     id: JSONValueZod,
 });
 
-const handleSocketMessage = <SRK extends string, SR extends SubscriptionRouter<SRK>>(
+//RTYPE_ALL extends string, SOCKET extends SubscriptionRouter<RTYPE_ALL>
+const handleSocketMessage = <RTYPE_ALL extends string, SOCKET extends SubscriptionRouter<RTYPE_ALL>>(
     state: State,
     message: MessageBrowserType,
-    subscriptionRouter: SR,
-    createSubsciption: (data: CreateSubscriptionData<SRK, SR>) => () => void,
+    subscriptionRouter: SOCKET,
+    createSubsciption: (data: CreateSubscriptionData<SOCKET, RTYPE_ALL>) => () => void,
 ): void => {
     if (message.type === 'subscribe') {
 
@@ -82,7 +85,7 @@ const handleSocketMessage = <SRK extends string, SR extends SubscriptionRouter<S
         const prefix = resourceIdSafe.data.type;
 
         //@ts-expect-error
-        const resourceIdValidator = subscriptionRouter[prefix];
+        const resourceIdValidator: DefValueList<JSONValue, JSONValue, JSONValue> | DefValue<JSONValue, JSONValue> | undefined = subscriptionRouter[prefix];
         
         if (resourceIdValidator === undefined) {
             state.sendError(stringifySort({
@@ -92,11 +95,9 @@ const handleSocketMessage = <SRK extends string, SR extends SubscriptionRouter<S
             }));
             return;
         }
-        // if ('type' in resourceId) {
-        // }
 
-        // for (const [prefix, { resourceId: resourceIdValidator}] of iterataObject<SRK, SR>(subscriptionRouter)) {
-        const safeDataId = resourceIdValidator['resourceId'].safeParse(resourceIdSafe.data.id);
+        
+        const safeDataId = resourceIdValidator.resourceId.safeParse(resourceIdSafe.data.id);
 
         if (safeDataId.success) {
             //@ts-expect-error
@@ -107,7 +108,6 @@ const handleSocketMessage = <SRK extends string, SR extends SubscriptionRouter<S
                     state.send({
                         type: 'data',
                         id: message.id,
-                        //@ts-expect-error - może w kolejnej iteracji uda się to poprawić
                         data: response
                     });
                 }
@@ -144,12 +144,12 @@ interface DenoInterface {
     upgradeWebSocket: (req: Request) => { socket: WebSocket, response: Response },
 }
 
-interface Params<SRK extends string, SR extends SubscriptionRouter<SRK>> {
+interface Params<RTYPE_ALL extends string, SOCKET extends SubscriptionRouter<RTYPE_ALL>> {
     deno: DenoInterface,
     hostname: string,
     port: number,
-    subscriptionRouter: SR,
-    createSubsciption: (data: CreateSubscriptionData<SRK, SR>) => () => void,
+    subscriptionRouter: SOCKET,
+    createSubsciption: (data: CreateSubscriptionData<SOCKET, RTYPE_ALL>) => () => void,
 }
 
 export const startWebsocketApi = <SRK extends string, SR extends SubscriptionRouter<SRK>>(params: Params<SRK, SR>): void => {

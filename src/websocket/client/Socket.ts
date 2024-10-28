@@ -1,33 +1,12 @@
-// import { assertNever, AutoId, EventEmitter, jsonParse, JSONValue, throwError, Value, ValueList, JSONValueZod, stringifySort } from "@reactive/utils";
 import { z } from 'zod';
 import { WebsocketStream } from "./WebsocketStream.ts";
 import { assertNever } from "../../assertNever.ts";
 import { AutoId } from "../../AutoId.ts";
 import { EventEmitter } from "../../EventEmitter.ts";
 import { jsonParse, JSONValue, JSONValueZod, stringifySort } from "../../Json.ts";
-import { throwError } from "../../throwError.ts";
 import { Value } from "../../Value.ts";
 import { ValueList } from "../../ValueList.ts";
-
-type SubscriptionRouter<K extends string> = Record<K, { resourceId: z.ZodType<JSONValue>, resp: z.ZodType<JSONValue>}>;
-
-type ValueListUpdateType<ID extends JSONValue, M extends JSONValue> = {
-    type: 'set',
-    id: ID,
-    model: M
-} | {
-    type: 'delete',
-    id: ID
-};
-
-type ValueListIdType<K> = K extends Array<ValueListUpdateType<infer ID, JSONValue>> ? ID : never;
-type ValueListModelType<K> = K extends Array<ValueListUpdateType<JSONValue, infer Model>> ? Model : never;
-
-type ResourceId<SRK extends string, SR extends SubscriptionRouter<SRK>> = {
-    [K in keyof SR]: {
-        resourceId: z.infer<SR[K]['resourceId']>;
-    }
-}[keyof SR]['resourceId'];
+import { DefValue, DefValueList, type ResourceIdAll, type SocketValueListId, type SocketValueListModel, type SocketValueModel, type SubscriptionRouter } from "../SocketRouter.ts";
 
 const MessageServerZod = z.union([
     z.object({
@@ -41,24 +20,26 @@ const MessageServerZod = z.union([
     })
 ]);
 
-
-type SocketStateType<SRK extends string, SR extends SubscriptionRouter<SRK>> = {
+type SocketStateType<RTYPE_ALL extends keyof SOCKET, SOCKET extends SubscriptionRouter<RTYPE_ALL>> = {
     type: 'connected',
     stream: WebsocketStream,
-    acctiveIds: Map<number, ResourceId<SRK, SR>>,
+    acctiveIds: Map<number, {
+        type: RTYPE_ALL,
+        id: ResourceIdAll<SOCKET>
+    }>,
 } | {
     type: 'idle',
 }
 
-export class Socket<SRK extends string, SR extends SubscriptionRouter<SRK>> {
+export class Socket<RTYPE_ALL extends string, SOCKET extends SubscriptionRouter<RTYPE_ALL>> {
     private readonly autoid: AutoId;
-    private connection: SocketStateType<SRK, SR>;
+    private connection: SocketStateType<RTYPE_ALL, SOCKET>;
     private eventResetConnection: EventEmitter<void> = new EventEmitter();
 
     private data: Map<number, (data: JSONValue) => void>;
 
     constructor(
-        private readonly socketRouter: SR,
+        private readonly socketRouter: SOCKET,
         private readonly wsHost: string,
     ) {
         this.autoid = new AutoId();
@@ -69,7 +50,7 @@ export class Socket<SRK extends string, SR extends SubscriptionRouter<SRK>> {
     }
 
     private processMessage(
-        acctiveIds: Map<number, ResourceId<SRK, SR>>,
+        acctiveIds: Map<number, ResourceIdAll<SOCKET>>,
         stream: WebsocketStream,
         message: MessageEvent<unknown> | null
     ) {
@@ -128,7 +109,10 @@ export class Socket<SRK extends string, SR extends SubscriptionRouter<SRK>> {
         return assertNever(messageDate);
     }
 
-    private on(id: number, resourceId: ResourceId<SRK, SR>) {
+    private on(id: number, resourceId: {
+        type: RTYPE_ALL,
+        id: ResourceIdAll<SOCKET>
+    }) {
         if (this.connection.type === 'idle') {
             const stream = new WebsocketStream(this.wsHost, 10_000, false);
             const acctiveIds = new Map();
@@ -178,10 +162,10 @@ export class Socket<SRK extends string, SR extends SubscriptionRouter<SRK>> {
         }
     }
 
-    createValue<K extends SRK, MODEL extends z.infer<SR[K]['resp']> >(
-        resourceType: K,
-        resourceId: z.infer<SR[K]['resourceId']>,
-    ): Value<z.infer<SR[K]['resp']>> {
+    createValue<RESOURCE_TYPE extends RTYPE_ALL, MODEL extends SocketValueModel<SOCKET, RESOURCE_TYPE>> (
+        resourceType: RESOURCE_TYPE,
+        resourceId: ResourceIdAll<SOCKET>,
+    ): Value<MODEL | null> {                                                //TODO - ten null może się zemścić, lepiej wymienić go na jakiegoś enuma algebraicznego
         const id = this.autoid.get();
 
         const value = new Value<MODEL | null>(null, () => {
@@ -195,16 +179,19 @@ export class Socket<SRK extends string, SR extends SubscriptionRouter<SRK>> {
             };
         });
 
-        const decodeResp = this.socketRouter[resourceType]?.resp ?? throwError('Oczekiwano dekodera, nieosiągalne odgałęzienie');
+        const decodeResp = this.socketRouter[resourceType];
 
-        this.data.set(id, (data: unknown) => {
-            const safeData = decodeResp.safeParse(data);
+        if (!(decodeResp instanceof DefValue)) {
+            throw Error('Ten typ zasobu nie jest listą');
+        }
 
-            if (safeData.success) {
+        this.data.set(id, (data: JSONValue) => {
+            const safeData = decodeResp.decodeResp(data);
+
+            if (safeData.type === 'ok') {
                 //@ts-expect-error
-                value.setValue(safeData.data);
+                value.setValue(safeData.value);
             } else {
-                //@ts-expect-error
                 console.info('Problem ze zdekodowaniem danych Value', stringifySort({
                     resourceType,
                     resourceId,
@@ -216,13 +203,15 @@ export class Socket<SRK extends string, SR extends SubscriptionRouter<SRK>> {
         return value;
     }
 
+    //TODO - spróbować tak zdefiniować typ, żeby było dozwolone podanie resourceType, tak aby wskazuwało na ValueList
+
     createValueList<
-        K extends SRK,
-        ID extends ValueListIdType<z.infer<SR[K]['resp']>>,
-        MODEL extends ValueListModelType<z.infer<SR[K]['resp']>>,
+        RESOURCE_TYPE extends RTYPE_ALL,
+        ID extends SocketValueListId<SOCKET, RESOURCE_TYPE>,
+        MODEL extends SocketValueListModel<SOCKET, RESOURCE_TYPE>,
     >(
-        resourceType: K,
-        resourceId: z.infer<SR[K]['resourceId']>,
+        resourceType: RESOURCE_TYPE,
+        resourceId: ResourceIdAll<SOCKET>,
     ): ValueList<ID, MODEL> {
         const id = this.autoid.get();
 
@@ -248,16 +237,21 @@ export class Socket<SRK extends string, SR extends SubscriptionRouter<SRK>> {
             TODO - przydałby się jakiś status loading
         */
 
-        const decodeResp = this.socketRouter[resourceType]?.resp ?? throwError('Oczekiwano dekodera, nieosiągalne odgałęzienie');
+        const decodeResp = this.socketRouter[resourceType];
+        
+        if (!(decodeResp instanceof DefValueList)) {
+            throw Error('Ten typ zasobu nie jest DefValueList');
+        }
 
-        this.data.set(id, (data: unknown) => {
-            const safeData = decodeResp.safeParse(data);
+        this.data.set(id, (data: JSONValue) => {
+            const safeData = decodeResp.decodeResp(data);
 
-            if (safeData.success) {
+            // const safeData = decodeResp.safeParse(data);
+
+            if (safeData.type === 'ok') {
                 //@ts-expect-error
-                list.bulkUpdate(safeData.data);
+                list.bulkUpdate(safeData.value);
             } else {
-                //@ts-expect-error
                 console.info('Problem ze zdekodowaniem danych ValueList', stringifySort({
                     resourceType,
                     resourceId,
