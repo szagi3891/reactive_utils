@@ -42,6 +42,7 @@ export { ValueList, type ValueListUpdateType} from './src/ValueList.ts';
 export { Socket } from './src/websocket/client/Socket.ts';
 export { startWebsocketApi } from './src/websocket/server-deno/server.ts';
 export { SocketRouter, DefValue, DefValueList } from './src/websocket/SocketRouter.ts';
+export { installGlobalSigint } from './src/deno/installGlobalSigint.ts';
 
 //... without jsx
 
