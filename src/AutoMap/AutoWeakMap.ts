@@ -1,5 +1,5 @@
 import { AutoMap } from "./AutoMap.ts";
-import { PrimitiveType } from "./PrimitiveType.ts";
+import { type PrimitiveJSONValue } from "./PrimitiveType.ts";
 
 class CommonRef {
     protected nominal?: never;
@@ -45,7 +45,7 @@ export class AutoWeakMap {
     public static register = register;
     public static unregister = unregister;
 
-    public static create = <C extends { [autoWeakMapKey]: () => void }, K extends PrimitiveType[], V>(
+    public static create = <C extends { [autoWeakMapKey]: () => void }, K extends PrimitiveJSONValue[], V>(
         createValue: (...key: [C, ...K]) => V
     ): ((...key: [C, ...K]) => V) => {
 

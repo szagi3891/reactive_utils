@@ -1,4 +1,4 @@
-import { PrimitiveType, reduceComplexSymbol } from "./PrimitiveType.ts";
+import { reduceComplexSymbol, type PrimitiveJSONValue } from "./PrimitiveType.ts";
 import { stringifySort } from '../Json.ts';
 
 class AutoMapSerialized<K, V> {
@@ -23,7 +23,7 @@ class AutoMapSerialized<K, V> {
     }
 }
 
-export class AutoMap<K extends PrimitiveType, V> {
+export class AutoMap<K extends PrimitiveJSONValue, V> {
     private data: AutoMapSerialized<K, V>;
 
     public constructor(getValue: (id: K) => V) {
@@ -34,7 +34,7 @@ export class AutoMap<K extends PrimitiveType, V> {
         return this.data.get(id);
     }
 
-    static create = <K extends PrimitiveType[], V>(
+    static create = <K extends PrimitiveJSONValue[], V>(
         createValue: (...key: [...K]) => V
     ): ((...key: [...K]) => V) => {
         const data: AutoMap<K, V> = new AutoMap((key: K): V => {

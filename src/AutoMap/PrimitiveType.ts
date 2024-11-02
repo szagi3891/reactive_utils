@@ -39,9 +39,18 @@ export class PrimitiveTypeId<T extends WeakKey> {
 }
 
 
-export type PrimitiveType = JSONValue | { [autoMapKeyAsString]: () => string | number };
+export type PrimitiveJSONValue = 
+    | string 
+    | number 
+    | boolean 
+    | null 
+    | PrimitiveJSONValue[] 
+    | { [key: string]: PrimitiveJSONValue | undefined }
+    | { [autoMapKeyAsString]: () => JSONValue };
 
-export const reduceComplexSymbol = (value: PrimitiveType): JSONValue => {
+
+
+export const reduceComplexSymbol = (value: PrimitiveJSONValue): JSONValue => {
     if (
         value === null ||
         typeof value === 'string' ||
@@ -52,9 +61,22 @@ export const reduceComplexSymbol = (value: PrimitiveType): JSONValue => {
     }
 
     if (autoMapKeyAsString in value) {
-        console.info('konwersja do stringa');
         return value[autoMapKeyAsString]();
     }
+
+    if (Array.isArray(value)) {
+        return value.map(reduceComplexSymbol);
+    }
+
+    const result: Record<string, PrimitiveJSONValue> = {};
     
-    return value;
+    for (const [key, item] of Object.entries(value)) {
+        if (item === undefined) {
+            //ignorowanie undefined wartości
+        } else {
+            result[key] = reduceComplexSymbol(item);
+        }
+    }
+
+    return result;
 };
