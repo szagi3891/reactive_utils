@@ -79,7 +79,7 @@ export const stringifySort = (value: JSONValue, format?: boolean): string => {
 
         return JSON.stringify(recursivelyOrderKeys(value));
     } catch (err) {
-        console.info('stringifySort', {value, format});
+        console.trace('stringifySort', {value, format});
         throw err;
     }
 };
