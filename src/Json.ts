@@ -71,6 +71,8 @@ const recursivelyOrderKeys = (unordered: JSONValue): JSONValue => {
 };
 
 export const stringifySort = (value: JSONValue, format?: boolean): string => {
+    console.info('stringifySort', {value, format});
+
     if (format === true) {
         return JSON.stringify(recursivelyOrderKeys(value), null, 4);
     }
