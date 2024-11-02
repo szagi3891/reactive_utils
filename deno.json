@@ -1,28 +1,28 @@
 {
-  "version": "0.5.137",
-  "name": "@reactive/utils",
-  "exports": "./index.ts",
-  "license": "MIT",
-  "lint": {
-    "rules": {
-      "exclude": [
-        "verbatim-module-syntax",
-        "no-namespace"
-      ]
+    "version": "0.5.138",
+    "name": "@reactive/utils",
+    "exports": "./index.ts",
+    "license": "MIT",
+    "lint": {
+        "rules": {
+            "exclude": [
+                "verbatim-module-syntax",
+                "no-namespace"
+            ]
+        }
+    },
+    "imports": {
+        "@types/react": "npm:@types/react@^*",
+        "mobx": "npm:mobx@^*",
+        "mobx-react-lite": "npm:mobx-react-lite@^*",
+        "react": "npm:react@^*",
+        "@js-temporal/polyfill": "npm:@js-temporal/polyfill@^*",
+        "unws": "npm:unws@^*",
+        "xml-js": "npm:xml-js@^*",
+        "zod": "npm:zod@^*"
+    },
+    "tasks": {
+        "ts-check": "tsc",
+        "test": "deno test  --allow-hrtime --v8-flags=\"--expose-gc\" --trace-leaks"
     }
-  },
-  "imports": {
-    "@types/react": "npm:@types/react@^*",
-    "mobx": "npm:@mobx@^*",
-    "mobx-react-lite": "npm:mobx-react-lite@^*",
-    "react": "npm:react@^*",
-    "@js-temporal/polyfill": "npm:@js-temporal/polyfill@^*",
-    "unws": "npm:unws@^*",
-    "xml-js": "npm:xml-js@^*",
-    "zod": "npm:zod@^*"
-  },
-  "tasks": {
-    "ts-check": "tsc",
-    "test": "deno test  --allow-hrtime --v8-flags=\"--expose-gc\" --trace-leaks"
-  }
 }
