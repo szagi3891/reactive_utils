@@ -1,5 +1,5 @@
-import { xml2js } from 'npm:xml-js';
-import { z } from 'npm:zod';
+import { xml2js } from 'xml-js';
+import { z } from 'zod';
 
 const DeclarationZod = z.object({
     type: z.undefined(),
