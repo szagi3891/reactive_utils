@@ -55,9 +55,10 @@ export class AsyncQuery<T> {
     private receiviers: Array<PromiseBox<Result<T, null>>> = [];
     private senders: Array<PromiseBox<Result<T, null>>> | null = []; //null - query is close
     private readonly abort: AbortBox = new AbortBox();
-    public onAbort = this.abort.onAbort;
+    public onAbort: (callback: () => void) => (() => void);
 
     constructor() {
+        this.onAbort = this.abort.onAbort;
     }
 
     [Symbol.dispose]() {
