@@ -23,7 +23,7 @@ class AutoMapSerialized<K, V> {
     }
 }
 
-export class AutoMap<K extends PrimitiveType[] | PrimitiveType, V> {
+export class AutoMap<K extends PrimitiveType, V> {
     private data: AutoMapSerialized<K, V>;
 
     public constructor(getValue: (id: K) => V) {

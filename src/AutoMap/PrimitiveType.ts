@@ -52,6 +52,7 @@ export const reduceComplexSymbol = (value: PrimitiveType): JSONValue => {
     }
 
     if (autoMapKeyAsString in value) {
+        console.info('konwersja do stringa');
         return value[autoMapKeyAsString]();
     }
     
