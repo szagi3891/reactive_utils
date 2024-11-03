@@ -199,7 +199,7 @@ const parseElementArray = (list: Array<unknown>): Array<XmlNode> => {
     return result;
 };
 
-export const parseXml = async (data: string): Promise<DeclarationType> => {
+export const parseXml = (data: string): DeclarationType => {
     const root = xml2js(data);
 
     const rootSafe = DeclarationZod.safeParse(root);
@@ -215,4 +215,43 @@ export const parseXml = async (data: string): Promise<DeclarationType> => {
     console.info('all xml', JSON.stringify(root, null, 4));
     throw Error('parseXml - unknown data');
 };
+
+
+
+export class XmlElementOnly {
+    constructor(
+        public readonly node: XmlElement,
+        public readonly child: Array<XmlElementOnly>
+    ) {
+    }
+
+    private static convertXmlElement = (main: XmlNode): XmlElementOnly => {
+        const child = [];
+    
+        if (main.type !== 'element') {
+            throw Error('Element powinien być typu Node');
+        }
+    
+        for (const node of main.elements) {
+            child.push(XmlElementOnly.convertXmlElement(node));
+        }
+    
+        return new XmlElementOnly(
+            main,
+            child
+        );
+    };
+    
+    public static parse = (data: string): XmlElementOnly => {
+        const xml = parseXml(data);
+    
+        const [main, ...restElements] = xml.elements;
+    
+        if (main === undefined || restElements.length > 0) {
+            throw Error('Spodziewano się dokładnie jednego elementu');
+        }
+    
+        return XmlElementOnly.convertXmlElement(main);
+    };
+}
 
