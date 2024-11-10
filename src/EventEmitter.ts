@@ -55,7 +55,7 @@ export class ValueEmitter<T> {
         this.emmiter = new EventEmitter();
     }
 
-    public on(callback: (param: T) => void): (() => void) {
+    public on = (callback: (param: T) => void): (() => void) => {
         const unregister = this.emmiter.on(callback);
         callback(this.value);
         return unregister;
