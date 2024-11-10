@@ -46,6 +46,8 @@ export { installGlobalSigint } from './src/deno/installGlobalSigint.ts';
 export { ResizableUint8Array } from './src/ResizableUint8Array.ts';
 export { parseXml, type DeclarationType, type XmlNode, XmlCData, XmlText, XmlElement, XmlElementOnly } from './src/parseXml.ts';
 
+export { superJsonCustom } from './src/superJsonCustom.ts';
+
 //... without jsx
 
 

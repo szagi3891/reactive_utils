@@ -1,5 +1,5 @@
 {
-    "version": "0.5.149",
+    "version": "0.5.150",
     "name": "@reactive/utils",
     "exports": {
         ".": "./index.ts"
@@ -18,6 +18,7 @@
         "mobx": "npm:mobx@^*",
         "mobx-react-lite": "npm:mobx-react-lite@^*",
         "react": "npm:react@^*",
+        "superjson": "npm:superjson@^*",
         "@js-temporal/polyfill": "npm:@js-temporal/polyfill@^*",
         "unws": "npm:unws@^*",
         "xml-js": "npm:xml-js@^*",
