@@ -4,7 +4,55 @@ import { Result } from "./Result.ts";
 
 export interface AsyncIteratorType<T> {
     [Symbol.asyncIterator](): { next: () => Promise<IteratorResult<T>> },
+    map<K>(mapFn: (value: T) => Result<K, null>): AsyncIteratorType<K>,
 }
+
+const buildMap = <T>(iterator2: () => AsyncIteratorType<T>): (<K>(mapFn: (value: T) => Result<K, null>) => AsyncIteratorType<K>) => {
+
+    return <K>(mapFn: (value: T) => Result<K, null>): AsyncIteratorType<K> => {
+
+        const iterator = iterator2()[Symbol.asyncIterator]();
+
+        const next = async (): Promise<IteratorResult<K>> => {
+            while (true) {
+                const value = await iterator.next();
+
+                if (value.done === false) {
+                    const result = mapFn(value.value);
+
+                    if (result.type === 'ok') {
+                        return {
+                            value: result.value,
+                            done: false,
+                        };
+                    }
+
+                    continue;
+                }
+
+                return {
+                    value: undefined,
+                    done: true,
+                };
+            }
+        };
+    
+        // throw Error('TODO');
+
+        const result: AsyncIteratorType<K> = {
+            [Symbol.asyncIterator]: () => {
+                return {
+                    next,
+                };
+            },
+            map: buildMap(() => result),
+        };
+
+        return result;
+    };
+
+    // throw Error('');
+};
 
 export class AsyncQueryIterator<T> implements AsyncIteratorType<T> {
     private isSubscribe: boolean = true;
@@ -52,44 +100,8 @@ export class AsyncQueryIterator<T> implements AsyncIteratorType<T> {
         }
     }
 
-    public map<K>(mapFn: (value: T) => Result<K, null>): AsyncIteratorType<K> {
-        const iterator = this[Symbol.asyncIterator]();
-
-        const next = async (): Promise<IteratorResult<K>> => {
-            while (true) {
-                const value = await iterator.next();
-
-                if (value.done === false) {
-                    const result = mapFn(value.value);
-
-                    if (result.type === 'ok') {
-                        return {
-                            value: result.value,
-                            done: false,
-                        };
-                    }
-
-                    continue;
-                }
-
-                return {
-                    value: undefined,
-                    done: true,
-                };
-            }
-        };
-
-        return {
-            [Symbol.asyncIterator]: () => {
-                return {
-                    next,
-                };
-            }
-        };
-    }
+    public map: <K>(mapFn: (value: T) => Result<K, null>) => AsyncIteratorType<K> = buildMap(() => this);
 }
-
-// const dd: Result<string, string> = Result.ok('a');
 
 export class AsyncQuery<T> {
     private receiviers: Array<PromiseBox<Result<T, null>>> = [];
