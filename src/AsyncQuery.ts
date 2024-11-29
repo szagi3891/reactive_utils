@@ -47,6 +47,28 @@ export class AsyncQueryIterator<T> {
             this.currentBox?.resolve(Result.error(null));
         }
     }
+
+    public map<K>(mapFn: (value: T) => K): { next: () => Promise<IteratorResult<K>> } {
+        const iterator = this[Symbol.asyncIterator]();
+
+        return {
+            next: async (): Promise<IteratorResult<K>> => {
+                const value = await iterator.next();
+
+                if (value.done === false) {
+                    return {
+                        value: mapFn(value.value),
+                        done: false,
+                    };
+                }
+
+                return {
+                    value: undefined,
+                    done: true,
+                };
+            }
+        };
+    }
 }
 
 // const dd: Result<string, string> = Result.ok('a');
