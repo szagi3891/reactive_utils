@@ -2,7 +2,11 @@ import { AbortBox } from "./AbortBox.ts";
 import { PromiseBox } from "./PromiseBox.ts";
 import { Result } from "./Result.ts";
 
-export class AsyncQueryIterator<T> {
+interface AsyncIteratorType<T> {
+    [Symbol.asyncIterator](): { next: () => Promise<IteratorResult<T>> },
+}
+
+export class AsyncQueryIterator<T> implements AsyncIteratorType<T> {
     private isSubscribe: boolean = true;
     private currentBox: PromiseBox<Result<T, null>> | null = null;
 
@@ -48,23 +52,29 @@ export class AsyncQueryIterator<T> {
         }
     }
 
-    public map<K>(mapFn: (value: T) => K): { next: () => Promise<IteratorResult<K>> } {
+    public map<K>(mapFn: (value: T) => K): AsyncIteratorType<K> {
         const iterator = this[Symbol.asyncIterator]();
 
-        return {
-            next: async (): Promise<IteratorResult<K>> => {
-                const value = await iterator.next();
+        const next = async (): Promise<IteratorResult<K>> => {
+            const value = await iterator.next();
 
-                if (value.done === false) {
-                    return {
-                        value: mapFn(value.value),
-                        done: false,
-                    };
-                }
-
+            if (value.done === false) {
                 return {
-                    value: undefined,
-                    done: true,
+                    value: mapFn(value.value),
+                    done: false,
+                };
+            }
+
+            return {
+                value: undefined,
+                done: true,
+            };
+        };
+
+        return {
+            [Symbol.asyncIterator]: () => {
+                return {
+                    next,
                 };
             }
         };
