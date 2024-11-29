@@ -2,7 +2,7 @@ import { AbortBox } from "./AbortBox.ts";
 import { PromiseBox } from "./PromiseBox.ts";
 import { Result } from "./Result.ts";
 
-interface AsyncIteratorType<T> {
+export interface AsyncIteratorType<T> {
     [Symbol.asyncIterator](): { next: () => Promise<IteratorResult<T>> },
 }
 

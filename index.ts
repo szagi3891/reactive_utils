@@ -15,7 +15,7 @@ export { Result } from './src/Result.ts';
 export type { ResultOk, ResultError } from './src/Result.ts';
 export { Semaphore } from './src/Semaphore.ts';
 export { AutoId } from './src/AutoId.ts';
-export { AsyncQuery, AsyncQueryIterator } from './src/AsyncQuery.ts';
+export { AsyncQuery, AsyncQueryIterator, type AsyncIteratorType} from './src/AsyncQuery.ts';
 export { AsyncWebSocket } from './src/AsyncWebSocket.ts';
 export { WebsocketStream } from './src/websocket/client/WebsocketStream.ts';
 export { Defer } from './src/Defer.ts';
