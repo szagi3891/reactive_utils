@@ -52,23 +52,31 @@ export class AsyncQueryIterator<T> implements AsyncIteratorType<T> {
         }
     }
 
-    public map<K>(mapFn: (value: T) => K): AsyncIteratorType<K> {
+    public map<K>(mapFn: (value: T) => Result<K, null>): AsyncIteratorType<K> {
         const iterator = this[Symbol.asyncIterator]();
 
         const next = async (): Promise<IteratorResult<K>> => {
-            const value = await iterator.next();
+            while (true) {
+                const value = await iterator.next();
 
-            if (value.done === false) {
+                if (value.done === false) {
+                    const result = mapFn(value.value);
+
+                    if (result.type === 'ok') {
+                        return {
+                            value: result.value,
+                            done: false,
+                        };
+                    }
+
+                    continue;
+                }
+
                 return {
-                    value: mapFn(value.value),
-                    done: false,
+                    value: undefined,
+                    done: true,
                 };
             }
-
-            return {
-                value: undefined,
-                done: true,
-            };
         };
 
         return {

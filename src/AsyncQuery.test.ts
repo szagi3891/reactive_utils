@@ -1,6 +1,7 @@
 import { AsyncQuery, AsyncQueryIterator } from "./AsyncQuery.ts";
 import { expect } from "jsr:@std/expect";
 import { timeout } from "./timeout.ts";
+import { Result } from "./Result.ts";
 
 const subscribeTo = <K>(query: AsyncQuery<K>, result: Array<K>): AsyncQueryIterator<K> => {
     const iterator = query.subscribe();
@@ -165,3 +166,75 @@ Deno.test('with null', async () => {
 /*
     zrobić test z dwoma konsumerami
 */
+
+Deno.test('AsyncQueryIterator test', async () => {
+    const query = new AsyncQuery<string>();
+    const list: Array<number> = [];
+    let isEnd: boolean = false;
+
+    (async () => {
+        const iterator =  query.subscribe().map((value): Result<number, null> => {
+            const valueInt = parseInt(value, 10);
+
+            if (isNaN(valueInt)) {
+                return Result.error(null);
+            }
+
+            return Result.ok(valueInt);
+        });
+
+        for await (const message of iterator) {
+            list.push(message);
+        }
+
+        isEnd = true;
+    })();
+
+    expect(list).toEqual([]);
+    query.push('ddd');
+    await timeout(0);
+    expect(list).toEqual([]);
+    expect(isEnd).toBe(false);
+
+    query.push('444');
+    await timeout(0);
+    expect(list).toEqual([444]);
+    expect(isEnd).toBe(false);
+
+    query.push('555');
+    await timeout(0);
+    expect(list).toEqual([444, 555]);
+    expect(isEnd).toBe(false);
+
+    query.push('d555');
+    await timeout(0);
+    expect(list).toEqual([444, 555]);
+    expect(isEnd).toBe(false);
+
+    query.push('d555');
+    await timeout(0);
+    expect(list).toEqual([444, 555]);
+    expect(isEnd).toBe(false);
+
+    query.push('d555');
+    await timeout(0);
+    expect(list).toEqual([444, 555]);
+    expect(isEnd).toBe(false);
+
+    query.push('d555');
+    await timeout(0);
+    expect(list).toEqual([444, 555]);
+    expect(isEnd).toBe(false);
+
+    query.push('111111');
+    await timeout(0);
+    expect(list).toEqual([444, 555, 111111]);
+    expect(isEnd).toBe(false);
+
+    query.close();
+    await timeout(0);
+
+    expect(list).toEqual([444, 555, 111111]);
+    expect(isEnd).toBe(true);
+});
+
