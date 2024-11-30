@@ -52,9 +52,9 @@ export class Socket<RTYPE_ALL extends string, SOCKET extends SubscriptionRouter<
     private processMessage(
         acctiveIds: Map<number, ResourceIdAll<SOCKET>>,
         stream: WebsocketStream,
-        message: MessageEvent<unknown> | null
+        message: MessageEvent<unknown> | 'connected' | 'disconnected'
     ) {
-        if (message === null) {
+        if (message === 'connected') {
             for (const [id, resourceId] of acctiveIds) {
                 stream.send(stringifySort({
                     type: "subscribe",
@@ -64,6 +64,10 @@ export class Socket<RTYPE_ALL extends string, SOCKET extends SubscriptionRouter<
             }
 
             this.eventResetConnection.trigger();
+            return;
+        }
+
+        if (message === 'disconnected') {
             return;
         }
 

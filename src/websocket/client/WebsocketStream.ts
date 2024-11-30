@@ -8,8 +8,8 @@ const createStream = (
     wsHost: string,
     timeoutMs: number,
     log: boolean
-): AsyncQuery<MessageEvent<unknown> | null> => {
-    const receivedMessage = new AsyncQuery<MessageEvent<unknown> | null>();
+): AsyncQuery<MessageEvent<unknown> | 'connected' | 'disconnected'> => {
+    const receivedMessage = new AsyncQuery<MessageEvent<unknown> | 'connected' | 'disconnected'>();
 
     (async () => {
         while (receivedMessage.isOpen()) {
@@ -30,11 +30,13 @@ const createStream = (
                 sentUnsubscribe();
             });
 
-            receivedMessage.push(null); //informuje, że jest nawiązane nowe połaczenie
+            receivedMessage.push('connected');
 
             for await (const message of socket.subscribe()) {
                 receivedMessage.push(message);
             }
+
+            receivedMessage.push('disconnected');
 
             console.info('disconnect, waiting ...');
             await timeout(1000);
@@ -46,7 +48,7 @@ const createStream = (
 
 export class WebsocketStream {
     private readonly sentMessage: EventEmitter<string | BufferSource>;
-    private readonly receivedMessage: AsyncQuery<MessageEvent<unknown> | null>;
+    private readonly receivedMessage: AsyncQuery<MessageEvent<unknown> | 'connected' | 'disconnected'>;
 
     constructor(
         wsHost: string,
@@ -61,7 +63,7 @@ export class WebsocketStream {
         this.sentMessage.trigger(data);
     }
 
-    public messages(): AsyncQueryIterator<MessageEvent<unknown> | null> {
+    public messages(): AsyncQueryIterator<MessageEvent<unknown> | 'connected' | 'disconnected'> {
         return this.receivedMessage.subscribe();
     }
 
