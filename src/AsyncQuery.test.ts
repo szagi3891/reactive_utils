@@ -31,7 +31,7 @@ Deno.test('basic', async () => {
     expect(abort).toBe(false);
     expect(list).toEqual([]);
 
-    const _sub1 = subscribeTo(query, list);
+    const sub1 = subscribeTo(query, list);
     // (async () => {
     //     for await (const message of query.subscribe()) {
     //         list.push(message);
@@ -56,6 +56,8 @@ Deno.test('basic', async () => {
 
     expect(abort).toBe(true);
     expect(list).toEqual([3, 4, 5]);
+
+    sub1.unsubscribe();
 });
 
 Deno.test('multi', async () => {
@@ -141,7 +143,7 @@ Deno.test('with null', async () => {
     const list: Array<string | null> = [];
     const query = new AsyncQuery();
 
-    const _sub = subscribeTo(query, list);
+    const sub = subscribeTo(query, list);
 
     expect(list).toEqual([]);
 
@@ -162,6 +164,8 @@ Deno.test('with null', async () => {
     await timeout(0);
 
     expect(list).toEqual(['aa', 'bb', null, 'cc', 'dd', 'ee']);
+
+    sub.unsubscribe();
 });
 /*
     zrobić test z dwoma konsumerami

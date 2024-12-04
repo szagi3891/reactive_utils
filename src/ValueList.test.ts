@@ -118,7 +118,7 @@ Deno.test('opóźniona replikacja', async () => {
     });
 
     const sub = autorun(() => {
-        const _ids = replica.ids;
+        /*const _ids =*/ replica.ids;
     })
 
     expect(replica.dump()).toEqual([]);
@@ -188,7 +188,7 @@ Deno.test('opóźniona replikacja', async () => {
     expect(replica.dump()).toEqual([{ id: 1, model: 'a' }, { id: 2, model: 'b' }]);
 
     const sub2 = autorun(() => {
-        const _aaa = replica.ids;
+        /*const _aaa =*/ replica.ids;
     });
 
     await time.tickAsync(200);
@@ -290,7 +290,7 @@ Deno.test('subscribe', async () => {
     expect(subscribe).toBe(false);
 
     const sub1 = autorun(() => {
-        const _ids = list.ids;
+        /*const _ids =*/ list.ids;
     })
 
     await time.tickAsync(0);

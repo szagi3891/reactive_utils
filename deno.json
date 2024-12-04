@@ -1,5 +1,5 @@
 {
-    "version": "0.5.159",
+    "version": "0.5.160",
     "name": "@reactive/utils",
     "exports": {
         ".": "./index.ts"
@@ -27,5 +27,9 @@
     "tasks": {
         "ts-check": "tsc",
         "test": "deno test  --allow-hrtime --v8-flags=\"--expose-gc\" --trace-leaks"
+    },
+    "compilerOptions": {
+        "noUnusedLocals": true,
+        "noUnusedParameters": true
     }
 }

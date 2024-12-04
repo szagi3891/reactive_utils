@@ -131,7 +131,7 @@ Deno.test('refresh-and-count', async () => {
     );
 
     const dispose = autorun(() => {
-        const _data = inst.getReady();
+        /*const _data =*/ inst.getReady();
     });
 
     expect(execCounter).toBe(0);
@@ -180,7 +180,7 @@ Deno.test('refresh-in-connect', async () => {
     );
 
     const dispose = autorun(() => {
-        const _data = inst.getReady();
+        /* const _data = */ inst.getReady();
     });
 
     await timeout(100);

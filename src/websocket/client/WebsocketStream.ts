@@ -98,7 +98,7 @@ export class WebsocketStream {
     }
 }
 
-function assertNever(message: never): void {
+function assertNever(_message: never): void {
     throw new Error("Function not implemented.");
 }
 

@@ -22,7 +22,7 @@ export class PathModel {
     }
 
     private constructor(
-        private readonly common: Common,
+        _common: Common,
         public readonly path: Array<string>,
     ) {
     }
@@ -39,8 +39,8 @@ export class PathContentModel {
     }
 
     private constructor(
-        private readonly common: Common,
-        private readonly path: PathModel,
+        _common: Common,
+        _path: PathModel,
         _sha: string,
     ) {
     }
