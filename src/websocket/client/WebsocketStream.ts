@@ -3,8 +3,15 @@ import { AsyncQuery, AsyncQueryIterator } from "../../AsyncQuery.ts";
 import { EventEmitter } from "../../EventEmitter.ts";
 import { AsyncWebSocket } from "../../AsyncWebSocket.ts";
 
+type Message = {
+    type: 'message',
+    value: string | BufferSource
+} | {
+    type: 'reconnect',
+};
+
 const createStream = (
-    sentMessage: EventEmitter<string | BufferSource>,
+    sentMessage: EventEmitter<Message>,
     wsHost: string,
     timeoutMs: number,
     log: boolean
@@ -19,9 +26,19 @@ const createStream = (
                 socket.close();
             });
 
-            const sentUnsubscribe = sentMessage.on((messageSent) => {
+            const sentUnsubscribe = sentMessage.on((message) => {
                 if (socket.isClose() === false) {
-                    socket.send(messageSent);
+                    if (message.type === 'message') {
+                        socket.send(message.value);
+                        return;
+                    }
+                    if (message.type === 'reconnect') {
+                        console.info('reconnect ...');
+                        socket.close();
+                        return;
+                    }
+
+                    return assertNever(message);
                 }
             });
 
@@ -47,7 +64,7 @@ const createStream = (
 };
 
 export class WebsocketStream {
-    private readonly sentMessage: EventEmitter<string | BufferSource>;
+    private readonly sentMessage: EventEmitter<Message>;
     private readonly receivedMessage: AsyncQuery<MessageEvent<unknown> | 'connected' | 'disconnected'>;
 
     constructor(
@@ -55,12 +72,15 @@ export class WebsocketStream {
         timeoutMs: number,
         log: boolean
     ) {
-        this.sentMessage = new EventEmitter<string | BufferSource>();
+        this.sentMessage = new EventEmitter<Message>();
         this.receivedMessage = createStream(this.sentMessage, wsHost, timeoutMs, log);
     }
 
     public send(data: string | BufferSource): void {
-        this.sentMessage.trigger(data);
+        this.sentMessage.trigger({
+            type: 'message',
+            value: data
+        });
     }
 
     public messages(): AsyncQueryIterator<MessageEvent<unknown> | 'connected' | 'disconnected'> {
@@ -70,5 +90,15 @@ export class WebsocketStream {
     public close(): void {
         this.receivedMessage.close();
     }
+
+    public reconnect(): void {
+        this.sentMessage.trigger({
+            type: 'reconnect',
+        });
+    }
+}
+
+function assertNever(message: never): void {
+    throw new Error("Function not implemented.");
 }
 
