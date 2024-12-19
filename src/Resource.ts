@@ -1,50 +1,44 @@
 import { autorun } from 'mobx';
 import { PromiseBox } from './PromiseBox.ts';
 import { ValueUnsafe } from './ValueUnsafe.ts';
+import { Result } from "./Result.ts";
+import { assertNever } from "./assertNever.ts";
 
 const TIMEOUT = 10000;
 
-interface ResultLoading {
-    readonly type: 'loading';
-    // readonly whenReady: Promise<void>;
-}
-
-interface ResultReady<T> {
-    readonly type: 'ready';
-    readonly value: T;
-}
-
-interface ResultError {
-    readonly type: 'error';
-    readonly message: string;
+type ResultError = {
+    type: 'error',
+    message: string,
+} | {
+    type: 'loading',
 }
 
 export namespace ResourceResult {
-    export const ok = <T>(value: T): ResultReady<T> => {
-        return {
-            type: 'ready',
-            value
-        };
+    export const ok = <T>(value: T): Result<T, ResultError> => {
+        return Result.ok(value);
     }
   
-    export const error = (message: string): ResultError => {
-        return {
+    export const error = <T>(message: string): Result<T, ResultError> => {
+        return Result.error({
             type: 'error',
             message,
-        };
+        });
+    }
+
+    export const loaading = <T>(): Result<T, ResultError> => {
+        return Result.error({
+            type: 'loading'
+        });
     }
 }
 
-export type ResourceResult<T> = ResultLoading | ResultReady<T> | ResultError;
+export type ResourceResult<T> = Result<T, ResultError>;
 
 const send = <T>(loadValue: () => Promise<T>): Promise<ResourceResult<T>> => {
     const response = new PromiseBox<ResourceResult<T>>();
 
     const timer = setTimeout(() => {
-        response.resolve({
-            type: 'error',
-            message: 'timeout',
-        });
+        response.resolve(ResourceResult.error('timeout'));
     }, TIMEOUT);
 
     (async () => {
@@ -52,18 +46,12 @@ const send = <T>(loadValue: () => Promise<T>): Promise<ResourceResult<T>> => {
             const loadedValue = await loadValue();
 
             clearTimeout(timer);
-            response.resolve({
-                type: 'ready',
-                value: loadedValue,
-            });
+            response.resolve(Result.ok(loadedValue));
         } catch (err) {
             console.error(err);
 
             clearTimeout(timer);
-            response.resolve({
-                type: 'error',
-                message: String(err),
-            });
+            response.resolve(ResourceResult.error(String(err)));
         }
     })();
 
@@ -84,9 +72,7 @@ export class Resource<T> {
             {
                 revision: 0,
                 type: 'optimistic',
-                value: {
-                    type: 'loading'
-                }
+                value: ResourceResult.loaading()
             },
             onConnect
         );
@@ -126,9 +112,7 @@ export class Resource<T> {
             this.current.value = {
                 revision: 1,
                 type: 'optimistic',
-                value: {
-                    'type': 'loading'
-                }
+                value: ResourceResult.loaading(),
             };
 
             setTimeout(() => {
@@ -136,6 +120,8 @@ export class Resource<T> {
             }, 0);
         }
     }
+
+    //TODO - zamoenić na Result<T, loding | error>
 
     public get(): ResourceResult<T> {
         this.init();
@@ -151,7 +137,7 @@ export class Resource<T> {
         optimisticUpdate?: (prevValue: T) => T
     ): [boolean, ResourceResult<T>] {
 
-        if (prevValue.type === 'ready' && optimisticUpdate !== undefined) {
+        if (prevValue.type === 'ok' && optimisticUpdate !== undefined) {
             return [true, ResourceResult.ok(optimisticUpdate(prevValue.value))];
         }
 
@@ -192,18 +178,28 @@ export class Resource<T> {
         const dispose = autorun((dispose) => {
             const data = this.get();
 
-            if (data.type === 'loading') {
-                return;
-            }
-
-            if (data.type === 'error') {
-                result.reject(data.message);
+            if (data.type === 'ok') {
+                result.resolve(data.value);
                 dispose.dispose();
                 return;
             }
 
-            result.resolve(data.value);
-            dispose.dispose();
+            if (data.type === 'error') {
+                const error = data.error;
+
+                if (error.type === 'loading') {
+                    return;
+                }
+
+                if (error.type === 'error') {
+                    result.reject(error.message);
+                    dispose.dispose();
+                    return;
+                }
+                return assertNever(error);
+            }
+            
+            return assertNever(data);
         });
 
         const timeout = new Error('Timeout');
@@ -219,7 +215,7 @@ export class Resource<T> {
     public getReady(): T | null {
         const result = this.get();
 
-        if (result.type === 'ready') {
+        if (result.type === 'ok') {
             return result.value;
         }
 

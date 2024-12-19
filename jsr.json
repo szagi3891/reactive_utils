@@ -1,5 +1,5 @@
 {
-    "version": "0.5.160",
+    "version": "0.5.161",
     "name": "@reactive/utils",
     "exports": "./index.ts",
     "license": "MIT"
