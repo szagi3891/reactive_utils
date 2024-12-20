@@ -44,7 +44,7 @@ export const jsonParse = <T>(text: string, validator: z.ZodType<T>): Result<T, s
         return Result.ok(data.data);
     }
 
-    return Result.error(`Validation (zod) -> error=${data.error.toString()} data=${JSON.stringify(text, null, 4)}`);
+    return Result.error(`Validation (zod) -> data=${JSON.stringify(text, null, 4)} error=${data.error.toString()}`);
 };
 
 const recursivelyOrderKeys = (unordered: JSONValue): JSONValue => {
