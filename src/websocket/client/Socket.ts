@@ -1,5 +1,5 @@
 import { z } from 'zod';
-import { WebsocketStream } from "./WebsocketStream.ts";
+import { WebsocketStream, type WebsocketStreamMessageReceived } from "./WebsocketStream.ts";
 import { assertNever } from "../../assertNever.ts";
 import { AutoId } from "../../AutoId.ts";
 import { EventEmitter } from "../../EventEmitter.ts";
@@ -52,9 +52,9 @@ export class Socket<RTYPE_ALL extends string, SOCKET extends SubscriptionRouter<
     private processMessage(
         acctiveIds: Map<number, ResourceIdAll<SOCKET>>,
         stream: WebsocketStream,
-        message: MessageEvent<unknown> | 'connected' | 'disconnected'
+        message: WebsocketStreamMessageReceived
     ) {
-        if (message === 'connected') {
+        if (message.type === 'connected') {
             for (const [id, resourceId] of acctiveIds) {
                 stream.send(stringifySort({
                     type: "subscribe",
@@ -67,12 +67,7 @@ export class Socket<RTYPE_ALL extends string, SOCKET extends SubscriptionRouter<
             return;
         }
 
-        if (message === 'disconnected') {
-            return;
-        }
-
-        if (typeof message.data !== 'string') {
-            console.error('Nieprawidłowy typ wiadomości', message);
+        if (message.type === 'disconnected') {
             return;
         }
 

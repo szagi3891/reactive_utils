@@ -8,8 +8,7 @@ const autoId = new AutoId();
 
 class SocketStream {
     constructor(
-        // public readonly socket: WebSocket,
-        public readonly query: AsyncQuery<MessageEvent<unknown>>,
+        public readonly query: AsyncQuery<string>,
         public readonly onClose: () => void,
         public readonly send: (data: string | BufferSource) => void
     ) {}
@@ -36,7 +35,7 @@ export class AsyncWebSocket {
         this.onAbort = this.stream.query.onAbort;
     }
 
-    subscribe(): AsyncQueryIterator<MessageEvent<unknown>> {
+    subscribe(): AsyncQueryIterator<string> {
         return this.stream.query.subscribe();
     }
 
@@ -111,14 +110,15 @@ export class AsyncWebSocket {
             });
 
             socket.addEventListener('message', (data) => {
-                if (log) {
-                    if (typeof data.data === 'string') {
+                if (typeof data.data === 'string') {
+                    if (log) {
                         console.info(`AsyncWebSocket ${id}: RECEIVED -> string -> ${data.data}`);
-                    } else {
-                        console.info(`AsyncWebSocket ${id}: RECEIVED -> ${typeof data.data}`);
                     }
+                    stream.query.push(data.data);
+                    return;
                 }
-                stream.query.push(data);
+
+                console.error(`AsyncWebSocket ${id}: RECEIVED -> unsupported message type -> ${typeof data.data}`);
             });
 
             socket.addEventListener('error', (data: Event) => {

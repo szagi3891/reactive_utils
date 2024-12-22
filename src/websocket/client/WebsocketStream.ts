@@ -3,7 +3,16 @@ import { AsyncQuery, AsyncQueryIterator } from "../../AsyncQuery.ts";
 import { EventEmitter } from "../../EventEmitter.ts";
 import { AsyncWebSocket } from "../../AsyncWebSocket.ts";
 
-type Message = {
+export type WebsocketStreamMessageReceived = {
+    type: 'message',
+    data: string,
+} | {
+    type: 'connected',
+} | {
+    type: 'disconnected',
+}
+
+export type WebsocketStreamMessageSend = {
     type: 'message',
     value: string | BufferSource
 } | {
@@ -11,12 +20,12 @@ type Message = {
 };
 
 const createStream = (
-    sentMessage: EventEmitter<Message>,
+    sentMessage: EventEmitter<WebsocketStreamMessageSend>,
     wsHost: string,
     timeoutMs: number,
     log: boolean
-): AsyncQuery<MessageEvent<unknown> | 'connected' | 'disconnected'> => {
-    const receivedMessage = new AsyncQuery<MessageEvent<unknown> | 'connected' | 'disconnected'>();
+): AsyncQuery<WebsocketStreamMessageReceived> => {
+    const receivedMessage = new AsyncQuery<WebsocketStreamMessageReceived>();
 
     (async () => {
         while (receivedMessage.isOpen()) {
@@ -47,13 +56,20 @@ const createStream = (
                 sentUnsubscribe();
             });
 
-            receivedMessage.push('connected');
+            receivedMessage.push({
+                type: 'connected'
+            });
 
             for await (const message of socket.subscribe()) {
-                receivedMessage.push(message);
+                receivedMessage.push({
+                    type: 'message',
+                    data: message
+                });
             }
 
-            receivedMessage.push('disconnected');
+            receivedMessage.push({
+                type: 'disconnected'
+            });
 
             console.info('disconnect, waiting ...');
             await timeout(1000);
@@ -64,15 +80,15 @@ const createStream = (
 };
 
 export class WebsocketStream {
-    private readonly sentMessage: EventEmitter<Message>;
-    private readonly receivedMessage: AsyncQuery<MessageEvent<unknown> | 'connected' | 'disconnected'>;
+    private readonly sentMessage: EventEmitter<WebsocketStreamMessageSend>;
+    private readonly receivedMessage: AsyncQuery<WebsocketStreamMessageReceived>;
 
     constructor(
         wsHost: string,
         timeoutMs: number,
         log: boolean
     ) {
-        this.sentMessage = new EventEmitter<Message>();
+        this.sentMessage = new EventEmitter<WebsocketStreamMessageSend>();
         this.receivedMessage = createStream(this.sentMessage, wsHost, timeoutMs, log);
     }
 
@@ -83,7 +99,7 @@ export class WebsocketStream {
         });
     }
 
-    public messages(): AsyncQueryIterator<MessageEvent<unknown> | 'connected' | 'disconnected'> {
+    public messages(): AsyncQueryIterator<WebsocketStreamMessageReceived> {
         return this.receivedMessage.subscribe();
     }
 

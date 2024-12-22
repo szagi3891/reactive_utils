@@ -17,7 +17,7 @@ export { Semaphore } from './src/Semaphore.ts';
 export { AutoId } from './src/AutoId.ts';
 export { AsyncQuery, AsyncQueryIterator, type AsyncIteratorType} from './src/AsyncQuery.ts';
 export { AsyncWebSocket } from './src/AsyncWebSocket.ts';
-export { WebsocketStream } from './src/websocket/client/WebsocketStream.ts';
+export { WebsocketStream, type WebsocketStreamMessageReceived, type WebsocketStreamMessageSend } from './src/websocket/client/WebsocketStream.ts';
 export { Defer } from './src/Defer.ts';
 export { jsonParseRaw, jsonParse, stringifySort, JSONValueZod } from './src/Json.ts';
 export type { JSONValue } from './src/Json.ts';
