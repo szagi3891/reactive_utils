@@ -1,6 +1,6 @@
-import { timeout } from "./timeout.ts";
-import { AsyncQuery, AsyncQueryIterator } from "./AsyncQuery.ts";
-import { EventEmitter } from "./EventEmitter.ts";
+import { timeout } from "../timeout.ts";
+import { AsyncQuery, AsyncQueryIterator } from "../AsyncQuery.ts";
+import { EventEmitter } from "../EventEmitter.ts";
 import { AsyncWebSocket } from "./AsyncWebsocket.ts";
 
 export type WebsocketStreamMessageReceived = {
