@@ -54,7 +54,7 @@ export class AsyncWebSocket {
 
     
     public isClose(): boolean {
-        return this.isClose();
+        return this.query.isClose();
     }
 
     public close() {
