@@ -39,6 +39,7 @@ export class AsyncWebSocket {
     private constructor(
         private log: Log,
         private readonly query: AsyncQuery<string>,
+        private readonly sendFn: (data: string | BufferSource) => void,
     ) {
         this.onAbort = this.query.onAbort;
     }
@@ -58,7 +59,7 @@ export class AsyncWebSocket {
 
     public close() {
         this.log.debug('close');
-        this.close();
+        this.query.close();
     }
 
     public send = (data: string | BufferSource): void => {
@@ -66,8 +67,57 @@ export class AsyncWebSocket {
             this.log.warn(`Ignore send message (socket is close)`, data);
         } else {
             this.log.debug('SEND ->', data);
-            this.send(data);
+            this.sendFn(data);
         }
+    }
+
+    static forTest(showDebugLog: boolean, onReceived: (message: string | BufferSource) => void): {
+        send: (data: string) => void,
+        socket: AsyncWebSocket,
+    } {
+        const log = new Log(showDebugLog);
+        const query = new AsyncQuery<string>(); 
+
+        const returnInst = new AsyncWebSocket(
+            log,
+            query,
+            (data: string | BufferSource) => {
+                onReceived(data);
+            },
+        );
+
+        return {
+            send: (data: string) => {
+                query.push(data);
+            },
+            socket: returnInst
+        };
+    }
+
+    static fromWebSocket(socket: WebSocket, showDebugLog: boolean): AsyncWebSocket {
+        const log = new Log(showDebugLog);
+
+        const query = new AsyncQuery<string>();
+
+        socket.addEventListener('message', (data) => {
+            if (typeof data.data === 'string') {
+                log.debug(`RECEIVED -> string -> ${data.data}`);
+                query.push(data.data);
+                return;
+            }
+
+            log.error(`RECEIVED -> unsupported message type -> ${typeof data.data}`);
+        });
+
+        const returnInst = new AsyncWebSocket(
+            log,
+            query,
+            (data: string | BufferSource) => {
+                socket.send(data);
+            },
+        );
+
+        return returnInst;
     }
 
     static create(host: string, timeout: number, showDebugLog: boolean): Promise<AsyncWebSocket> {
@@ -83,7 +133,13 @@ export class AsyncWebSocket {
             socket.close();
         });
 
-        const returnInst = new AsyncWebSocket(log, query);
+        const returnInst = new AsyncWebSocket(
+            log,
+            query,
+            (data: string | BufferSource) => {
+                socket.send(data);
+            },
+        );
 
         setTimeout(() => {
             if (result.isFulfilled()) {
@@ -130,6 +186,8 @@ export class AsyncWebSocket {
         return result.promise;
     }
 }
+
+//TODO - konstruktor statyczny, tworzenie strumienia z gotowego obiektu WebSoocket
 
 /*
     interfejs strumienia (socket ?)
