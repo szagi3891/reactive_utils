@@ -1,5 +1,5 @@
 import { z } from 'zod';
-import { WebsocketStream, type WebsocketStreamMessageReceived } from "./WebsocketStream.ts";
+import { WebsocketStream, type WebsocketStreamMessageReceived } from "../../AsyncWebsocketStream.ts";
 import { assertNever } from "../../assertNever.ts";
 import { AutoId } from "../../AutoId.ts";
 import { EventEmitter } from "../../EventEmitter.ts";
