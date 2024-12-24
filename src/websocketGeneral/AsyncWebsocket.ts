@@ -71,7 +71,7 @@ export class AsyncWebSocket {
         }
     }
 
-    static forTest(showDebugLog: boolean, onReceived: (message: string | BufferSource) => void): {
+    static custom(showDebugLog: boolean, onReceived: (message: string | BufferSource) => void): {
         send: (data: string) => void,
         socket: AsyncWebSocket,
     } {
