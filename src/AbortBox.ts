@@ -26,7 +26,9 @@ export class AbortBox {
         if (this.emmit === null) {
             return;
         }
-        this.emmit.trigger();
+
+        const emmit = this.emmit;
         this.emmit = null;
+        emmit.trigger();
     }
 }

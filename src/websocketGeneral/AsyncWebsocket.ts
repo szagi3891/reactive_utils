@@ -4,6 +4,13 @@ import type { AsyncQueryIterator } from "../AsyncQuery.ts";
 import { WebSocket } from 'unws';
 import { AutoId } from "../AutoId.ts";
 
+export interface AsyncWebSocketType {
+    addEventListener : WebSocket['addEventListener'],
+    close: WebSocket['close'],
+    url: WebSocket['url'],
+    send: WebSocket['send'],
+}
+
 const autoId = new AutoId();
 
 class Log {
@@ -33,6 +40,39 @@ class Log {
     }
 }
 
+const setupHanlders = (
+    log: Log,
+    socket: AsyncWebSocketType,
+    query: AsyncQuery<string>,
+    whenClose?: () => void,
+) => {
+    query.onAbort(() => {
+        socket.close();
+    });
+
+    socket.addEventListener('message', (data) => {
+        if (typeof data.data === 'string') {
+            log.debug(`RECEIVED -> string -> ${data.data}`);
+            query.push(data.data);
+            return;
+        }
+
+        log.error(`RECEIVED -> unsupported message type -> ${typeof data.data}`);
+    });
+
+    socket.addEventListener('error', (data: Event) => {
+        log.error(`Error connection for ${socket.url}, error=${String(data)}`, data);
+        query.close();
+        whenClose?.();
+    });
+
+    socket.addEventListener('close', () => {
+        log.debug(`Close connection for ${socket.url}`);
+        query.close();
+        whenClose?.();
+    });
+}
+
 export class AsyncWebSocket {
     public onAbort: (callback: () => void) => (() => void);
 
@@ -52,7 +92,6 @@ export class AsyncWebSocket {
         this.close();
     }
 
-    
     public isClose(): boolean {
         return this.query.isClose();
     }
@@ -76,48 +115,39 @@ export class AsyncWebSocket {
         socket: AsyncWebSocket,
     } {
         const log = new Log(showDebugLog);
-        const query = new AsyncQuery<string>(); 
-
-        const returnInst = new AsyncWebSocket(
-            log,
-            query,
-            (data: string | BufferSource) => {
-                onReceived(data);
-            },
-        );
+        const query = new AsyncQuery<string>();
 
         return {
             send: (data: string) => {
                 query.push(data);
             },
-            socket: returnInst
+            socket: new AsyncWebSocket(
+                log,
+                query,
+                (data: string | BufferSource) => {
+                    onReceived(data);
+                },
+            )
         };
     }
 
-    static fromWebSocket(socket: WebSocket, showDebugLog: boolean): AsyncWebSocket {
+    static fromWebSocket(socket: AsyncWebSocketType, showDebugLog: boolean): AsyncWebSocket {
         const log = new Log(showDebugLog);
-
         const query = new AsyncQuery<string>();
 
-        socket.addEventListener('message', (data) => {
-            if (typeof data.data === 'string') {
-                log.debug(`RECEIVED -> string -> ${data.data}`);
-                query.push(data.data);
-                return;
-            }
+        setupHanlders(
+            log,
+            socket,
+            query,
+        );
 
-            log.error(`RECEIVED -> unsupported message type -> ${typeof data.data}`);
-        });
-
-        const returnInst = new AsyncWebSocket(
+        return new AsyncWebSocket(
             log,
             query,
             (data: string | BufferSource) => {
                 socket.send(data);
             },
         );
-
-        return returnInst;
     }
 
     static create(host: string, timeout: number, showDebugLog: boolean): Promise<AsyncWebSocket> {
@@ -128,10 +158,6 @@ export class AsyncWebSocket {
         const timeStart = new Date();
         const socket = new WebSocket(host);
         const query = new AsyncQuery<string>();
-
-        query.onAbort(() => {
-            socket.close();
-        });
 
         const returnInst = new AsyncWebSocket(
             log,
@@ -159,45 +185,15 @@ export class AsyncWebSocket {
             result.resolve(returnInst);
         });
 
-        socket.addEventListener('message', (data) => {
-            if (typeof data.data === 'string') {
-                log.debug(`RECEIVED -> string -> ${data.data}`);
-                query.push(data.data);
-                return;
-            }
-
-            log.error(`RECEIVED -> unsupported message type -> ${typeof data.data}`);
-        });
-
-        socket.addEventListener('error', (data: Event) => {
-            log.error(`Error connection for ${host}, error=${String(data)}`, data);
-            result.resolve(returnInst);
-            query.close();
-        });
-
-        socket.addEventListener('close', () => {
-            if (result.isFulfilled() === false) {
-                log.error(`Close connection for ${host}`);
+        setupHanlders(
+            log,
+            socket,
+            query,
+            () => {
                 result.resolve(returnInst);
             }
-            query.close();
-        });
+        );
 
         return result.promise;
     }
 }
-
-//TODO - konstruktor statyczny, tworzenie strumienia z gotowego obiektu WebSoocket
-
-/*
-    interfejs strumienia (socket ?)
-
-        subscribe(): AsyncQueryIterator<string> {
-        }
-
-        public close() {
-        }
-
-        public send = (data: string | BufferSource): void => {
-        }
-*/
