@@ -9,6 +9,7 @@ export interface AsyncWebSocketType {
     close: WebSocket['close'],
     url: WebSocket['url'],
     send: WebSocket['send'],
+    protocol: WebSocket['protocol'],
 }
 
 const autoId = new AutoId();
@@ -80,6 +81,7 @@ export class AsyncWebSocket {
         private log: Log,
         private readonly query: AsyncQuery<string>,
         private readonly sendFn: (data: string | BufferSource) => void,
+        public readonly protocol: string,
     ) {
         this.onAbort = this.query.onAbort;
     }
@@ -110,7 +112,11 @@ export class AsyncWebSocket {
         }
     }
 
-    static custom(showDebugLog: boolean, onReceived: (message: string | BufferSource) => void): {
+    static custom(
+        showDebugLog: boolean,
+        onReceived: (message: string | BufferSource) => void,
+        protocol: string,
+    ): {
         send: (data: string) => void,
         socket: AsyncWebSocket,
     } {
@@ -127,6 +133,7 @@ export class AsyncWebSocket {
                 (data: string | BufferSource) => {
                     onReceived(data);
                 },
+                protocol,
             )
         };
     }
@@ -147,10 +154,16 @@ export class AsyncWebSocket {
             (data: string | BufferSource) => {
                 socket.send(data);
             },
+            socket.protocol,
         );
     }
 
-    static create(host: string, timeout: number, showDebugLog: boolean): Promise<AsyncWebSocket> {
+    static create(
+        host: string,
+        protocol: string,
+        timeout: number,
+        showDebugLog: boolean
+    ): Promise<AsyncWebSocket> {
         const result = new PromiseBoxOptimistic<AsyncWebSocket>();
         const log = new Log(showDebugLog);
         log.info(`connect to ${host}`);
@@ -165,6 +178,7 @@ export class AsyncWebSocket {
             (data: string | BufferSource) => {
                 socket.send(data);
             },
+            protocol,
         );
 
         setTimeout(() => {

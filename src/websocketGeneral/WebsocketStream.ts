@@ -22,6 +22,7 @@ export type WebsocketStreamMessageSend = {
 const createStream = (
     sentMessage: EventEmitter<WebsocketStreamMessageSend>,
     wsHost: string,
+    protocol: string,
     timeoutMs: number,
     log: boolean
 ): AsyncQuery<WebsocketStreamMessageReceived> => {
@@ -29,7 +30,7 @@ const createStream = (
 
     (async () => {
         while (receivedMessage.isOpen()) {
-            const socket = await AsyncWebSocket.create(wsHost, timeoutMs, log);
+            const socket = await AsyncWebSocket.create(wsHost, protocol, timeoutMs, log);
 
             const unsubscribe = receivedMessage.onAbort(() => {
                 socket.close();
@@ -85,11 +86,12 @@ export class WebsocketStream {
 
     constructor(
         wsHost: string,
+        protocol: string,
         timeoutMs: number,
         log: boolean
     ) {
         this.sentMessage = new EventEmitter<WebsocketStreamMessageSend>();
-        this.receivedMessage = createStream(this.sentMessage, wsHost, timeoutMs, log);
+        this.receivedMessage = createStream(this.sentMessage, wsHost, protocol, timeoutMs, log);
     }
 
     public send(data: string | BufferSource): void {
