@@ -114,8 +114,8 @@ export class AsyncWebSocket {
 
     static custom(
         showDebugLog: boolean,
-        onReceived: (message: string | BufferSource) => void,
         protocol: string,
+        onReceived: (message: string | BufferSource) => void,
     ): {
         send: (data: string) => void,
         socket: AsyncWebSocket,
