@@ -15,18 +15,24 @@ const formatZodErrors = (error: z.ZodError): Array<FormatZodErrorsType> => {
     });
 };
 interface CheckByZodResult {
+    description: string,
     errors: Array<FormatZodErrorsType>,
     data: unknown,
 }
 
-export const checkByZod = <T>(validator: z.ZodType<T>, data: unknown): Result<T, CheckByZodResult> => {
-    const safeData = validator.safeParse(data);
-    if (safeData.success) {
-        return Result.ok(safeData.data);
-    }
+export class CheckByZod<T> {
+    constructor(private readonly description: string, private readonly validator: z.ZodType<T>) {}
 
-    return Result.error({
-        errors: formatZodErrors(safeData.error),
-        data,
-    });
+    check = (data: unknown): Result<T, CheckByZodResult> => {
+        const safeData = this.validator.safeParse(data);
+        if (safeData.success) {
+            return Result.ok(safeData.data);
+        }
+    
+        return Result.error({
+            errors: formatZodErrors(safeData.error),
+            data,
+            description: this.description,
+        });
+    }
 }
