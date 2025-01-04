@@ -18,7 +18,7 @@ export const websocketToAsyncQuery = <T>(socket: WebSocket, validator: CheckByZo
             const result = validator.jsonParse(event.data);
 
             if (result.type === 'ok') {
-                query.push(result.value);
+                query.push(result.data);
                 return;
             }
 

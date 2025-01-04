@@ -233,7 +233,7 @@ export class ValueList<ID extends JSONValue, M extends JSONValue> {
             const model = this.model(id);
 
             if (model.type === 'ok') {
-                result.push({id, model: model.value});
+                result.push({id, model: model.data});
             } else {
                 throw Error('Nieprawidłowe odgałęzienie programu');
             }

@@ -103,7 +103,7 @@ const handleSocketMessage = <RTYPE_ALL extends string, SOCKET extends Subscripti
             //@ts-expect-error
             const dispose = createSubsciption({
                 type: prefix,
-                resourceId: safeDataId.value,
+                resourceId: safeDataId.data,
                 response: (response) => {
                     state.send({
                         type: 'data',

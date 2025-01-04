@@ -22,7 +22,7 @@ const buildMap = <T>(iterator2: () => AsyncIteratorType<T>): (<K>(mapFn: (value:
 
                     if (result.type === 'ok') {
                         return {
-                            value: result.value,
+                            value: result.data,
                             done: false,
                         };
                     }
@@ -83,7 +83,7 @@ export class AsyncQueryIterator<T> implements AsyncIteratorType<T> {
             }
 
             return {
-                value: value.value,
+                value: value.data,
                 done: false,
             };
         }

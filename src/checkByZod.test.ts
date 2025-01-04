@@ -267,7 +267,7 @@ Deno.test('basic', () => {
         }
     })).toEqual({
         "type": "ok",
-        "value": {
+        "data": {
             "name": "dd",
             "age": 444,
             "sub": {
@@ -301,7 +301,7 @@ Deno.test('jsonParse ok', () => {
 
     expect(validator.jsonParse(data)).toEqual({
         type: "ok",
-        value: [{
+        data: [{
             b: "b",
             c: 44,
             type: "a",

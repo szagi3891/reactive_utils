@@ -75,9 +75,9 @@ export class Socket<RTYPE_ALL extends string, SOCKET extends SubscriptionRouter<
         const messageDate = messageServerCheck.jsonParse(message.data); //, MessageServerZod);
 
         if (messageDate.type === 'ok') {
-            if (messageDate.value.type === 'data') {
+            if (messageDate.data.type === 'data') {
 
-                const { id, data } = messageDate.value;
+                const { id, data } = messageDate.data;
                 const callbackData = this.data.get(id);
 
                 if (callbackData === undefined) {
@@ -93,12 +93,12 @@ export class Socket<RTYPE_ALL extends string, SOCKET extends SubscriptionRouter<
                 return;
             }
 
-            if (messageDate.value.type === 'error-message') {
-                console.error('Wiadomość z socket', messageDate.value.message);
+            if (messageDate.data.type === 'error-message') {
+                console.error('Wiadomość z socket', messageDate.data.message);
                 return;
             }
 
-            return assertNever(messageDate.value);
+            return assertNever(messageDate.data);
         }
 
         if (messageDate.type === 'error') {

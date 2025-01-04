@@ -20,11 +20,11 @@ export class FormModel<V> implements FormModelType<V> {
                 const value = this.getValue();
 
                 if (value.type === 'ok') {
-                    const result = conv(value.value);
+                    const result = conv(value.data);
                     const isVisited = this.isVisited();
 
                     if (result.type === 'ok') {
-                        return Result.ok(result.value);
+                        return Result.ok(result.data);
                     }
             
                     const error = new FormErrorMessage([], isVisited, result.error);
@@ -113,7 +113,7 @@ export class FormModel<V> implements FormModelType<V> {
                 for (const [key, item] of Object.entries(fields)) {
                     const result = item[FormModelTrait]().result;
                     if (result.type === 'ok') {
-                        const innerValue = result.value;
+                        const innerValue = result.data;
 
                         //@ts-expect-error
                         modelOut[key] = innerValue;
@@ -147,7 +147,7 @@ export class FormModel<V> implements FormModelType<V> {
                 for (const [index, item] of models.entries()) {
                     const result = item[FormModelTrait]().result;
                     if (result.type === 'ok') {
-                        modelOut.push(result.value);
+                        modelOut.push(result.data);
                     } else {
                         for (const error of result.error) {
                             errors.push(error.unshiftPath(`[${index}]`));

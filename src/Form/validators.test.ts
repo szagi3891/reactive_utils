@@ -4,7 +4,7 @@ import { validateConvertToNumber, validateConvertToNumeric } from './validators.
 Deno.test('validators', () => {
     expect(validateConvertToNumber('oczekiwano liczby')('44')).toEqual({
         type: 'ok',
-        value: 44
+        data: 44
     });
 });
 
@@ -16,17 +16,17 @@ Deno.test('validators2', () => {
 
     expect(validateConvertToNumeric('44')).toEqual({
         type: 'ok',
-        value: '44'
+        data: '44'
     });
 
     expect(validateConvertToNumeric('44,5')).toEqual({
         type: 'ok',
-        value: '44.5'
+        data: '44.5'
     });
 
     expect(validateConvertToNumeric('44,56')).toEqual({
         type: 'ok',
-        value: '44.56'
+        data: '44.56'
     });
 
     expect(validateConvertToNumeric('44.56.5')).toEqual({

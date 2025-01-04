@@ -138,7 +138,7 @@ export class Resource<T> {
     ): [boolean, ResourceResult<T>] {
 
         if (prevValue.type === 'ok' && optimisticUpdate !== undefined) {
-            return [true, ResourceResult.ok(optimisticUpdate(prevValue.value))];
+            return [true, ResourceResult.ok(optimisticUpdate(prevValue.data))];
         }
 
         return [false, prevValue];
@@ -179,7 +179,7 @@ export class Resource<T> {
             const data = this.get();
 
             if (data.type === 'ok') {
-                result.resolve(data.value);
+                result.resolve(data.data);
                 dispose.dispose();
                 return;
             }
@@ -216,7 +216,7 @@ export class Resource<T> {
         const result = this.get();
 
         if (result.type === 'ok') {
-            return result.value;
+            return result.data;
         }
 
         return null;

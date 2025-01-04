@@ -62,7 +62,7 @@ export class CheckByZod<T> {
             return Result.error(result);
         }
     
-        const dataRaw: JSONValue = json.value;
+        const dataRaw: JSONValue = json.data;
     
         return this.check(dataRaw);
     }
