@@ -1,7 +1,7 @@
-import { assertNever, AsyncQuery, jsonParse, stringifySort } from "@reactive/utils";
-import { z } from 'zod';
+import { assertNever, AsyncQuery, JSONValue, stringifySort } from "@reactive/utils";
+import { CheckByZod } from "../../checkByZod.ts";
 
-export const websocketToAsyncQuery = <T>(socket: WebSocket, validator: z.ZodType<T>): AsyncQuery<T> => {
+export const websocketToAsyncQuery = <T>(socket: WebSocket, validator: CheckByZod<T>): AsyncQuery<T> => {
     const query = new AsyncQuery<T>();
 
     const timer = setTimeout(() => {
@@ -15,7 +15,7 @@ export const websocketToAsyncQuery = <T>(socket: WebSocket, validator: z.ZodType
 
     socket.addEventListener("message", (event) => {
         if (typeof event.data === 'string') {
-            const result = jsonParse(event.data, validator);
+            const result = validator.jsonParse(event.data);
 
             if (result.type === 'ok') {
                 query.push(result.value);
@@ -23,9 +23,12 @@ export const websocketToAsyncQuery = <T>(socket: WebSocket, validator: z.ZodType
             }
 
             if (result.type === 'error') {
+                //@ts-expect-error - Ten typ CheckByZodResult pasuje do JSONValue. Spróbować lepiej to ograć i pozbyć się tego wykluczenia TS
+                const message: JSONValue = result.error;
+
                 socket.send(stringifySort({
                     'type': '',
-                    message: result.error
+                    message, //: result.error
                 }));
                 return;
             }

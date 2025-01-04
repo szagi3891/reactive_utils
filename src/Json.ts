@@ -1,5 +1,4 @@
 import { z } from 'zod';
-import { Result } from './Result.ts';
 
 export type JSONValue = 
     | string 
@@ -19,33 +18,6 @@ export const JSONValueZod: z.ZodType<JSONValue> = z.lazy(() =>
         z.record(JSONValueZod.or(z.undefined()))
     ])
 );
-
-export const jsonParseRaw = (text: string): Result<JSONValue, string> => {
-    try {
-        const json = JSON.parse(text);
-        return Result.ok(json);
-    } catch (_error) {
-        return Result.error(`Parsing error json data=${JSON.stringify(text, null, 4)}`);
-    }
-};
-
-export const jsonParse = <T>(text: string, validator: z.ZodType<T>): Result<T, string> => {
-    const json = jsonParseRaw(text);
-
-    if (json.type === 'error') {
-        return json;
-    }
-
-    const dataRaw: JSONValue = json.value;
-
-    const data = validator.safeParse(dataRaw);
-
-    if (data.success) {
-        return Result.ok(data.data);
-    }
-
-    return Result.error(`Validation (zod) -> \n\n\n\ndata:\n\n${text} \n\n\n\nerror:\n\n${data.error.toString()}`);
-};
 
 const recursivelyOrderKeys = (unordered: JSONValue): JSONValue => {
     if (Array.isArray(unordered)) {

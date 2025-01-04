@@ -19,7 +19,7 @@ export { AsyncQuery, AsyncQueryIterator, type AsyncIteratorType} from './src/Asy
 export { AsyncWebSocket, type AsyncWebSocketType } from './src/websocketGeneral/AsyncWebsocket.ts';
 export { WebsocketStream, type WebsocketStreamMessageReceived, type WebsocketStreamMessageSend } from './src/websocketGeneral/WebsocketStream.ts';
 export { Defer } from './src/Defer.ts';
-export { jsonParseRaw, jsonParse, stringifySort, JSONValueZod } from './src/Json.ts';
+export { stringifySort, JSONValueZod } from './src/Json.ts';
 export type { JSONValue } from './src/Json.ts';
 export { throwError } from './src/throwError.ts';
 export { FormInputState } from './src/Form/FormInputState.ts';

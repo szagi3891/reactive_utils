@@ -47,7 +47,7 @@ Deno.test('basic', () => {
     })).toEqual({
         "type": "error",
         "error": {
-            "description": 'basic MessageZod',
+            "description": 'CheckByZod: basic MessageZod',
             "errors": [
                 {
                     "field": "sub.year",
@@ -77,7 +77,7 @@ Deno.test('basic', () => {
     })).toEqual({
         "type": "error",
         "error": {
-            "description": 'basic MessageZod',
+            "description": 'CheckByZod: basic MessageZod',
             "errors": [
                 {
                     "field": "sub.age",
@@ -112,7 +112,7 @@ Deno.test('basic', () => {
     })).toEqual({
         "type": "error",
         "error": {
-            "description": 'basic MessageZod',
+            "description": 'CheckByZod: basic MessageZod',
             "errors": [
                 {
                     "field": "sub.age",
@@ -150,7 +150,7 @@ Deno.test('basic', () => {
     })).toEqual({
         "type": "error",
         "error": {
-            "description": 'basic MessageZod',
+            "description": 'CheckByZod: basic MessageZod',
             "errors": [
                 {
                     field: "sub.sub2.type",
@@ -187,7 +187,7 @@ Deno.test('basic', () => {
     })).toEqual({
         "type": "error",
         "error": {
-            "description": 'basic MessageZod',
+            "description": 'CheckByZod: basic MessageZod',
             "errors": [
                 {
                     field: "sub.sub2.age",
@@ -227,7 +227,7 @@ Deno.test('basic', () => {
     })).toEqual({
         "type": "error",
         "error": {
-            "description": 'basic MessageZod',
+            "description": 'CheckByZod: basic MessageZod',
             "errors": [
                 {
                     field: "sub.sub2.age",
@@ -283,3 +283,170 @@ Deno.test('basic', () => {
     });
 });
 
+
+Deno.test('jsonParse ok', () => {
+    const data = '[{"type":"a","b":"b","c":44},{"type":"b","d":false}]';
+
+    const validator = new CheckByZod('test variant', z.array(z.discriminatedUnion('type', [
+        z.object({
+            type: z.literal('a'),
+            b: z.string(),
+            c: z.number(),
+        }),
+        z.object({
+            type: z.literal('b'),
+            d: z.boolean(),
+        })
+    ])));
+
+    expect(validator.jsonParse(data)).toEqual({
+        type: "ok",
+        value: [{
+            b: "b",
+            c: 44,
+            type: "a",
+        }, {
+            d: false,
+            type: "b",
+        }],
+    });
+});
+
+
+Deno.test('jsonParse missing fields', () => {
+    const data = '[{"type":"a","b":"b"},{"type":"b"}]';
+
+    const validator = new CheckByZod('test variant', z.array(z.discriminatedUnion('type', [
+        z.object({
+            type: z.literal('a'),
+            b: z.string(),
+            c: z.number(),
+        }),
+        z.object({
+            type: z.literal('b'),
+            d: z.boolean(),
+        })
+    ])));
+
+    expect(validator.jsonParse(data)).toEqual({
+        type: "error",
+        error: {
+            description: "CheckByZod: test variant",
+            data: [{
+                b: "b",
+                type: "a",
+            }, {
+                type: "b",
+            }],
+            errors: [{
+                field: "0.c",
+                message: "Required",
+            }, {
+                field: "1.d",
+                message: "Required",
+            }],
+        },
+    });
+});
+
+Deno.test('jsonParse missing fields 2', () => {
+    const data = '[{"type":"a","b":"b","c":false},{"type":"b","d":444}]';
+
+    const validator = new CheckByZod('test variant', z.array(z.discriminatedUnion('type', [
+        z.object({
+            type: z.literal('a'),
+            b: z.string(),
+            c: z.number(),
+        }),
+        z.object({
+            type: z.literal('b'),
+            d: z.boolean(),
+        })
+    ])));
+
+    expect(validator.jsonParse(data)).toEqual({
+        type: "error",
+        error: {
+            description: "CheckByZod: test variant",
+            data: [{
+                b: "b",
+                type: "a",
+                c: false,
+            }, {
+                type: "b",
+                d: 444,
+            }],
+            errors: [{
+                field: "0.c",
+                message: "Expected number, received boolean",
+            }, {
+                field: "1.d",
+                message: "Expected boolean, received number",
+            }],
+        },
+    });
+});
+
+Deno.test('jsonParse missing fields 1', () => {
+    const data = '[{"type":"a","b":"b","c":false},{"type":"b","d":true}]';
+
+    const validator = new CheckByZod('test variant', z.array(z.discriminatedUnion('type', [
+        z.object({
+            type: z.literal('a'),
+            b: z.string(),
+            c: z.number(),
+        }),
+        z.object({
+            type: z.literal('b'),
+            d: z.boolean(),
+        })
+    ])));
+
+    expect(validator.jsonParse(data)).toEqual({
+        type: "error",
+        error: {
+            description: "CheckByZod: test variant",
+            data: [{
+                b: "b",
+                type: "a",
+                c: false,
+            }, {
+                type: "b",
+                d: true,
+            }],
+            errors: [{
+                field: "0.c",
+                message: "Expected number, received boolean",
+            }],
+        },
+    });
+});
+
+
+Deno.test('jsonParse missing fields 1', () => {
+    const data = '[{"type":"a","b":"b","c":false},{"type":"b","d":t';
+
+    const validator = new CheckByZod('test variant', z.array(z.discriminatedUnion('type', [
+        z.object({
+            type: z.literal('a'),
+            b: z.string(),
+            c: z.number(),
+        }),
+        z.object({
+            type: z.literal('b'),
+            d: z.boolean(),
+        })
+    ])));
+
+    expect(validator.jsonParse(data)).toEqual({
+        type: "error",
+        error: {
+            data: '[{"type":"a","b":"b","c":false},{"type":"b","d":t',
+            description: "CheckByZod: test variant",
+            errors: [{
+                field: "---",
+                message: 'Json: Parsing error',
+            }]
+        },
+    });
+});

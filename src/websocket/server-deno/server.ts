@@ -1,4 +1,4 @@
-import { MessageBrowserZod, type MessageBrowserType, type MessageServerType } from "./message.ts";
+import { MessageBrowserCheck, type MessageBrowserType, type MessageServerType } from "./message.ts";
 import { JSONValueZod, stringifySort } from '../../Json.ts';
 import { assertNever } from '../../assertNever.ts';
 import { websocketToAsyncQuery } from "./websocketToAsyncQuery.ts";
@@ -183,7 +183,7 @@ export const startWebsocketApi = <SRK extends string, SR extends SubscriptionRou
 
                 const state = new State(socket);
 
-                for await (const message of websocketToAsyncQuery(socket, MessageBrowserZod).subscribe()) {
+                for await (const message of websocketToAsyncQuery(socket, MessageBrowserCheck).subscribe()) {
                     handleSocketMessage(state, message, subscriptionRouter, createSubsciption);
                 }
 

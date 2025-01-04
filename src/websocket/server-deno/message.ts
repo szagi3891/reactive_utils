@@ -1,7 +1,8 @@
+import { CheckByZod } from "../../checkByZod.ts";
 import { JSONValueZod } from '../../Json.ts';
 import { z } from 'zod';
 
-export const MessageBrowserZod = z.union([
+const MessageBrowserZod = z.discriminatedUnion('type', [
     z.object({
         type: z.literal('subscribe'),
         id: z.number(), //request id
@@ -12,6 +13,8 @@ export const MessageBrowserZod = z.union([
         id: z.number(), //request id
     }),
 ]);
+
+export const MessageBrowserCheck = new CheckByZod('Socket deno MessageBrowser', MessageBrowserZod);
 
 export type MessageBrowserType = z.TypeOf<typeof MessageBrowserZod>;
 

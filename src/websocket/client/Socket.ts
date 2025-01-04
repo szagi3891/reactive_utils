@@ -3,12 +3,13 @@ import { WebsocketStream, type WebsocketStreamMessageReceived } from "../../webs
 import { assertNever } from "../../assertNever.ts";
 import { AutoId } from "../../AutoId.ts";
 import { EventEmitter } from "../../EventEmitter.ts";
-import { jsonParse, JSONValue, JSONValueZod, stringifySort } from "../../Json.ts";
+import { JSONValue, JSONValueZod, stringifySort } from "../../Json.ts";
 import { Value } from "../../Value.ts";
 import { ValueList } from "../../ValueList.ts";
 import { DefValue, DefValueList, type ResourceIdAll, type ResourceTypeForValue, type ResourceTypeForValueList, type SocketResourceId, type SocketValueListId, type SocketValueListModel, type SocketValueModel, type SubscriptionRouter } from "../SocketRouter.ts";
+import { CheckByZod } from "../../checkByZod.ts";
 
-const MessageServerZod = z.union([
+const messageServerCheck = new CheckByZod('socket messageServerCheck', z.discriminatedUnion('type', [
     z.object({
         type: z.literal('data'),
         id: z.number(),
@@ -18,7 +19,7 @@ const MessageServerZod = z.union([
         type: z.literal('error-message'),
         message: z.string(),
     })
-]);
+]));
 
 type SocketStateType<RTYPE_ALL extends string, SOCKET extends SubscriptionRouter<RTYPE_ALL>> = {
     type: 'connected',
@@ -71,7 +72,7 @@ export class Socket<RTYPE_ALL extends string, SOCKET extends SubscriptionRouter<
             return;
         }
 
-        const messageDate = jsonParse(message.data, MessageServerZod);
+        const messageDate = messageServerCheck.jsonParse(message.data); //, MessageServerZod);
 
         if (messageDate.type === 'ok') {
             if (messageDate.value.type === 'data') {
@@ -101,7 +102,7 @@ export class Socket<RTYPE_ALL extends string, SOCKET extends SubscriptionRouter<
         }
 
         if (messageDate.type === 'error') {
-            console.error('Problem ze zdekodowaniem wiadomości', messageDate.error);
+            console.error(messageDate.error);
             return;
         }
 
