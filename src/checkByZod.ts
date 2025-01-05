@@ -39,8 +39,8 @@ export class CheckByZodError {
 
         return new CheckByZodError(
             [
+                message,
                 ...description,
-                message
             ],
             this.errors,
             this.data
