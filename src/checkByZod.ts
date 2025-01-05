@@ -1,6 +1,6 @@
 import z from "zod";
 import { Result } from "./Result.ts";
-import { JSONValue } from "./Json.ts";
+import { JSONValue, stringifySort } from "./Json.ts";
 
 interface FormatZodErrorsType {
     field: string;
@@ -15,29 +15,43 @@ const formatZodErrors = (error: z.ZodError): Array<FormatZodErrorsType> => {
         });
     });
 };
-export interface CheckByZodResult {
-    description: string,
-    errors: Array<FormatZodErrorsType>,
-    data: unknown,
+export class CheckByZodError {
+
+    constructor(
+        public readonly description: string,
+        public readonly errors: Array<FormatZodErrorsType>,
+        public readonly data: unknown,
+    ) {}
+
+    stringifySort() {
+        //@ts-expect-error - assumption that they are compatible
+        const data: JSONValue = this.data;
+
+        return stringifySort({
+            description: this.description,
+            errors: this.errors.map(item => ({...item})),
+            data,
+        }, true)
+    }
 }
 
 export class CheckByZod<T> {
     constructor(private readonly description: string, private readonly validator: z.ZodType<T>) {}
 
-    check = (data: unknown): Result<T, CheckByZodResult> => {
+    check = (data: unknown): Result<T, CheckByZodError> => {
         const safeData = this.validator.safeParse(data);
         if (safeData.success) {
             return Result.ok(safeData.data);
         }
     
-        return Result.error({
-            description: `CheckByZod: ${this.description}`,
-            errors: formatZodErrors(safeData.error),
+        return Result.error(new CheckByZodError(
+            `CheckByZod: ${this.description}`,
+            formatZodErrors(safeData.error),
             data,
-        });
+        ));
     }
 
-    jsonParse = (text: string): Result<T, CheckByZodResult> => {
+    jsonParse = (text: string): Result<T, CheckByZodError> => {
         const jsonParseRaw = (text: string): Result<JSONValue, null> => {
             try {
                 const json = JSON.parse(text);
@@ -50,16 +64,14 @@ export class CheckByZod<T> {
         const json = jsonParseRaw(text);
     
         if (json.type === 'error') {
-            const result: CheckByZodResult = {
-                description: `CheckByZod: ${this.description}`,
-                errors: [{
+            return Result.error(new CheckByZodError(
+                `CheckByZod: ${this.description}`,
+                [{
                     field: '---',
                     message: 'jsonParse: Parsing error',
                 }],
-                data: text,
-            };
-
-            return Result.error(result);
+                text,
+            ));
         }
     
         const dataRaw: JSONValue = json.data;
@@ -67,18 +79,16 @@ export class CheckByZod<T> {
         return this.check(dataRaw);
     }
 
-    jsonParseUnknown = (data: unknown): Result<T, CheckByZodResult> => {
+    jsonParseUnknown = (data: unknown): Result<T, CheckByZodError> => {
         if (typeof data !== 'string') {
-            const result: CheckByZodResult = {
-                description: `CheckByZod: ${this.description}`,
-                errors: [{
+            return Result.error(new CheckByZodError(
+                `CheckByZod: ${this.description}`,
+                [{
                     field: '---',
                     message: `jsonParseUnknown: expected string, received ${typeof data}`,
                 }],
                 data,
-            };
-
-            return Result.error(result);
+            ));
         }
 
         return this.jsonParse(data);
