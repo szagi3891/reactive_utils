@@ -54,7 +54,7 @@ export class CheckByZod<T> {
                 description: `CheckByZod: ${this.description}`,
                 errors: [{
                     field: '---',
-                    message: 'Json: Parsing error',
+                    message: 'jsonParse: Parsing error',
                 }],
                 data: text,
             };
@@ -65,6 +65,23 @@ export class CheckByZod<T> {
         const dataRaw: JSONValue = json.data;
     
         return this.check(dataRaw);
+    }
+
+    jsonParseUnknown = (data: unknown): Result<T, CheckByZodResult> => {
+        if (typeof data !== 'string') {
+            const result: CheckByZodResult = {
+                description: `CheckByZod: ${this.description}`,
+                errors: [{
+                    field: '---',
+                    message: `jsonParseUnknown: expected string, received ${typeof data}`,
+                }],
+                data,
+            };
+
+            return Result.error(result);
+        }
+
+        return this.jsonParse(data);
     }
 }
 

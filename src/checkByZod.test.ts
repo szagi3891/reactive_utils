@@ -445,8 +445,37 @@ Deno.test('jsonParse missing fields 1', () => {
             description: "CheckByZod: test variant",
             errors: [{
                 field: "---",
-                message: 'Json: Parsing error',
+                message: 'jsonParse: Parsing error',
             }]
         },
     });
 });
+
+Deno.test('jsonParseUnknown', () => {
+    const fff = 444;
+
+    const validator = new CheckByZod('test variant', z.array(z.discriminatedUnion('type', [
+        z.object({
+            type: z.literal('a'),
+            b: z.string(),
+            c: z.number(),
+        }),
+        z.object({
+            type: z.literal('b'),
+            d: z.boolean(),
+        })
+    ])));
+
+    expect(validator.jsonParseUnknown(fff)).toEqual({
+        type: "error",
+        error: {
+            description: "CheckByZod: test variant",
+            errors: [{
+                field: "---",
+                message: "jsonParseUnknown: expected string, received number",
+            }],
+            data: 444,
+        },
+    });
+});
+
