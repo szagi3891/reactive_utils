@@ -23,7 +23,7 @@ export class CheckByZodError {
         public readonly data: unknown,
     ) {}
 
-    stringifySort() {
+    stringifySort(): string {
         //@ts-expect-error - assumption that they are compatible
         const data: JSONValue = this.data;
 
