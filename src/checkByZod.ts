@@ -18,7 +18,7 @@ const formatZodErrors = (error: z.ZodError): Array<FormatZodErrorsType> => {
 export class CheckByZodError {
 
     constructor(
-        public readonly description: string,
+        public readonly description: string | Array<string>,
         public readonly errors: Array<FormatZodErrorsType>,
         public readonly data: unknown,
     ) {}
@@ -32,6 +32,19 @@ export class CheckByZodError {
             errors: this.errors.map(item => ({...item})),
             data,
         }, true)
+    }
+
+    public addDescription(message: string): CheckByZodError {
+        const description: Array<string> = Array.isArray(this.description) ? this.description : [this.description];
+
+        return new CheckByZodError(
+            [
+                ...description,
+                message
+            ],
+            this.errors,
+            this.data
+        );
     }
 }
 
