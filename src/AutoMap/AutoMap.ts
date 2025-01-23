@@ -40,9 +40,13 @@ export class AutoMap<K extends PrimitiveJSONValue, V> {
         const data: AutoMap<K, V> = new AutoMap((key: K): V => {
             return createValue(...key);
         });
-    
+
         return (...key: [...K]): V => {
-            return data.get(key);
+            
+            //@ts-expect-error - if the function create, is created with redundant parameters, they will be truncated
+            const newKey: K = key.slice(0, createValue.length);
+
+            return data.get(newKey);
         };
     };
 }
