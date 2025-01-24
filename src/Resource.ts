@@ -13,24 +13,24 @@ type ResultError = {
     type: 'loading',
 }
 
-export namespace ResourceResult {
-    export const ok = <T>(value: T): Result<T, ResultError> => {
+export const ResourceResult = {
+    ok: <T>(value: T): Result<T, ResultError> => {
         return Result.ok(value);
-    }
+    },
   
-    export const error = <T>(message: string): Result<T, ResultError> => {
+    error: <T>(message: string): Result<T, ResultError> => {
         return Result.error({
             type: 'error',
             message,
         });
-    }
+    },
 
-    export const loaading = <T>(): Result<T, ResultError> => {
+    loaading: <T>(): Result<T, ResultError> => {
         return Result.error({
             type: 'loading'
         });
     }
-}
+};
 
 export type ResourceResult<T> = Result<T, ResultError>;
 
