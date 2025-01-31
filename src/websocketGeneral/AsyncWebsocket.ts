@@ -170,7 +170,7 @@ export class AsyncWebSocket {
         log.info(`connect to host=${host}, protocol=${protocol}, timeout=${timeout}`);
 
         const timeStart = new Date();
-        const socket = new WebSocket(host);
+        const socket = new WebSocket(host, protocol);
         const query = new AsyncQuery<string>();
 
         const returnInst = new AsyncWebSocket(
