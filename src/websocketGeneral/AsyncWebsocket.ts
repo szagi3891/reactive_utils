@@ -167,6 +167,7 @@ export class AsyncWebSocket {
         const result = new PromiseBoxOptimistic<AsyncWebSocket>();
         const log = new Log(showDebugLog);
         log.info(`connect to ${host}`);
+        log.info(`connect to host=${host}, protocol=${protocol}, timeout=${timeout}`);
 
         const timeStart = new Date();
         const socket = new WebSocket(host);
