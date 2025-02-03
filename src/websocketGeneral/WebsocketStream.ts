@@ -22,7 +22,7 @@ export type WebsocketStreamMessageSend = {
 const createStream = (
     sentMessage: EventEmitter<WebsocketStreamMessageSend>,
     wsHost: string,
-    getProtocol: () => string,
+    getProtocol: () => string | null,
     timeoutMs: number,
     log: boolean
 ): AsyncQuery<WebsocketStreamMessageReceived> => {
@@ -86,7 +86,7 @@ export class WebsocketStream {
 
     constructor(
         wsHost: string,
-        getProtocol: () => string,
+        getProtocol: () => string | null,
         timeoutMs: number,
         log: boolean
     ) {

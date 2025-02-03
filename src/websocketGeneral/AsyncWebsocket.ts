@@ -81,7 +81,7 @@ export class AsyncWebSocket {
         private log: Log,
         private readonly query: AsyncQuery<string>,
         private readonly sendFn: (data: string | BufferSource) => void,
-        public readonly protocol: string,
+        public readonly protocol: string | null,
     ) {
         this.onAbort = this.query.onAbort;
     }
@@ -160,7 +160,7 @@ export class AsyncWebSocket {
 
     static create(
         host: string,
-        protocol: string,
+        protocol: string | null,
         timeout: number,
         showDebugLog: boolean
     ): Promise<AsyncWebSocket> {
@@ -170,7 +170,7 @@ export class AsyncWebSocket {
         log.info(`connect to host=${host}, protocol=${protocol}, timeout=${timeout}`);
 
         const timeStart = new Date();
-        const socket = new WebSocket(host, protocol);
+        const socket = new WebSocket(host, protocol ?? undefined);
         const query = new AsyncQuery<string>();
 
         const returnInst = new AsyncWebSocket(
