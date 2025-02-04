@@ -48,6 +48,7 @@ export { ResizableUint8Array } from './src/ResizableUint8Array.ts';
 export { parseXml, type DeclarationType, type XmlNode, XmlCData, XmlText, XmlElement, XmlElementOnly } from './src/parseXml.ts';
 export { CheckByZod } from './src/checkByZod.ts';
 export { superJsonCustom } from './src/superJsonCustom.ts';
+export { getCssPropertiesForClasses } from './src/css/getCSSRuleForClass.ts';
 
 //... without jsx
 

@@ -1,5 +1,5 @@
 {
-    "version": "0.5.188",
+    "version": "0.5.189",
     "name": "@reactive/utils",
     "exports": {
         ".": "./index.ts"
@@ -30,6 +30,12 @@
     },
     "compilerOptions": {
         "noUnusedLocals": true,
-        "noUnusedParameters": true
+        "noUnusedParameters": true,
+        "lib": [
+            "deno.window",
+            "dom",
+            "es6",
+            "esnext"
+        ]
     }
 }
