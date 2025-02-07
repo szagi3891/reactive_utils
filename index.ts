@@ -49,6 +49,7 @@ export { parseXml, type DeclarationType, type XmlNode, XmlCData, XmlText, XmlEle
 export { CheckByZod } from './src/checkByZod.ts';
 export { superJsonCustom } from './src/superJsonCustom.ts';
 export { getCssPropertiesForClasses } from './src/css/getCSSRuleForClass.ts';
+export { ComputedStruct } from './src/ComputedStruct.ts';
 
 //... without jsx
 
