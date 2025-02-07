@@ -28,11 +28,17 @@ export class ComputedStruct<T> {
         });
     }
 
-    static initStructural<T>(value: () => T): ComputedStruct<T> {
-        return new ComputedStruct(value, comparer.structural);
+    //https://mobx.js.org/computeds.html#built-in-comparers
+
+    static initIdentity<T>(value: () => T): ComputedStruct<T> {
+        return new ComputedStruct(value, comparer.identity);
     }
 
-    static initArrays<P, K extends Array<P> | null>(value: () => K): ComputedStruct<K> {
+    static initShallow<T>(value: () => T): ComputedStruct<T> {
+        return new ComputedStruct(value, comparer.shallow);
+    }
+
+    static initShallowArray<K extends Array<unknown> | null>(value: () => K): ComputedStruct<K> {
         return new ComputedStruct(value, (a: K, b: K) => {
             if (a === null || b === null) {
                 return a === b;
@@ -41,6 +47,12 @@ export class ComputedStruct<T> {
             return compareArray(a, b);
         });
     }
+
+    static initStructural<T>(value: () => T): ComputedStruct<T> {
+        return new ComputedStruct(value, comparer.structural);
+    }
+
+
 
     getValue(): T {
         return this.computedValue.get();
