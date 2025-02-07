@@ -32,8 +32,14 @@ export class ComputedStruct<T> {
         return new ComputedStruct(value, comparer.structural);
     }
 
-    static initArrays<T>(value: () => Array<T>): ComputedStruct<Array<T>> {
-        return new ComputedStruct(value, compareArray);
+    static initArrays<P, K extends Array<P> | null>(value: () => K): ComputedStruct<K> {
+        return new ComputedStruct(value, (a: K, b: K) => {
+            if (a === null || b === null) {
+                return a === b;
+            }
+
+            return compareArray(a, b);
+        });
     }
 
     getValue(): T {
