@@ -8,7 +8,7 @@ export { AutoMap } from './src/AutoMap/AutoMap.ts';
 export { autoMapKeyAsString, reduceComplexSymbol } from './src/AutoMap/PrimitiveType.ts';
 export type { PrimitiveJSONValue } from './src/AutoMap/PrimitiveType.ts';
 export { AutoWeakMap, autoWeakMapKey } from './src/AutoMap/AutoWeakMap.ts';
-export { EventEmitter, ValueEmitter } from './src/EventEmitter.ts';
+export { EventEmitter, ValueEmitter, type EventEmitterReceiver } from './src/EventEmitter.ts';
 export { timeout } from './src/timeout.ts';
 export { getValueCache } from './src/getValueCache.ts';
 export { Result } from './src/Result.ts';

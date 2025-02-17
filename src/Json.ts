@@ -19,7 +19,7 @@ export const JSONValueZod: z.ZodType<JSONValue> = z.lazy(() =>
     ])
 );
 
-const recursivelyOrderKeys = (unordered: JSONValue): JSONValue => {
+export const recursivelyOrderKeys = (unordered: JSONValue): JSONValue => {
     if (Array.isArray(unordered)) {
         return unordered.map(item => recursivelyOrderKeys(item));
     }
@@ -27,7 +27,7 @@ const recursivelyOrderKeys = (unordered: JSONValue): JSONValue => {
     if (unordered === null) {
         return unordered;
     }
-  
+
     if (typeof unordered === 'object') {
         const ordered: Record<string, JSONValue | undefined> = {};
         
