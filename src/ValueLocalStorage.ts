@@ -7,12 +7,38 @@ type ConnectType<T> = (setValue: (newValue: T) => void) => UnsubscrbeType;
 
 const isServer = () => typeof window === 'undefined';
 
-const getInitValue = <T>(localStorageKey: string, value: T, decoder: z.ZodType<T>): T => {
+class Storage {
+    constructor(private readonly storage: 'localStorage' | 'sessionStorage') {}
+
+    get = (key: string) => {
+        switch (this.storage) {
+            case 'localStorage': {
+                return localStorage.getItem(key);
+            }
+            case 'sessionStorage': {
+                return sessionStorage.getItem(key);
+            }
+        }
+    }
+
+    set = (key: string, value: string) => {
+        switch (this.storage) {
+            case 'localStorage': {
+                return localStorage.setItem(key, value);
+            }
+            case 'sessionStorage': {
+                return sessionStorage.setItem(key, value);
+            }
+        }
+    }
+}
+
+const getInitValue = <T>(storage: Storage, localStorageKey: string, value: T, decoder: z.ZodType<T>): T => {
     if (isServer()) {
         return value;
     }
 
-    const valueLocalStorage = localStorage.getItem(localStorageKey);
+    const valueLocalStorage = storage.get(localStorageKey);
 
     if (valueLocalStorage === null) {
         return value;
@@ -26,7 +52,7 @@ const getInitValue = <T>(localStorageKey: string, value: T, decoder: z.ZodType<T
         if (valueSafe.success) {
             return valueSafe.data;
         }
-    } catch (error) {
+    } catch (error: unknown) {
         console.warn(`Ignore value from localStorage key=${localStorageKey}`);
     }
 
@@ -36,16 +62,17 @@ const getInitValue = <T>(localStorageKey: string, value: T, decoder: z.ZodType<T
 export class ValueLocalStorage<T> {
     private readonly value: Value<T>;
 
-    constructor(localStorageKey: string, value: T, decoder: z.ZodType<T>, onConnect?: ConnectType<T>) {
-        
-        const initValue = getInitValue(localStorageKey, value, decoder);
+    constructor(storageType: 'localStorage' | 'sessionStorage', localStorageKey: string, value: T, decoder: z.ZodType<T>, onConnect?: ConnectType<T>) {
+        const storage = new Storage(storageType);
+
+        const initValue = getInitValue(storage, localStorageKey, value, decoder);
 
         this.value = new Value(initValue, onConnect);
 
         if (!isServer()) {
             autorun(() => {
                 const serialized = JSON.stringify(this.value.getValue());
-                localStorage.setItem(localStorageKey, serialized);
+                storage.set(localStorageKey, serialized);
             });
         }
     }
