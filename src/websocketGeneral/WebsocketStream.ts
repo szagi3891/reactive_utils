@@ -62,7 +62,7 @@ const createStream = (
                 type: 'connected'
             });
 
-            let timer: number | null = null;
+            let timer: ReturnType<typeof setTimeout> | null = null;
             const resetTimerIdle = () => {
                 if (timeoutIdleMs === null) {
                     return;
