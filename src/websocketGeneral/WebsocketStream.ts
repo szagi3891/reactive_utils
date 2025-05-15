@@ -24,6 +24,7 @@ const createStream = (
     wsHost: string,
     getProtocol: () => string | null,
     timeoutMs: number,
+    timeoutIdleMs: number | null,
     log: boolean
 ): AsyncQuery<WebsocketStreamMessageReceived> => {
     const receivedMessage = new AsyncQuery<WebsocketStreamMessageReceived>();
@@ -61,7 +62,30 @@ const createStream = (
                 type: 'connected'
             });
 
+            let timer: number | null = null;
+            const resetTimerIdle = () => {
+                if (timeoutIdleMs === null) {
+                    return;
+                }
+
+                if (timer !== null) {
+                    clearTimeout(timer);
+                }
+
+                timer = setTimeout(() => {
+                    socket.close();
+                }, timeoutIdleMs);
+            };
+
+            resetTimerIdle();
+
             for await (const message of socket.subscribe()) {
+                resetTimerIdle();
+
+                timer = setTimeout(() => {
+                    socket.close();
+                }, 30_000);
+
                 receivedMessage.push({
                     type: 'message',
                     data: message
@@ -88,10 +112,11 @@ export class WebsocketStream {
         wsHost: string,
         getProtocol: () => string | null,
         timeoutMs: number,
+        timeoutIdleMs: number | null,
         log: boolean
     ) {
         this.sentMessage = new EventEmitter<WebsocketStreamMessageSend>();
-        this.receivedMessage = createStream(this.sentMessage, wsHost, getProtocol, timeoutMs, log);
+        this.receivedMessage = createStream(this.sentMessage, wsHost, getProtocol, timeoutMs, timeoutIdleMs, log);
     }
 
     public send(data: string | BufferSource): void {
