@@ -29,7 +29,7 @@ class PingPongManager {
     lastActionTime: number;
     lastAction: 'ping' | 'message' = 'message';
 
-    constructor(socket: AsyncWebSocket, config: PingPongParamsType) {
+    constructor(socket: AsyncWebSocket, config: PingPongParamsType, showLog: boolean) {
         this.lastActionTime = new Date().getTime();
         
         if (config.timeoutPingMs < config.timeoutCloseMs) {
@@ -39,12 +39,23 @@ class PingPongManager {
             return;
         }
     
+        if (showLog) {
+            console.info('WebsocketStream - PingPongManager: start timer');
+        }
+
         const timerInterval = setInterval(() => {
             const timeElapsed = new Date().getTime() - this.lastActionTime;
+
+            if (showLog) {
+                console.info('WebsocketStream - PingPongManager: timeElapsed ...', timeElapsed);
+            }
 
             switch (this.lastAction) {
                 case 'message': {
                     if (timeElapsed > config.timeoutPingMs) {
+                        if (showLog) {
+                            console.info('WebsocketStream - PingPongManager: send ping')
+                        }
                         this.lastAction = 'ping';
                         socket.send(config.formatPingMessage());
                         return;
@@ -53,6 +64,9 @@ class PingPongManager {
                 }
                 case 'ping': {
                     if (timeElapsed > config.timeoutCloseMs) {
+                        if (showLog) {
+                            console.info('WebsocketStream: close')
+                        }
                         socket.close();
                     }
                 }
@@ -93,17 +107,16 @@ const createStream = (
                     return;
                 }
 
-                if (message.type === 'message') {
-                    socket.send(message.value);
-                    return;
+                switch (message.type) {
+                    case 'message': {
+                        socket.send(message.value);
+                        return;
+                    }
+                    case 'reconnect': {
+                        console.info('reconnect ...');
+                        socket.close();
+                    }
                 }
-                if (message.type === 'reconnect') {
-                    console.info('reconnect ...');
-                    socket.close();
-                    return;
-                }
-
-                return assertNever(message);
             });
 
             socket.onAbort(() => {
@@ -115,7 +128,7 @@ const createStream = (
                 type: 'connected'
             });
 
-            const pingPongManager = pingPong === null ? null : new PingPongManager(socket, pingPong);
+            const pingPongManager = pingPong === null ? null : new PingPongManager(socket, pingPong, log);
 
             for await (const message of socket.subscribe()) {
                 pingPongManager?.reciveMessage();
@@ -133,7 +146,9 @@ const createStream = (
             console.info('disconnect, waiting ...');
             await timeout(1000);
         }
-    })();
+    })().catch((error: unknown) => {
+        console.error(error);
+    });
 
     return receivedMessage;
 };
@@ -174,8 +189,3 @@ export class WebsocketStream {
         });
     }
 }
-
-function assertNever(_message: never): void {
-    throw new Error("Function not implemented.");
-}
-
