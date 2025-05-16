@@ -103,7 +103,7 @@ const createStream = (
             });
 
             const sentUnsubscribe = sentMessage.on((message) => {
-                if (socket.isClose() === false) {
+                if (socket.isClose()) {
                     return;
                 }
 
