@@ -19,19 +19,70 @@ export type WebsocketStreamMessageSend = {
     type: 'reconnect',
 };
 
+interface PingPongParamsType {
+    timeoutPingMs: number,
+    timeoutCloseMs: number,
+    formatPingMessage: () => string,
+}
+
+class PingPongManager {
+    lastActionTime: number;
+    lastAction: 'ping' | 'message' = 'message';
+
+    constructor(socket: AsyncWebSocket, config: PingPongParamsType) {
+        this.lastActionTime = new Date().getTime();
+        
+        if (config.timeoutPingMs < config.timeoutCloseMs) {
+            //ok
+        } else {
+            console.error('timeoutCloseMs must be greater than timeoutPingMs');
+            return;
+        }
+    
+        const timerInterval = setInterval(() => {
+            const timeElapsed = new Date().getTime() - this.lastActionTime;
+
+            switch (this.lastAction) {
+                case 'message': {
+                    if (timeElapsed > config.timeoutPingMs) {
+                        this.lastAction = 'ping';
+                        socket.send(config.formatPingMessage());
+                        return;
+                    }
+                    return;
+                }
+                case 'ping': {
+                    if (timeElapsed > config.timeoutCloseMs) {
+                        socket.close();
+                    }
+                }
+            }
+        }, 1_000);
+
+        socket.onAbort(() => {
+            clearInterval(timerInterval);
+        });
+    }
+
+    reciveMessage() {
+        this.lastAction = 'message';
+        this.lastActionTime = new Date().getTime();
+    }
+};
+
 const createStream = (
     sentMessage: EventEmitter<WebsocketStreamMessageSend>,
     wsHost: string,
     getProtocol: () => string | null,
-    timeoutMs: number,
-    timeoutIdleMs: number | null,
+    connectionTimeoutMs: number,
+    pingPong: PingPongParamsType | null,
     log: boolean
 ): AsyncQuery<WebsocketStreamMessageReceived> => {
     const receivedMessage = new AsyncQuery<WebsocketStreamMessageReceived>();
 
     (async () => {
         while (receivedMessage.isOpen()) {
-            const socket = await AsyncWebSocket.create(wsHost, getProtocol(), timeoutMs, log);
+            const socket = await AsyncWebSocket.create(wsHost, getProtocol(), connectionTimeoutMs, log);
 
             const unsubscribe = receivedMessage.onAbort(() => {
                 socket.close();
@@ -39,18 +90,20 @@ const createStream = (
 
             const sentUnsubscribe = sentMessage.on((message) => {
                 if (socket.isClose() === false) {
-                    if (message.type === 'message') {
-                        socket.send(message.value);
-                        return;
-                    }
-                    if (message.type === 'reconnect') {
-                        console.info('reconnect ...');
-                        socket.close();
-                        return;
-                    }
-
-                    return assertNever(message);
+                    return;
                 }
+
+                if (message.type === 'message') {
+                    socket.send(message.value);
+                    return;
+                }
+                if (message.type === 'reconnect') {
+                    console.info('reconnect ...');
+                    socket.close();
+                    return;
+                }
+
+                return assertNever(message);
             });
 
             socket.onAbort(() => {
@@ -62,29 +115,10 @@ const createStream = (
                 type: 'connected'
             });
 
-            let timer: ReturnType<typeof setTimeout> | null = null;
-            const resetTimerIdle = () => {
-                if (timeoutIdleMs === null) {
-                    return;
-                }
-
-                if (timer !== null) {
-                    clearTimeout(timer);
-                }
-
-                timer = setTimeout(() => {
-                    socket.close();
-                }, timeoutIdleMs);
-            };
-
-            resetTimerIdle();
+            const pingPongManager = pingPong === null ? null : new PingPongManager(socket, pingPong);
 
             for await (const message of socket.subscribe()) {
-                resetTimerIdle();
-
-                timer = setTimeout(() => {
-                    socket.close();
-                }, 30_000);
+                pingPongManager?.reciveMessage();
 
                 receivedMessage.push({
                     type: 'message',
@@ -111,12 +145,12 @@ export class WebsocketStream {
     constructor(
         wsHost: string,
         getProtocol: () => string | null,
-        timeoutMs: number,
-        timeoutIdleMs: number | null,
+        connectionTimeoutMs: number,
+        pingPong: PingPongParamsType | null,
         log: boolean
     ) {
         this.sentMessage = new EventEmitter<WebsocketStreamMessageSend>();
-        this.receivedMessage = createStream(this.sentMessage, wsHost, getProtocol, timeoutMs, timeoutIdleMs, log);
+        this.receivedMessage = createStream(this.sentMessage, wsHost, getProtocol, connectionTimeoutMs, pingPong, log);
     }
 
     public send(data: string | BufferSource): void {
