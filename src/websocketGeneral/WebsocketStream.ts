@@ -99,6 +99,11 @@ const createStream = (
         while (receivedMessage.isOpen()) {
             const socket = await AsyncWebSocket.create(wsHost, getProtocol(), connectionTimeoutMs, log);
 
+            if (socket === null) {
+                console.info('AsyncWebSocket.create fail ...');
+                continue;
+            }
+
             const unsubscribe = receivedMessage.onAbort(() => {
                 socket.close();
             });

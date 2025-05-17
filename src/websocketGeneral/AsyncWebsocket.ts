@@ -158,19 +158,30 @@ export class AsyncWebSocket {
         );
     }
 
-    static create(
+    private static createWebsocket(host: string, protocol: string | null): WebSocket | null {
+        try {
+            return new WebSocket(host, protocol ?? undefined);
+        } catch (_error: unknown) {
+            return null;
+        }
+    }
+
+    static async create(
         host: string,
         protocol: string | null,
         timeout: number,
         showDebugLog: boolean
-    ): Promise<AsyncWebSocket> {
-        const result = new PromiseBoxOptimistic<AsyncWebSocket>();
+    ): Promise<AsyncWebSocket | null> {
+        const result = new PromiseBoxOptimistic<AsyncWebSocket | null>();
         const log = new Log(showDebugLog);
-        log.info(`connect to ${host}`);
         log.info(`connect to host=${host}, protocol=${protocol}, timeout=${timeout}`);
 
         const timeStart = new Date();
-        const socket = new WebSocket(host, protocol ?? undefined);
+        const socket = AsyncWebSocket.createWebsocket(host, protocol);
+        if (socket === null) {
+            return null;
+        }
+
         const query = new AsyncQuery<string>();
 
         const returnInst = new AsyncWebSocket(
@@ -188,7 +199,7 @@ export class AsyncWebSocket {
             }
 
             log.error(`Timeout connection for ${host}, timeout=${timeout}`);
-            result.resolve(returnInst);
+            result.resolve(null);
             query.close();
         }, timeout);
 
@@ -205,10 +216,12 @@ export class AsyncWebSocket {
             socket,
             query,
             () => {
-                result.resolve(returnInst);
+                result.resolve(null);
+                query.close();
             }
         );
 
-        return result.promise;
+        const response = await result.promise;
+        return response;
     }
 }
