@@ -90,6 +90,7 @@ const createStream = (
     wsHost: string,
     getProtocol: () => string | null,
     connectionTimeoutMs: number,
+    reconnectTimeoutMs: number,
     pingPong: PingPongParamsType | null,
     log: boolean
 ): AsyncQuery<WebsocketStreamMessageReceived> => {
@@ -101,6 +102,7 @@ const createStream = (
 
             if (socket === null) {
                 console.info('AsyncWebSocket.create fail ...');
+                await timeout(reconnectTimeoutMs);
                 continue;
             }
 
@@ -153,7 +155,7 @@ const createStream = (
             });
 
             console.info('disconnect, waiting ...');
-            await timeout(1000);
+            await timeout(reconnectTimeoutMs);
         }
     })().catch((error: unknown) => {
         console.error(error);
@@ -170,11 +172,12 @@ export class WebsocketStream {
         wsHost: string,
         getProtocol: () => string | null,
         connectionTimeoutMs: number,
+        reconnectTimeoutMs: number,
         pingPong: PingPongParamsType | null,
         log: boolean
     ) {
         this.sentMessage = new EventEmitter<WebsocketStreamMessageSend>();
-        this.receivedMessage = createStream(this.sentMessage, wsHost, getProtocol, connectionTimeoutMs, pingPong, log);
+        this.receivedMessage = createStream(this.sentMessage, wsHost, getProtocol, connectionTimeoutMs, reconnectTimeoutMs, pingPong, log);
     }
 
     public send(data: string | BufferSource): void {

@@ -114,7 +114,7 @@ export class Socket<RTYPE_ALL extends string, SOCKET extends SubscriptionRouter<
         id: ResourceIdAll<SOCKET>
     }) {
         if (this.connection.type === 'idle') {
-            const stream = new WebsocketStream(this.wsHost, () => null, 10_000, null, false);
+            const stream = new WebsocketStream(this.wsHost, () => null, 10_000, 5_000, null, false);
             const acctiveIds = new Map();
 
             acctiveIds.set(id, resourceId);
