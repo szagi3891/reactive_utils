@@ -18,7 +18,7 @@ Deno.test('validateRange', () => {
 });
 
 Deno.test('grupa', () => {
-    const field1 = FormInputState.new('')
+    const field1 = FormInputState.fromValue('')
         .map(validateConvertToNumber('Input1: Not number'))
         .map((value): Result<number, string> => {
             if (value > 10) {
@@ -28,7 +28,7 @@ Deno.test('grupa', () => {
             }
         });
 
-    const field2 = FormInputState.new('')
+    const field2 = FormInputState.fromValue('')
         .map(validateConvertToNumber('Input2: Not number'))
         .map((value): Result<number, string> => {
             if (value > 10) {

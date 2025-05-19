@@ -59,6 +59,7 @@ export class FormBoxValue<K> {
         this.value.setValue({
             type: 'none'
         });
+        this.visited.setValue(false);
     }
 
     [FormChildTrait](): FormChildType {

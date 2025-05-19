@@ -7,7 +7,7 @@ const errorMessage = 'Przynajmnie dwa znaki wprowadz';
 const createError = (): Result<string, string> => Result.error(errorMessage);
 
 Deno.test('Visited', () => {
-    const field = FormInputState.new('').map((value: string): Result<string, string> => {
+    const field = FormInputState.fromValue('').map((value: string): Result<string, string> => {
         if (value.length < 2) {
             return createError();
         }

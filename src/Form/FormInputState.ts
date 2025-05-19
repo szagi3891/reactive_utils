@@ -12,7 +12,7 @@ export class FormInputState<K, M> implements FormModelType<M> {
         this.model = model;
     }
 
-    public static new<K>(value: K): FormInputState<K, K> {
+    public static fromValue<K>(value: K): FormInputState<K, K> {
         const box = new FormBoxValue<K>(() => value);
         const model = new FormModel(
             () => [box],
