@@ -2,6 +2,7 @@ import { FormModel } from './FormModel.ts';
 import { FormBoxValue } from './FormBoxValue.ts';
 import { FormChildTrait, FormChildType, FormErrorMessage, FormModelTrait, FormModelType } from './FormTypes.ts';
 import { Result } from '../Result.ts';
+import { FormNode } from "./FormNode.ts";
 
 export class FormInputState<K, M> implements FormModelType<M> {
     private readonly box: FormBoxValue<K>;
@@ -30,6 +31,13 @@ export class FormInputState<K, M> implements FormModelType<M> {
         );
 
         return new FormInputState<K, K>(box, model);
+    }
+
+    public render(render: (input: FormInputState<K, unknown>) => React.ReactNode): FormNode<M> {
+        return FormNode.fromFormInputState(
+            this,
+            render
+        );
     }
 
     public setValue(value: K): void {
