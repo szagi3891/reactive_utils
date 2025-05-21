@@ -2,12 +2,37 @@ import * as React from 'react';
 import { FormModel } from "./FormModel.ts";
 import { FormChildTrait, FormChildType, FormErrorMessage, FormModelTrait, FormModelType } from "./FormTypes.ts";
 import { Result } from "../Result.ts";
+import { FormInputState } from "./FormInputState.ts";
+
+/*
+    //TODO
+    użycie FormInputState może się zamknąć w obrębie fromFormInputState
+    wszędzie dalej, można używać FormModel
+
+    funkcje group może działać na parametrach FormModel, można się pozbyć tych kilku symboli
+*/
 
 export class FormNode<T> {
     constructor(
         public readonly value: FormModel<T>,
         public readonly jsx: React.ReactNode,
     ) {}
+
+    public static fromFormInputState<T, M>(
+        value: FormInputState<T, M>,
+        render: (value: FormInputState<T, unknown>) => React.ReactNode
+    ): FormNode<M> {
+        const jsx = render(value);
+
+        const model = new FormModel(
+            () => [{
+                [FormChildTrait]: () => value,
+            }],
+            () => value.result
+        );
+
+        return new FormNode(model, jsx);
+    }
 
     public static group = <IN extends Record<keyof IN, FormNode<unknown>>>(fields: IN): FormModel<{
         readonly [P in keyof IN]: IN[P] extends FormNode<infer O> ? O : never;
