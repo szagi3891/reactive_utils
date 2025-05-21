@@ -82,6 +82,7 @@ export class FormModel<V> implements FormModelType<V> {
             item[FormChildTrait]().reset();
         }
     }
+
     public static group = <IN extends FormRecordBox>(fields: IN): FormModel<{
         readonly [P in keyof IN]: IN[P] extends FormModelType<infer O> ? O : never;
     }> => {
