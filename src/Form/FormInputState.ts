@@ -33,6 +33,16 @@ export class FormInputState<K, M> implements FormModelType<M> {
         return new FormInputState<K, K>(box, model);
     }
 
+    public static from<K>(getValue: (() => K) | K): FormInputState<K, K> {
+        if (typeof getValue === 'function') {
+            //@ts-expect-error ...
+            const getValueType: () => K = getValue;
+            return FormInputState.fromModel(getValueType);
+        }
+
+        return FormInputState.fromValue(getValue);
+    }
+
     public render(render: (input: FormInputState<K, unknown>) => React.ReactNode): FormNode<M> {
         return FormNode.fromFormInputState(
             this,
