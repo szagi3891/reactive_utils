@@ -9,6 +9,7 @@ export type WebsocketStreamMessageReceived = {
 } | {
     type: 'connected',
     send: (data: string | BufferSource) => void,
+    close: () => void,
 } | {
     type: 'disconnected',
 }
@@ -136,7 +137,10 @@ const createStream = (
                 type: 'connected',
                 send: (data: string | BufferSource) => {
                     socket.send(data);
-                }
+                },
+                close: () => {
+                    socket.close();
+                },
             });
 
             const pingPongManager = pingPong === null ? null : new PingPongManager(socket, pingPong, log);
