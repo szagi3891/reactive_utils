@@ -1,9 +1,6 @@
 {
-    "version": "0.5.213",
+    "version": "0.5.214",
     "name": "@reactive/utils",
     "license": "MIT",
-    "exports": {
-        "./": "./index.ts",
-        "./parseXml": "./src/parseXml.ts"
-    }
+    "exports": "./index.ts"
 }
