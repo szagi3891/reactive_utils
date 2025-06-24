@@ -37,6 +37,7 @@ export {
     validateMinLength,
     validateEmail
 } from './src/Form/validators.ts';
+export { groupFields } from './src/Form/groupFields.ts';
 export { sort } from './src/sort.ts';
 export { AbortBox } from './src/AbortBox.ts';
 export type { AbortBoxFn } from './src/AbortBox.ts';
