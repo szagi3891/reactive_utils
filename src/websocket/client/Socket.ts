@@ -55,6 +55,10 @@ export class Socket<RTYPE_ALL extends string, SOCKET extends SubscriptionRouter<
         stream: WebsocketStream,
         message: WebsocketStreamMessageReceived
     ) {
+        if (message.type === 'connecting') {
+            return;
+        }
+
         if (message.type === 'connected') {
             for (const [id, resourceId] of acctiveIds) {
                 stream.send(stringifySort({

@@ -7,6 +7,8 @@ export type WebsocketStreamMessageReceived = {
     type: 'message',
     data: string,
 } | {
+    type: 'connecting',
+} | {
     type: 'connected',
     send: (data: string | BufferSource) => void,
     close: () => void,
@@ -99,9 +101,16 @@ const createStream = (
 
     (async () => {
         while (receivedMessage.isOpen()) {
+            receivedMessage.push({
+                type: 'connecting'
+            });
+
             const socket = await AsyncWebSocket.create(wsHost, getProtocol(), connectionTimeoutMs, log);
 
             if (socket === null) {
+                receivedMessage.push({
+                    type: 'disconnected'
+                });
                 console.info('AsyncWebSocket.create fail ...');
                 await timeout(reconnectTimeoutMs);
                 continue;
