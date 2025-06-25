@@ -196,7 +196,7 @@ export class Socket<RTYPE_ALL extends string, SOCKET extends SubscriptionRouter<
             const safeData = decodeResp.decodeResp(data);
 
             if (safeData.type === 'ok') {
-                //@ts-expect-error
+                //@ts-expect-error ...
                 value.setValue(safeData.value);
             } else {
                 console.info('Problem ze zdekodowaniem danych Value', stringifySort({

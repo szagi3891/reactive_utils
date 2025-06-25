@@ -2,6 +2,7 @@ import { timeout } from "../timeout.ts";
 import { AsyncQuery, AsyncQueryIterator } from "../AsyncQuery.ts";
 import { EventEmitter } from "../EventEmitter.ts";
 import { AsyncWebSocket } from "./AsyncWebsocket.ts";
+import { addEventOffline } from "./offline.ts";
 
 export type WebsocketStreamMessageReceived = {
     type: 'message',
@@ -137,9 +138,14 @@ const createStream = (
                 }
             });
 
+            const unsubscribeNeetworkOffline = addEventOffline(() => {
+                socket.close();
+            });
+
             socket.onAbort(() => {
                 unsubscribe();
                 sentUnsubscribe();
+                unsubscribeNeetworkOffline();
             });
 
             receivedMessage.push({
