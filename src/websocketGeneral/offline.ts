@@ -26,14 +26,33 @@ export const addEventOnline = (callback: () => void): (() => void)=> {
     };
 };
 
+const whenVisible = (callback: () => void): (() => void) => {
+    if (typeof window === 'undefined') {
+        return () => {};
+    }
+
+    const callbacklistener = () => {
+        if (document.visibilityState === 'visible') {
+            callback();
+        }
+    };
+
+    document.addEventListener('visibilitychange', callbacklistener);
+    return () => {
+        document.removeEventListener('visibilitychange', callbacklistener);
+    };
+}
+
 export const timeout = (timeoutMs: number): Promise<void> => {
 
     return new Promise((resolve) => {
 
-        const unsubscribe = addEventOnline(resolve);
+        const unsubscribeOnline = addEventOnline(resolve);
+        const unsubscribeWhenVisible = whenVisible(resolve);
     
         setTimeout(() => {
-            unsubscribe();
+            unsubscribeOnline();
+            unsubscribeWhenVisible();
             resolve();
         }, timeoutMs);
     });
