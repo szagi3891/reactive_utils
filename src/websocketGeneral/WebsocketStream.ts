@@ -1,11 +1,14 @@
-import { AsyncQuery, AsyncQueryIterator } from "../AsyncQuery.ts";
-import { EventEmitter } from "../EventEmitter.ts";
-import { AsyncWebSocket } from "./AsyncWebsocket.ts";
-import { addEventOffline, timeout } from "./offline.ts";
+import type { AsyncQueryIterator } from "@reactive/utils";
+import { AsyncQuery , EventEmitter , AsyncWebSocket } from "@reactive/utils";
+import { addEventOffline } from "./WebsocketStream/offline.ts";
+import { OnlineSemafor } from "./WebsocketStream/onlineSemafor.ts";
+import { timeoutSemafor } from "./WebsocketStream/timeout.ts";
 
 export type WebsocketStreamMessageReceived = {
     type: 'message',
     data: string,
+} | {
+    type: 'offline'
 } | {
     type: 'connecting',
 } | {
@@ -88,6 +91,44 @@ class PingPongManager {
     }
 };
 
+const initEvents = (
+    receivedMessage: AsyncQuery<WebsocketStreamMessageReceived>,
+    sentMessage: EventEmitter<WebsocketStreamMessageSend>,
+    socket: AsyncWebSocket
+) => {
+
+    const unsubscribe = receivedMessage.onAbort(() => {
+        socket.close();
+    });
+
+    const sentUnsubscribe = sentMessage.on((message) => {
+        if (socket.isClose()) {
+            return;
+        }
+
+        switch (message.type) {
+            case 'message': {
+                socket.send(message.value);
+                return;
+            }
+            case 'reconnect': {
+                console.info('reconnect ...');
+                socket.close();
+            }
+        }
+    });
+
+    const unsubscribeNeetworkOffline = addEventOffline(() => {
+        socket.close();
+    });
+
+    socket.onAbort(() => {
+        unsubscribe();
+        sentUnsubscribe();
+        unsubscribeNeetworkOffline();
+    });
+};
+
 const createStream = (
     sentMessage: EventEmitter<WebsocketStreamMessageSend>,
     wsHost: string,
@@ -100,81 +141,69 @@ const createStream = (
     const receivedMessage = new AsyncQuery<WebsocketStreamMessageReceived>();
 
     (async () => {
-        while (receivedMessage.isOpen()) {
-            receivedMessage.push({
-                type: 'connecting'
-            });
+        const onlineSemafor = new OnlineSemafor();
 
-            const socket = await AsyncWebSocket.create(wsHost, getProtocol(), connectionTimeoutMs, log);
+        try {
+            while (receivedMessage.isOpen()) {
+                receivedMessage.push({
+                    type: 'offline'
+                });
 
-            if (socket === null) {
+                await onlineSemafor.waitFor(true);
+
+                receivedMessage.push({
+                    type: 'connecting'
+                });
+
+                const socket = await AsyncWebSocket.create(wsHost, getProtocol(), connectionTimeoutMs, log);
+
+                if (socket === null) {
+                    receivedMessage.push({
+                        type: 'disconnected'
+                    });
+                    console.info('AsyncWebSocket.create fail ...');
+                    await timeoutSemafor(onlineSemafor, reconnectTimeoutMs);
+                    continue;
+                }
+
+                initEvents(
+                    receivedMessage,
+                    sentMessage,
+                    socket
+                );
+
+                receivedMessage.push({
+                    type: 'connected',
+                    send: (data: string | BufferSource) => {
+                        socket.send(data);
+                    },
+                    close: () => {
+                        socket.close();
+                    },
+                });
+
+                const pingPongManager = pingPong === null ? null : new PingPongManager(socket, pingPong, log);
+
+                for await (const message of socket.subscribe()) {
+                    pingPongManager?.reciveMessage();
+
+                    receivedMessage.push({
+                        type: 'message',
+                        data: message
+                    });
+                }
+
                 receivedMessage.push({
                     type: 'disconnected'
                 });
-                console.info('AsyncWebSocket.create fail ...');
-                await timeout(reconnectTimeoutMs);
-                continue;
+
+                console.info('disconnect, waiting ...');
+                await timeoutSemafor(onlineSemafor, reconnectTimeoutMs);
             }
-
-            const unsubscribe = receivedMessage.onAbort(() => {
-                socket.close();
-            });
-
-            const sentUnsubscribe = sentMessage.on((message) => {
-                if (socket.isClose()) {
-                    return;
-                }
-
-                switch (message.type) {
-                    case 'message': {
-                        socket.send(message.value);
-                        return;
-                    }
-                    case 'reconnect': {
-                        console.info('reconnect ...');
-                        socket.close();
-                    }
-                }
-            });
-
-            const unsubscribeNeetworkOffline = addEventOffline(() => {
-                socket.close();
-            });
-
-            socket.onAbort(() => {
-                unsubscribe();
-                sentUnsubscribe();
-                unsubscribeNeetworkOffline();
-            });
-
-            receivedMessage.push({
-                type: 'connected',
-                send: (data: string | BufferSource) => {
-                    socket.send(data);
-                },
-                close: () => {
-                    socket.close();
-                },
-            });
-
-            const pingPongManager = pingPong === null ? null : new PingPongManager(socket, pingPong, log);
-
-            for await (const message of socket.subscribe()) {
-                pingPongManager?.reciveMessage();
-
-                receivedMessage.push({
-                    type: 'message',
-                    data: message
-                });
-            }
-
-            receivedMessage.push({
-                type: 'disconnected'
-            });
-
-            console.info('disconnect, waiting ...');
-            await timeout(reconnectTimeoutMs);
+        } finally {
+            onlineSemafor.dispose();
         }
+
     })().catch((error: unknown) => {
         console.error(error);
     });
