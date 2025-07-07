@@ -18,3 +18,14 @@ export const tryFn = async <T>(fn: () => Promise<T>): Promise<Result<T, string>>
         return Result.error(errorToString(error));
     }
 };
+
+
+export const tryFnSync = <T>(fn: () => T): Result<T, string> => {
+    try {
+        const value = fn();
+        return Result.ok(value);
+    } catch (error) {
+        return Result.error(errorToString(error));
+    }
+};
+

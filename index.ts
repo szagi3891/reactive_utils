@@ -50,7 +50,7 @@ export { CheckByZod } from './src/checkByZod.ts';
 export { superJsonCustom } from './src/superJsonCustom.ts';
 export { getCssPropertiesForClasses } from './src/css/getCSSRuleForClass.ts';
 export { ComputedStruct } from './src/ComputedStruct.ts';
-export { tryFn } from './src/tryFn.ts';
+export { tryFn, tryFnSync } from './src/tryFn.ts';
 
 //... without jsx
 
