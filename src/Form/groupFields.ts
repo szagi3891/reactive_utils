@@ -14,12 +14,13 @@ interface Params<P extends Record<keyof P, FormNode<unknown>>,> {
         readonly [K in keyof P]: string;
     },
     renderRow: (params: RenderRowType) => React.ReactElement,
+    renderWrapper?: (jsx: React.ReactElement) => React.ReactElement,
 }
 
 export const groupFields = <P extends Record<keyof P, FormNode<unknown>>,>(params: Params<P>): FormNode<{
     readonly [K in keyof P]: P[K] extends FormNode<infer R> ? R : never;
 }> => {
-    const {model, labels, renderRow } = params;
+    const {model, labels, renderRow, renderWrapper } = params;
 
     const group: FormModel<{
         readonly [K in keyof P]: P[K] extends FormNode<infer R> ? R : never;
@@ -45,5 +46,9 @@ export const groupFields = <P extends Record<keyof P, FormNode<unknown>>,>(param
 
     const jsx = React.createElement(React.Fragment, null, result);
 
-    return new FormNode(group, jsx);
+    if (renderWrapper === undefined) {
+        return new FormNode(group, jsx);
+    } else {
+        return new FormNode(group, renderWrapper(jsx));
+    }
 }
