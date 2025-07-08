@@ -17,18 +17,6 @@ export interface FormModelType<V> extends FormChildType {
     get isValid(): boolean;
 }
 
-// class AA<T> {
-//     [FormChildTrait](): FormChildType {
-//         throw Error('');
-//     }
-//
-//     [FormModelTrait](): FormModelType<T> {
-//         throw Error('');
-//     }
-// }
-
-
-
 
 /*
     zrobić dodatkowe pole, które będzie zwracało tablicę z lokalizacjami wystąpienia błędu w wynikowym jsonie
