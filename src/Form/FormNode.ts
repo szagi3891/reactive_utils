@@ -88,6 +88,13 @@ export class FormNode<T> {
             }
         );
     };
+
+    public map<C>(conv: (value: T) => Result<C, string>): FormNode<C> {
+        return new FormNode(
+            this.value.map(conv),
+            this.jsx,
+        );
+    }
 }
 
 // React.createElement()

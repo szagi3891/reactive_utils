@@ -1,4 +1,4 @@
-import { timeout } from '@reactive/utils';
+import { timeout } from "../../timeout.ts";
 import type { OnlineSemafor } from './onlineSemafor.ts';
 
 export const timeoutSemafor = async (semafor: OnlineSemafor, timeoutMs: number): Promise<void> => {

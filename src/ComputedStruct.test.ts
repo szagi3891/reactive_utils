@@ -1,4 +1,4 @@
-import { Value } from '@reactive/utils';
+import { Value } from './Value.ts';
 import { ComputedStruct } from './ComputedStruct.ts';
 import { autorun } from 'mobx';
 import { expect } from "jsr:@std/expect";

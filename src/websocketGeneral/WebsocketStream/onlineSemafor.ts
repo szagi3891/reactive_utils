@@ -1,4 +1,4 @@
-import { PromiseBox } from "@reactive/utils";
+import { PromiseBox } from "../../PromiseBox.ts";
 
 const assert = (logicalCondition: boolean, label: string) => {
     if (logicalCondition) {

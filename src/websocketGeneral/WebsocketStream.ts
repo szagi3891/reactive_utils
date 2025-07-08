@@ -1,5 +1,6 @@
-import type { AsyncQueryIterator } from "@reactive/utils";
-import { AsyncQuery , EventEmitter , AsyncWebSocket } from "@reactive/utils";
+import { AsyncQuery, AsyncQueryIterator } from "../AsyncQuery.ts";
+import { EventEmitter } from "../EventEmitter.ts";
+import { AsyncWebSocket } from "./AsyncWebsocket.ts";
 import { addEventOffline } from "./WebsocketStream/offline.ts";
 import { OnlineSemafor } from "./WebsocketStream/onlineSemafor.ts";
 import { timeoutSemafor } from "./WebsocketStream/timeout.ts";

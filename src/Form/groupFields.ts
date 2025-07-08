@@ -1,5 +1,5 @@
-import type { FormModel } from "@reactive/utils";
-import { FormNode } from "@reactive/utils";
+import type { FormModel } from "./FormModel.ts";
+import { FormNode } from "./FormNode.ts";
 import React from "react";
 
 interface RenderRowType {
