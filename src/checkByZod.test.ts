@@ -4,7 +4,7 @@ import { CheckByZod } from "./checkByZod.ts";
 
 Deno.test('basic', () => {
         
-    const messageCheck = new CheckByZod('basic MessageZod', z.object({
+    const messageCheck = CheckByZod.create('basic MessageZod', z.object({
         name: z.string(),
         age: z.number(),
         sub: z.discriminatedUnion('type', [        
@@ -287,7 +287,7 @@ Deno.test('basic', () => {
 Deno.test('jsonParse ok', () => {
     const data = '[{"type":"a","b":"b","c":44},{"type":"b","d":false}]';
 
-    const validator = new CheckByZod('test variant', z.array(z.discriminatedUnion('type', [
+    const validator = CheckByZod.create('test variant', z.array(z.discriminatedUnion('type', [
         z.object({
             type: z.literal('a'),
             b: z.string(),
@@ -316,7 +316,7 @@ Deno.test('jsonParse ok', () => {
 Deno.test('jsonParse missing fields', () => {
     const data = '[{"type":"a","b":"b"},{"type":"b"}]';
 
-    const validator = new CheckByZod('test variant', z.array(z.discriminatedUnion('type', [
+    const validator = CheckByZod.create('test variant', z.array(z.discriminatedUnion('type', [
         z.object({
             type: z.literal('a'),
             b: z.string(),
@@ -352,7 +352,7 @@ Deno.test('jsonParse missing fields', () => {
 Deno.test('jsonParse missing fields 2', () => {
     const data = '[{"type":"a","b":"b","c":false},{"type":"b","d":444}]';
 
-    const validator = new CheckByZod('test variant', z.array(z.discriminatedUnion('type', [
+    const validator = CheckByZod.create('test variant', z.array(z.discriminatedUnion('type', [
         z.object({
             type: z.literal('a'),
             b: z.string(),
@@ -390,7 +390,7 @@ Deno.test('jsonParse missing fields 2', () => {
 Deno.test('jsonParse missing fields 1', () => {
     const data = '[{"type":"a","b":"b","c":false},{"type":"b","d":true}]';
 
-    const validator = new CheckByZod('test variant', z.array(z.discriminatedUnion('type', [
+    const validator = CheckByZod.create('test variant', z.array(z.discriminatedUnion('type', [
         z.object({
             type: z.literal('a'),
             b: z.string(),
@@ -426,7 +426,7 @@ Deno.test('jsonParse missing fields 1', () => {
 Deno.test('jsonParse missing fields 1', () => {
     const data = '[{"type":"a","b":"b","c":false},{"type":"b","d":t';
 
-    const validator = new CheckByZod('test variant', z.array(z.discriminatedUnion('type', [
+    const validator = CheckByZod.create('test variant', z.array(z.discriminatedUnion('type', [
         z.object({
             type: z.literal('a'),
             b: z.string(),
@@ -454,7 +454,7 @@ Deno.test('jsonParse missing fields 1', () => {
 Deno.test('jsonParseUnknown', () => {
     const fff = 444;
 
-    const validator = new CheckByZod('test variant', z.array(z.discriminatedUnion('type', [
+    const validator = CheckByZod.create('test variant', z.array(z.discriminatedUnion('type', [
         z.object({
             type: z.literal('a'),
             b: z.string(),

@@ -1,6 +1,5 @@
-import z from "zod";
-import { Result } from "./Result.ts";
-import { JSONValue, stringifySort } from "./Json.ts";
+import type z from "zod";
+import { Result, stringifySort, type JSONValue } from '@reactive/utils';
 
 interface FormatZodErrorsType {
     field: string;
@@ -49,17 +48,48 @@ export class CheckByZodError {
 }
 
 export class CheckByZod<T> {
-    constructor(private readonly description: string, private readonly validator: z.ZodType<T>) {}
+    private constructor(
+        private readonly description: string,
+        private readonly safeParse: (data: unknown) => { 
+            success: true, 
+            data: T
+        } | {
+            success: false,
+            error: Array<FormatZodErrorsType>
+        },
+    ) {}
+
+    public static create<T0, T>(description: string, schema: z.ZodType<T0, z.ZodTypeDef, T>): CheckByZod<T0> {
+        return new CheckByZod(
+            description,
+            (data: unknown) => {
+
+                const safeeData = schema.safeParse(data);
+
+                if (safeeData.success) {
+                    return {
+                        success: true,
+                        data: safeeData.data,
+                    }
+                }
+
+                return {
+                    success: false,
+                    error: formatZodErrors(safeeData.error),
+                }
+            }
+        )
+    }
 
     check = (data: unknown): Result<T, CheckByZodError> => {
-        const safeData = this.validator.safeParse(data);
+        const safeData = this.safeParse(data);
         if (safeData.success) {
             return Result.ok(safeData.data);
         }
     
         return Result.error(new CheckByZodError(
             `CheckByZod: ${this.description}`,
-            formatZodErrors(safeData.error),
+            safeData.error,
             data,
         ));
     }
