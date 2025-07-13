@@ -15,7 +15,6 @@
     "npm:mobx@*": "6.13.5",
     "npm:react@*": "18.3.1",
     "npm:superjson@*": "2.2.1",
-    "npm:unws@*": "0.2.4_ws@8.18.0",
     "npm:zod@*": "3.23.8"
   },
   "jsr": {
@@ -126,20 +125,11 @@
     "undici-types@6.19.8": {
       "integrity": "sha512-ve2KP6f/JnbPBFyobGHuerC9g1FYGn/F8n1LWTwNxCEzd6IfqTwUQcNXgEtmmQ6DlRrC1hrSrBnCZPokRrDHjw=="
     },
-    "unws@0.2.4_ws@8.18.0": {
-      "integrity": "sha512-/N1ajiqrSp0A/26/LBg7r10fOcPtGXCqJRJ61sijUFoGZMr6ESWGYn7i0cwr7fR7eEECY5HsitqtjGHDZLAu2w==",
-      "dependencies": [
-        "ws"
-      ]
-    },
     "use-sync-external-store@1.2.2_react@18.3.1": {
       "integrity": "sha512-PElTlVMwpblvbNqQ82d2n6RjStvdSoNe9FG28kNfz3WiXilJm4DdNkEzRhCZuIDwY8U08WVihhGR5iRqAwfDiw==",
       "dependencies": [
         "react"
       ]
-    },
-    "ws@8.18.0": {
-      "integrity": "sha512-8VbfWfHLbbwu3+N6OKsOMpBdT4kXPDDB9cJk2bJ6mh9ucxdlnNvH1e+roYkKmN9Nxw2yjz7VzeO9oOz2zJ04Pw=="
     },
     "zod@3.23.8": {
       "integrity": "sha512-XBx9AXhXktjUqnepgTiE5flcKIYWi/rme0Eaj+5Y0lftuGBq+jyRu/md4WnuxqgP1ubdpNCsYEYPxrzVHD8d6g=="
@@ -153,7 +143,6 @@
       "npm:mobx@*",
       "npm:react@*",
       "npm:superjson@*",
-      "npm:unws@*",
       "npm:zod@*"
     ]
   }

@@ -1,5 +1,5 @@
 {
-    "version": "0.5.230",
+    "version": "0.5.231",
     "name": "@reactive/utils",
     "exports": {
         ".": "./index.ts"
@@ -20,7 +20,6 @@
         "react": "npm:react@^*",
         "superjson": "npm:superjson@^*",
         "@js-temporal/polyfill": "npm:@js-temporal/polyfill@^*",
-        "unws": "npm:unws@^*",
         "zod": "npm:zod@^*"
     },
     "tasks": {
