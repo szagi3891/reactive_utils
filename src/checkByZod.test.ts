@@ -51,7 +51,7 @@ Deno.test('basic', () => {
             "errors": [
                 {
                     "field": "sub.year",
-                    "message": "Required"
+                    "message": "Invalid input: expected number, received undefined"
                 }
             ],
             "data": {
@@ -81,11 +81,11 @@ Deno.test('basic', () => {
             "errors": [
                 {
                     "field": "sub.age",
-                    "message": "Required"
+                    "message": "Invalid input: expected number, received undefined"
                 },
                 {
                     field: "sub.sub2",
-                    message: "Required",
+                    message: "Invalid input: expected object, received undefined",
                 },
             ],
             "data": {
@@ -116,11 +116,11 @@ Deno.test('basic', () => {
             "errors": [
                 {
                     "field": "sub.age",
-                    "message": "Required"
+                    "message": "Invalid input: expected number, received undefined"
                 },
                 {
                     field: "sub.sub2.type",
-                    message: "Invalid discriminator value. Expected 'ver1' | 'ver2' | 'ver3'",
+                    message: "Invalid input",
                 },
             ],
             "data": {
@@ -154,7 +154,7 @@ Deno.test('basic', () => {
             "errors": [
                 {
                     field: "sub.sub2.type",
-                    message: "Invalid discriminator value. Expected 'ver1' | 'ver2' | 'ver3'",
+                    message: "Invalid input",
                 },
             ],
             "data": {
@@ -191,7 +191,7 @@ Deno.test('basic', () => {
             "errors": [
                 {
                     field: "sub.sub2.age",
-                    message: "Required",                    
+                    message: "Invalid input: expected number, received undefined",                    
                 },
             ],
             "data": {
@@ -231,7 +231,7 @@ Deno.test('basic', () => {
             "errors": [
                 {
                     field: "sub.sub2.age",
-                    message: "Expected number, received null",
+                    message: "Invalid input: expected number, received null",
                 },
             ],
             "data": {
@@ -340,10 +340,10 @@ Deno.test('jsonParse missing fields', () => {
             }],
             errors: [{
                 field: "0.c",
-                message: "Required",
+                message: "Invalid input: expected number, received undefined",
             }, {
                 field: "1.d",
-                message: "Required",
+                message: "Invalid input: expected boolean, received undefined",
             }],
         },
     });
@@ -378,10 +378,10 @@ Deno.test('jsonParse missing fields 2', () => {
             }],
             errors: [{
                 field: "0.c",
-                message: "Expected number, received boolean",
+                message: "Invalid input: expected number, received boolean",
             }, {
                 field: "1.d",
-                message: "Expected boolean, received number",
+                message: "Invalid input: expected boolean, received number",
             }],
         },
     });
@@ -416,7 +416,7 @@ Deno.test('jsonParse missing fields 1', () => {
             }],
             errors: [{
                 field: "0.c",
-                message: "Expected number, received boolean",
+                message: "Invalid input: expected number, received boolean",
             }],
         },
     });

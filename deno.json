@@ -1,5 +1,5 @@
 {
-    "version": "0.5.231",
+    "version": "0.5.232",
     "name": "@reactive/utils",
     "exports": {
         ".": "./index.ts"
@@ -20,7 +20,7 @@
         "react": "npm:react@^*",
         "superjson": "npm:superjson@^*",
         "@js-temporal/polyfill": "npm:@js-temporal/polyfill@^*",
-        "zod": "npm:zod@^*"
+        "zod": "npm:zod@^4.0.0"
     },
     "tasks": {
         "ts-check": "tsc",

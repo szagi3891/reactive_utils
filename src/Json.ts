@@ -15,7 +15,7 @@ export const JSONValueZod: z.ZodType<JSONValue> = z.lazy(() =>
         z.boolean(),
         z.null(),
         z.array(JSONValueZod),
-        z.record(JSONValueZod.or(z.undefined()))
+        z.record(z.string(), JSONValueZod.or(z.undefined()))
     ])
 );
 

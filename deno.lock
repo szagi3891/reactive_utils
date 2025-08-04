@@ -15,7 +15,7 @@
     "npm:mobx@*": "6.13.5",
     "npm:react@*": "18.3.1",
     "npm:superjson@*": "2.2.1",
-    "npm:zod@*": "3.23.8"
+    "npm:zod@4": "4.0.10"
   },
   "jsr": {
     "@std/assert@1.0.6": {
@@ -131,8 +131,8 @@
         "react"
       ]
     },
-    "zod@3.23.8": {
-      "integrity": "sha512-XBx9AXhXktjUqnepgTiE5flcKIYWi/rme0Eaj+5Y0lftuGBq+jyRu/md4WnuxqgP1ubdpNCsYEYPxrzVHD8d6g=="
+    "zod@4.0.10": {
+      "integrity": "sha512-3vB+UU3/VmLL2lvwcY/4RV2i9z/YU0DTV/tDuYjrwmx5WeJ7hwy+rGEEx8glHp6Yxw7ibRbKSaIFBgReRPe5KA=="
     }
   },
   "workspace": {
@@ -143,7 +143,7 @@
       "npm:mobx@*",
       "npm:react@*",
       "npm:superjson@*",
-      "npm:zod@*"
+      "npm:zod@4"
     ]
   }
 }

@@ -7,7 +7,7 @@ interface FormatZodErrorsType {
 }
 
 const formatZodErrors = (error: z.ZodError): Array<FormatZodErrorsType> => {
-    return error.errors.map((err) => {        
+    return error.issues.map((err) => {
         return ({
             field: err.path.join("."),
             message: err.message,
@@ -59,7 +59,7 @@ export class CheckByZod<T> {
         },
     ) {}
 
-    public static create<T0, T>(description: string, schema: z.ZodType<T0, z.ZodTypeDef, T>): CheckByZod<T0> {
+    public static create<T0, T>(description: string, schema: z.ZodType<T0, T>): CheckByZod<T0> {
         return new CheckByZod(
             description,
             (data: unknown) => {
