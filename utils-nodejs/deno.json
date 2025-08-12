@@ -1,6 +1,6 @@
 {
-    "version": "0.5.237",
-    "name": "@reactive/utils",
+    "version": "0.1.1",
+    "name": "@reactive/utils-nodejs",
     "exports": {
         ".": "./index.ts"
     },
@@ -24,7 +24,7 @@
         "chalk": "npm:chalk@^*"
     },
     "tasks": {
-        "check": "deno -A ./index.ts && deno -A ./src/nodejs/index.ts",
+        "check": "deno ./index.ts",
         "test": "deno install && deno test --allow-hrtime --allow-env --v8-flags=\"--expose-gc\" --trace-leaks"
     },
     "compilerOptions": {
