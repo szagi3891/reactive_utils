@@ -44,7 +44,6 @@ export { sort } from './src/sort.ts';
 export { AbortBox } from './src/AbortBox.ts';
 export type { AbortBoxFn } from './src/AbortBox.ts';
 export { ValueList, type ValueListUpdateType} from './src/ValueList.ts';
-export { installGlobalSigint } from './src/deno/installGlobalSigint.ts';
 export { ResizableUint8Array } from './src/ResizableUint8Array.ts';
 export { CheckByZod } from './src/checkByZod.ts';
 export { superJsonCustom } from './src/superJsonCustom.ts';
@@ -54,4 +53,6 @@ export { tryFn, tryFnSync } from './src/tryFn.ts';
 
 //... without jsx
 
+export { exec } from './src/nodejs/exec.ts';
+export { execAndGet } from './src/nodejs/execAndGet.ts';
 

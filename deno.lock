@@ -1,5 +1,5 @@
 {
-  "version": "4",
+  "version": "5",
   "specifiers": {
     "jsr:@std/assert@*": "1.0.6",
     "jsr:@std/assert@^1.0.6": "1.0.6",
@@ -11,6 +11,7 @@
     "npm:@js-temporal/polyfill@*": "0.4.4",
     "npm:@types/node@*": "22.5.4",
     "npm:@types/react@*": "18.3.12",
+    "npm:chalk@*": "5.4.1",
     "npm:mobx-react-lite@*": "4.0.7_mobx@6.13.5_react@18.3.1",
     "npm:mobx@*": "6.13.5",
     "npm:react@*": "18.3.1",
@@ -72,6 +73,9 @@
         "csstype"
       ]
     },
+    "chalk@5.4.1": {
+      "integrity": "sha512-zgVZuo2WcZgfUEmsn6eO3kINexW8RAE4maiQ8QNs8CtpPCSyMiYsULR3HQYkm3w8FIA3SberyMJMSldGsW+U3w=="
+    },
     "copy-anything@3.0.5": {
       "integrity": "sha512-yCEafptTtb4bk7GLEQoM8KVJpxAfdBJYaXyzQEgQQQgYrZiDp8SJmGKlYza6CYjEDNstAdNdKA3UuoULlEbS6w==",
       "dependencies": [
@@ -94,7 +98,8 @@
       "integrity": "sha512-lyuxPGr/Wfhrlem2CL/UcnUc1zcqKAImBDzukY7Y5F/yQiNdko6+fRLevlw1HgMySw7f611UIY408EtxRSoK3Q==",
       "dependencies": [
         "js-tokens"
-      ]
+      ],
+      "bin": true
     },
     "mobx-react-lite@4.0.7_mobx@6.13.5_react@18.3.1": {
       "integrity": "sha512-RjwdseshK9Mg8On5tyJZHtGD+J78ZnCnRaxeQDSiciKVQDUbfZcXhmld0VMxAwvcTnPEHZySGGewm467Fcpreg==",
@@ -139,6 +144,7 @@
     "dependencies": [
       "npm:@js-temporal/polyfill@*",
       "npm:@types/react@*",
+      "npm:chalk@*",
       "npm:mobx-react-lite@*",
       "npm:mobx@*",
       "npm:react@*",

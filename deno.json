@@ -1,5 +1,5 @@
 {
-    "version": "0.5.232",
+    "version": "0.5.233",
     "name": "@reactive/utils",
     "exports": {
         ".": "./index.ts"
@@ -20,11 +20,12 @@
         "react": "npm:react@^*",
         "superjson": "npm:superjson@^*",
         "@js-temporal/polyfill": "npm:@js-temporal/polyfill@^*",
-        "zod": "npm:zod@^4.0.0"
+        "zod": "npm:zod@^4.0.0",
+        "chalk": "npm:chalk@^*"
     },
     "tasks": {
         "ts-check": "tsc",
-        "test": "deno test  --allow-hrtime --v8-flags=\"--expose-gc\" --trace-leaks"
+        "test": "deno install && deno test --allow-hrtime --allow-env --v8-flags=\"--expose-gc\" --trace-leaks"
     },
     "compilerOptions": {
         "noUnusedLocals": true,
