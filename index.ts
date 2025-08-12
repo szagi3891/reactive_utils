@@ -52,7 +52,3 @@ export { ComputedStruct } from './src/ComputedStruct.ts';
 export { tryFn, tryFnSync } from './src/tryFn.ts';
 
 //... without jsx
-
-export { exec } from './src/nodejs/exec.ts';
-export { execAndGet } from './src/nodejs/execAndGet.ts';
-

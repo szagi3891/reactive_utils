@@ -1,8 +1,9 @@
 {
-    "version": "0.5.233",
+    "version": "0.5.234",
     "name": "@reactive/utils",
     "exports": {
-        ".": "./index.ts"
+        ".": "./index.ts",
+        "./nodejs": "./src/nodejs/index.ts"
     },
     "license": "MIT",
     "lint": {
@@ -24,7 +25,7 @@
         "chalk": "npm:chalk@^*"
     },
     "tasks": {
-        "ts-check": "tsc",
+        "check": "deno -A ./index.ts && deno -A ./src/nodejs/index.ts",
         "test": "deno install && deno test --allow-hrtime --allow-env --v8-flags=\"--expose-gc\" --trace-leaks"
     },
     "compilerOptions": {
