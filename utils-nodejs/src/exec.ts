@@ -83,7 +83,7 @@ export async function exec(cwd: string, commandStr: string, env = {}) {
     }
 
     try {
-        await spawnPromise(commandStr, args, {
+        await spawnPromise(command, args, {
             cwd,
             env: {
                 ...process.env,
