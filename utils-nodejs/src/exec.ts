@@ -1,15 +1,10 @@
 import type { SpawnOptionsWithoutStdio } from 'node:child_process';
 import { spawn } from 'node:child_process';
 import process from "node:process";
+import chalk from 'chalk';
 
-const spawnPromise = (commandStr: string, options: SpawnOptionsWithoutStdio): Promise<void> => {
+const spawnPromise = (command: string, args: Array<string>, options: SpawnOptionsWithoutStdio): Promise<void> => {
     return new Promise<void>((resolve, reject) => {
-        const [command, ...args] = commandStr.split(' ');
-
-        if (command === undefined) {
-            throw Error('Błędny parametr wejściowy command');
-        }
-
         const child = spawn(command, args, {
             ...options,
             stdio: 'inherit',
@@ -44,10 +39,16 @@ const spawnPromise = (commandStr: string, options: SpawnOptionsWithoutStdio): Pr
 };
 
 export async function exec(cwd: string, commandStr: string, env = {}) {
-    console.info(`exec ${cwd} ${commandStr}`);
+    console.info(chalk.green(`exec ${cwd} ${commandStr}`));
+
+    const [command, ...args] = commandStr.split(' ');
+
+    if (command === undefined) {
+        throw Error('Błędny parametr wejściowy command');
+    }
 
     try {
-        await spawnPromise(commandStr, {
+        await spawnPromise(commandStr, args, {
             cwd,
             env: {
                 ...process.env,
@@ -61,3 +62,25 @@ export async function exec(cwd: string, commandStr: string, env = {}) {
         throw error;
     }
 }
+
+export async function execSsh(cwd: string, sshCommand: string, remoteCommand: string, env = {}) {
+    console.info(chalk.green(`Executing SSH command: ${cwd} ${sshCommand} "${remoteCommand}"`));
+
+    try {
+        await spawnPromise('ssh', [sshCommand, remoteCommand], {
+            cwd,
+            env: {
+                ...process.env,
+                ...env,
+            },
+            // Kluczowe: shell: false, aby uniknąć problemów z escapowaniem
+            shell: false,           //TODO - do sprawdzenia 
+        });
+    } catch (error) {
+        console.error(`CWD: ${cwd}`);
+        console.error(`SSH COMMAND: ${sshCommand}`);
+        console.error(`REMOTE COMMAND: ${remoteCommand}`);
+        throw error;
+    }
+}
+
