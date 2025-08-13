@@ -3,7 +3,44 @@ import { spawn } from 'node:child_process';
 import process from "node:process";
 import chalk from 'chalk';
 
+const getEnv = (env: NodeJS.ProcessEnv | undefined): Record<string, string> | undefined => {
+    const result: Record<string, string> = {};
+
+    if (env === undefined) {
+        return undefined;
+    }
+
+    for (const [key, value] of Object.entries(env)) {
+        if (value === undefined) {
+            continue;
+        }
+
+        if (process.env[key] === value) {
+            continue;
+        } else {
+            result[key] = value;
+        }
+    }
+    
+    if (Object.keys(result).length === 0) {
+        return undefined;
+    }
+
+    return result;
+};
+
 const spawnPromise = (command: string, args: Array<string>, options: SpawnOptionsWithoutStdio): Promise<void> => {
+    options.env
+
+    console.info(chalk.green(JSON.stringify({
+        command,
+        args,
+        options: {
+            ...options,
+            env: getEnv(options.env),
+        },
+    }, null, 4)));
+
     return new Promise<void>((resolve, reject) => {
         const child = spawn(command, args, {
             ...options,
@@ -39,8 +76,6 @@ const spawnPromise = (command: string, args: Array<string>, options: SpawnOption
 };
 
 export async function exec(cwd: string, commandStr: string, env = {}) {
-    console.info(chalk.green(`exec ${cwd} ${commandStr}`));
-
     const [command, ...args] = commandStr.split(' ');
 
     if (command === undefined) {
@@ -64,23 +99,13 @@ export async function exec(cwd: string, commandStr: string, env = {}) {
 }
 
 export async function execSsh(cwd: string, sshCommand: string, remoteCommand: string, env = {}) {
-    console.info(chalk.green(`Executing SSH command: ${cwd} ${sshCommand} "${remoteCommand}"`));
-
-    try {
-        await spawnPromise('ssh', [sshCommand, remoteCommand], {
-            cwd,
-            env: {
-                ...process.env,
-                ...env,
-            },
-            // Kluczowe: shell: false, aby uniknąć problemów z escapowaniem
-            shell: false,           //TODO - do sprawdzenia 
-        });
-    } catch (error) {
-        console.error(`CWD: ${cwd}`);
-        console.error(`SSH COMMAND: ${sshCommand}`);
-        console.error(`REMOTE COMMAND: ${remoteCommand}`);
-        throw error;
-    }
+    await spawnPromise('ssh', [sshCommand, `cd ${cwd} && ${remoteCommand}`], {
+        env: {
+            ...process.env,
+            ...env,
+        },
+        // Kluczowe: shell: false, aby uniknąć problemów z escapowaniem
+        shell: false,           //TODO - do sprawdzenia 
+    });
 }
 
