@@ -8,7 +8,7 @@ export async function exec(cwd: string, commandStr: string, env = {}) {
         throw Error('Błędny parametr wejściowy command');
     }
 
-    await spawnPromise(command, args, {
+    const code = await spawnPromise(command, args, {
         cwd,
         env: {
             ...process.env,
@@ -16,10 +16,14 @@ export async function exec(cwd: string, commandStr: string, env = {}) {
         },
         shell: true,
     });
+
+    if (code !== 0) {
+        throw Error(`Expected codee=0, receive code=${code}`);
+    }
 }
 
 export async function execSsh(cwd: string, sshCommand: string, remoteCommand: string, env = {}) {
-    await spawnPromise('ssh', [sshCommand, `cd ${cwd} && ${remoteCommand}`], {
+    const code = await spawnPromise('ssh', [sshCommand, `cd ${cwd} && ${remoteCommand}`], {
         env: {
             ...process.env,
             ...env,
@@ -27,8 +31,11 @@ export async function execSsh(cwd: string, sshCommand: string, remoteCommand: st
         // Kluczowe: shell: false, aby uniknąć problemów z escapowaniem
         shell: true,           //TODO - do sprawdzenia 
     });
-}
 
+    if (code !== 0) {
+        throw Error(`Expected codee=0, receive code=${code}`);
+    }
+}
 
 export async function sshExecAndGet(
     cwd: string,
