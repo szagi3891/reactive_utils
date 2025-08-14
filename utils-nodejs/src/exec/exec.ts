@@ -14,7 +14,7 @@ export async function exec(cwd: string, commandStr: string, env = {}) {
             ...process.env,
             ...env,
         },
-        shell: true,
+        // shell: true,
     });
 
     if (code !== 0) {
@@ -28,8 +28,7 @@ export async function execSsh(cwd: string, sshCommand: string, remoteCommand: st
             ...process.env,
             ...env,
         },
-        // Kluczowe: shell: false, aby uniknąć problemów z escapowaniem
-        shell: true,           //TODO - do sprawdzenia 
+        // shell: false,           //jeślli jest true, to na ssh serwerze nie działa zaciąganie obazu dokerowego
     });
 
     if (code !== 0) {
@@ -37,7 +36,7 @@ export async function execSsh(cwd: string, sshCommand: string, remoteCommand: st
     }
 }
 
-export async function sshExecAndGet(
+export async function execAndGet(
     cwd: string,
     commandStr: string,
     env: Record<string, string> = {}
@@ -58,13 +57,12 @@ export async function sshExecAndGet(
             ...process.env,
             ...env,
         },
-        shell: true,
     });
 
     return result;
 }
 
-export async function sshExec(cwd: string, sshCommand: string, remoteCommand: string, env = {}): Promise<{
+export async function execSshAndGet(cwd: string, sshCommand: string, remoteCommand: string, env = {}): Promise<{
     code: number;
     stdout: string;
     stderr: string;
@@ -74,8 +72,7 @@ export async function sshExec(cwd: string, sshCommand: string, remoteCommand: st
             ...process.env,
             ...env,
         },
-        // Kluczowe: shell: false, aby uniknąć problemów z escapowaniem
-        shell: true,           //TODO - do sprawdzenia 
+        // shell: false,           //jeślli jest true, to na ssh serwerze nie działa zaciąganie obazu dokerowego
     });
 
     return result;
