@@ -25,7 +25,7 @@ export async function execSsh(cwd: string, sshCommand: string, remoteCommand: st
             ...env,
         },
         // Kluczowe: shell: false, aby uniknąć problemów z escapowaniem
-        shell: false,           //TODO - do sprawdzenia 
+        shell: true,           //TODO - do sprawdzenia 
     });
 }
 
@@ -57,14 +57,18 @@ export async function sshExecAndGet(
     return result;
 }
 
-export async function sshExec(cwd: string, sshCommand: string, remoteCommand: string, env = {}) {
+export async function sshExec(cwd: string, sshCommand: string, remoteCommand: string, env = {}): Promise<{
+    code: number;
+    stdout: string;
+    stderr: string;
+}> {
     const result = await spawnPromiseAndGet('ssh', [sshCommand, `cd ${cwd} && ${remoteCommand}`], {
         env: {
             ...process.env,
             ...env,
         },
         // Kluczowe: shell: false, aby uniknąć problemów z escapowaniem
-        shell: false,           //TODO - do sprawdzenia 
+        shell: true,           //TODO - do sprawdzenia 
     });
 
     return result;
