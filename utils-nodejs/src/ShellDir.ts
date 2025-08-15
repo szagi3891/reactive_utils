@@ -28,6 +28,24 @@ export class ShellDir {
         });
     }
 
+    public cd(dir: string): ShellDir {
+        switch (this.params.type) {
+            case 'local': {
+                return new ShellDir({
+                    type: 'local',
+                    cwd: [this.params.cwd, dir].join('/'),
+                });
+            }
+            case 'ssh': {
+                return new ShellDir({
+                    type: 'ssh',
+                    cwd: [this.params.cwd, dir].join('/'),
+                    sshCommand: this.params.sshCommand,
+                });
+            }
+        }
+    }
+
     async exec(commandStr: string, env = {}): Promise<void> {
         switch (this.params.type) {
             case 'local': {
