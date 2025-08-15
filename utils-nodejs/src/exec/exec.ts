@@ -1,12 +1,19 @@
 import process from "node:process";
 import { spawnPromise, spawnPromiseAndGet } from './spawnPromise.ts';
 
-export async function exec(cwd: string, commandStr: string, env = {}) {
+const splitCommandStr = (commandStr: string): [string, Array<string>] => {
     const [command, ...args] = commandStr.split(' ');
 
     if (command === undefined) {
         throw Error('Błędny parametr wejściowy command');
     }
+
+    return [command, args];
+};
+
+export async function exec(params: {cwd: string, commandStr: string, env: Record<string, string>}) {
+    const {cwd, commandStr, env} = params;
+    const [command, args] = splitCommandStr(commandStr);
 
     const code = await spawnPromise(command, args, {
         cwd,
@@ -22,7 +29,9 @@ export async function exec(cwd: string, commandStr: string, env = {}) {
     }
 }
 
-export async function execSsh(cwd: string, sshCommand: string, remoteCommand: string, env = {}) {
+export async function execSsh(params: {cwd: string, sshCommand: string, remoteCommand: string, env: Record<string, string>}) {
+    const {cwd, sshCommand, remoteCommand, env} = params;
+
     const code = await spawnPromise('ssh', [sshCommand, `cd ${cwd} && ${remoteCommand}`], {
         env: {
             ...process.env,
@@ -37,19 +46,18 @@ export async function execSsh(cwd: string, sshCommand: string, remoteCommand: st
 }
 
 export async function execAndGet(
-    cwd: string,
-    commandStr: string,
-    env: Record<string, string> = {}
+    params: {
+        cwd: string,
+        commandStr: string,
+        env: Record<string, string>
+    }
 ): Promise<{
     code: number;
     stdout: string;
     stderr: string;
 }> {
-    const [command, ...args] = commandStr.split(' ');
-
-    if (command === undefined) {
-        throw Error('Błędny parametr wejściowy command');
-    }
+    const { cwd, commandStr, env } = params;
+    const [command, args] = splitCommandStr(commandStr);
 
     const result = await spawnPromiseAndGet(command, args, {
         cwd,
@@ -62,11 +70,13 @@ export async function execAndGet(
     return result;
 }
 
-export async function execSshAndGet(cwd: string, sshCommand: string, remoteCommand: string, env = {}): Promise<{
+export async function execSshAndGet(params: {cwd: string, sshCommand: string, remoteCommand: string, env: Record<string, string>}): Promise<{
     code: number;
     stdout: string;
     stderr: string;
 }> {
+    const {cwd, sshCommand, remoteCommand, env} = params;
+
     const result = await spawnPromiseAndGet('ssh', [sshCommand, `cd ${cwd} && ${remoteCommand}`], {
         env: {
             ...process.env,

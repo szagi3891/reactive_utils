@@ -46,30 +46,52 @@ export class ShellDir {
         }
     }
 
-    async exec(commandStr: string, env = {}): Promise<void> {
+    async exec(params: { command: string, env?: Record<string, string>}): Promise<void> {
+        const {command, env = {}} = params;
+
         switch (this.params.type) {
             case 'local': {
-                await exec(this.params.cwd, commandStr, env);
+                await exec({
+                    cwd: this.params.cwd,
+                    commandStr: command,
+                    env,
+                });
                 return;
             }
             case 'ssh': {
-                await execSsh(this.params.cwd, this.params.sshCommand, commandStr, env);
+                await execSsh({
+                    cwd: this.params.cwd,
+                    sshCommand: this.params.sshCommand,
+                    remoteCommand: command,
+                    env
+                });
                 return;
             }
         }
     }
 
-    execAndGet(commandStr: string, env = {}): Promise<{
+    execAndGet(params: { command: string, env?: Record<string, string>}): Promise<{
         code: number;
         stdout: string;
         stderr: string;
     }> {
+        const {command, env = {}} = params;
+
         switch (this.params.type) {
             case 'local': {
-                return execAndGet(this.params.cwd, commandStr, env);
+                return execAndGet({
+                    cwd: this.params.cwd,
+                    commandStr: command,
+                    env,
+                })
             }
             case 'ssh': {
-                return execSshAndGet(this.params.cwd, this.params.sshCommand, commandStr, env);
+                return execSshAndGet({
+                    cwd: this.params.cwd,
+                    sshCommand: this.params.sshCommand,
+                    remoteCommand: command,
+                    env
+                });
             }
         }
     }
