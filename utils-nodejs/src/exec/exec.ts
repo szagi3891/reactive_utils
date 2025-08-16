@@ -11,11 +11,11 @@ const splitCommandStr = (commandStr: string): [string, Array<string>] => {
     return [command, args];
 };
 
-export async function exec(params: {cwd: string, commandStr: string, env: Record<string, string>}) {
-    const {cwd, commandStr, env} = params;
+export async function exec(params: {cwd: string, commandStr: string, argsIn: Array<string>, env: Record<string, string>}) {
+    const {cwd, commandStr, argsIn, env} = params;
     const [command, args] = splitCommandStr(commandStr);
 
-    const code = await spawnPromise(command, args, {
+    const code = await spawnPromise(command, [...args, ...argsIn], {
         cwd,
         env: {
             ...process.env,
@@ -49,6 +49,7 @@ export async function execAndGet(
     params: {
         cwd: string,
         commandStr: string,
+        argsIn: Array<string>,
         env: Record<string, string>
     }
 ): Promise<{
@@ -56,10 +57,10 @@ export async function execAndGet(
     stdout: string;
     stderr: string;
 }> {
-    const { cwd, commandStr, env } = params;
+    const { cwd, commandStr, argsIn, env } = params;
     const [command, args] = splitCommandStr(commandStr);
 
-    const result = await spawnPromiseAndGet(command, args, {
+    const result = await spawnPromiseAndGet(command, [...args, ...argsIn], {
         cwd,
         env: {
             ...process.env,

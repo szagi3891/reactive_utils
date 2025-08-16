@@ -46,8 +46,8 @@ export class ShellDir {
         }
     }
 
-    async exec(params: { command: string, env?: Record<string, string>}): Promise<void> {
-        const {command, env = {}} = params;
+    async exec(params: { command: string, argsIn?: Array<string>, env?: Record<string, string>}): Promise<void> {
+        const {command, argsIn = [], env = {}} = params;
 
         switch (this.params.type) {
             case 'local': {
@@ -55,10 +55,15 @@ export class ShellDir {
                     cwd: this.params.cwd,
                     commandStr: command,
                     env,
+                    argsIn,
                 });
                 return;
             }
             case 'ssh': {
+                if (argsIn.length !== 0) {
+                    throw Error('TODO - ssh does not yet support the parameter');
+                }
+
                 await execSsh({
                     cwd: this.params.cwd,
                     sshCommand: this.params.sshCommand,
@@ -70,12 +75,12 @@ export class ShellDir {
         }
     }
 
-    execAndGet(params: { command: string, env?: Record<string, string>}): Promise<{
+    execAndGet(params: { command: string, argsIn?: Array<string>, env?: Record<string, string>}): Promise<{
         code: number;
         stdout: string;
         stderr: string;
     }> {
-        const {command, env = {}} = params;
+        const {command, argsIn = [], env = {}} = params;
 
         switch (this.params.type) {
             case 'local': {
@@ -83,9 +88,14 @@ export class ShellDir {
                     cwd: this.params.cwd,
                     commandStr: command,
                     env,
+                    argsIn,
                 })
             }
             case 'ssh': {
+                if (argsIn.length !== 0) {
+                    throw Error('TODO - ssh does not yet support the parameter');
+                }
+
                 return execSshAndGet({
                     cwd: this.params.cwd,
                     sshCommand: this.params.sshCommand,
