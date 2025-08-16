@@ -3,10 +3,6 @@ import { escapeParamShell } from "./escape.ts";
 export class ShellEscapedString {
     protected nominal: 'nominal' = 'nominal' as const;
     constructor(public readonly value: string) {}
-
-    toString() {
-        return this.value;
-    }
 }
 
 export const shellEscape = (
