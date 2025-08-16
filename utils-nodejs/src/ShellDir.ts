@@ -1,4 +1,5 @@
 import { exec, execSsh, execAndGet, execSshAndGet } from './exec/exec.ts';
+import { ShellEscapedString } from "./exec/shellEscape.ts";
 
 type ShellDirType = {
     type: 'local',
@@ -46,7 +47,7 @@ export class ShellDir {
         }
     }
 
-    async exec(params: { command: string, argsIn?: Array<string>, env?: Record<string, string>}): Promise<void> {
+    async exec(params: { command: string, argsIn?: Array<string | ShellEscapedString>, env?: Record<string, string>}): Promise<void> {
         const {command, argsIn = [], env = {}} = params;
 
         switch (this.params.type) {
@@ -75,7 +76,7 @@ export class ShellDir {
         }
     }
 
-    execAndGet(params: { command: string, argsIn?: Array<string>, env?: Record<string, string>}): Promise<{
+    execAndGet(params: { command: string, argsIn?: Array<string | ShellEscapedString>, env?: Record<string, string>}): Promise<{
         code: number;
         stdout: string;
         stderr: string;

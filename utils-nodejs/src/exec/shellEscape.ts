@@ -1,6 +1,6 @@
 import { escapeParamShell } from "./escape.ts";
 
-class ShellEscapedString {
+export class ShellEscapedString {
     protected nominal: 'nominal' = 'nominal' as const;
     constructor(public readonly value: string) {}
 

@@ -1,5 +1,6 @@
 import process from "node:process";
 import { spawnPromise, spawnPromiseAndGet } from './spawnPromise.ts';
+import { ShellEscapedString } from "./shellEscape.ts";
 
 const splitCommandStr = (commandStr: string): [string, Array<string>] => {
     const [command, ...args] = commandStr.split(' ');
@@ -11,11 +12,21 @@ const splitCommandStr = (commandStr: string): [string, Array<string>] => {
     return [command, args];
 };
 
-export async function exec(params: {cwd: string, commandStr: string, argsIn: Array<string>, env: Record<string, string>}) {
+const formatArgs = (args: Array<string | ShellEscapedString>): Array<string> => {
+    return args.map(arg => {
+        if (typeof arg === 'string') {
+            return arg;
+        }
+
+        return arg.value;
+    });
+}
+
+export async function exec(params: {cwd: string, commandStr: string, argsIn: Array<string | ShellEscapedString>, env: Record<string, string>}) {
     const {cwd, commandStr, argsIn, env} = params;
     const [command, args] = splitCommandStr(commandStr);
 
-    const code = await spawnPromise(command, [...args, ...argsIn], {
+    const code = await spawnPromise(command, formatArgs([...args, ...argsIn]), {
         cwd,
         env: {
             ...process.env,
@@ -49,7 +60,7 @@ export async function execAndGet(
     params: {
         cwd: string,
         commandStr: string,
-        argsIn: Array<string>,
+        argsIn: Array<string | ShellEscapedString>,
         env: Record<string, string>
     }
 ): Promise<{
@@ -60,7 +71,7 @@ export async function execAndGet(
     const { cwd, commandStr, argsIn, env } = params;
     const [command, args] = splitCommandStr(commandStr);
 
-    const result = await spawnPromiseAndGet(command, [...args, ...argsIn], {
+    const result = await spawnPromiseAndGet(command, formatArgs([...args, ...argsIn]), {
         cwd,
         env: {
             ...process.env,
