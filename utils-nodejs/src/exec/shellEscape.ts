@@ -15,7 +15,11 @@ export const shellEscape = (
         result.push(part);
 
         if (i < values.length) {
-            result.push(escapeParamShell(values[i]));
+            const val = values[i];
+            if (val === undefined) {
+                throw Error('Expected value');
+            }
+            result.push(escapeParamShell(val));
         }
     });
 
