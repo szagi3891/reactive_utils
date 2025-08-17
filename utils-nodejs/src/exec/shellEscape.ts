@@ -1,14 +1,6 @@
 import { escapeParamShell } from "./escape.ts";
 
-export class ShellEscapedString {
-    protected nominal: 'nominal' = 'nominal' as const;
-    constructor(public readonly value: string) {}
-}
-
-export const shellEscape = (
-  strings: TemplateStringsArray,
-  ...values: string[]
-): ShellEscapedString => {
+export const shellEscape = (strings: TemplateStringsArray, ...values: string[]): string => {
     const result: Array<string> = [];
 
     strings.forEach((part, i) => {
@@ -23,7 +15,7 @@ export const shellEscape = (
         }
     });
 
-    return new ShellEscapedString(result.join(''));
+    return result.join('');
 };
 
 

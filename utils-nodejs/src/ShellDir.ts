@@ -1,5 +1,4 @@
 import { exec, execSsh, execAndGet, execSshAndGet } from './exec/exec.ts';
-import { ShellEscapedString } from "./exec/shellEscape.ts";
 
 type ShellDirType = {
     type: 'local',
@@ -47,28 +46,29 @@ export class ShellDir {
         }
     }
 
-    async exec(params: { command: string, argsIn?: Array<string | ShellEscapedString>, env?: Record<string, string>}): Promise<void> {
-        const {command, argsIn = [], env = {}} = params;
+    async exec(params: {
+        command: string,
+        args?: Array<string>,
+        env?: Record<string, string>
+    }): Promise<void> {
+        const {command, args = [], env = {}} = params;
 
         switch (this.params.type) {
             case 'local': {
                 await exec({
                     cwd: this.params.cwd,
                     commandStr: command,
+                    argsIn: args,
                     env,
-                    argsIn,
                 });
                 return;
             }
             case 'ssh': {
-                if (argsIn.length !== 0) {
-                    throw Error('TODO - ssh does not yet support the parameter');
-                }
-
                 await execSsh({
                     cwd: this.params.cwd,
                     sshCommand: this.params.sshCommand,
                     remoteCommand: command,
+                    argsIn: args,
                     env
                 });
                 return;
@@ -76,32 +76,29 @@ export class ShellDir {
         }
     }
 
-    execAndGet(params: { command: string, argsIn?: Array<string | ShellEscapedString>, env?: Record<string, string>}): Promise<{
+    execAndGet(params: { command: string, args?: Array<string>, env?: Record<string, string>}): Promise<{
         code: number;
         stdout: string;
         stderr: string;
     }> {
-        const {command, argsIn = [], env = {}} = params;
+        const {command, args = [], env = {}} = params;
 
         switch (this.params.type) {
             case 'local': {
                 return execAndGet({
                     cwd: this.params.cwd,
                     commandStr: command,
+                    argsIn: args,
                     env,
-                    argsIn,
                 })
             }
             case 'ssh': {
-                if (argsIn.length !== 0) {
-                    throw Error('TODO - ssh does not yet support the parameter');
-                }
-
                 return execSshAndGet({
                     cwd: this.params.cwd,
                     sshCommand: this.params.sshCommand,
                     remoteCommand: command,
-                    env
+                    argsIn: args,
+                    env,
                 });
             }
         }
