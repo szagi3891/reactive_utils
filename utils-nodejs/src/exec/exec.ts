@@ -1,5 +1,6 @@
 import process from "node:process";
 import { spawnPromise, spawnPromiseAndGet } from './spawnPromise.ts';
+import { escapeParamShell } from "./escape.ts";
 
 const splitCommandStr = (commandStr: string): [string, Array<string>] => {
     const [command, ...args] = commandStr.split(' ');
@@ -32,7 +33,7 @@ export async function exec(params: {cwd: string, commandStr: string, argsIn: Arr
 export async function execSsh(params: {cwd: string, sshCommand: string, remoteCommand: string, argsIn: Array<string>, env: Record<string, string>}) {
     const {cwd, sshCommand, remoteCommand, argsIn, env} = params;
 
-    const code = await spawnPromise('ssh', [sshCommand, 'cd', cwd, '\&\&', remoteCommand, ...argsIn], {
+    const code = await spawnPromise('ssh', [sshCommand, 'cd', cwd, '\&\&', remoteCommand, ...argsIn.map(escapeParamShell)], {
         env: {
             ...process.env,
             ...env,
@@ -84,7 +85,7 @@ export async function execSshAndGet(params: {
 }> {
     const {cwd, sshCommand, remoteCommand, argsIn, env} = params;
 
-    const result = await spawnPromiseAndGet('ssh', [sshCommand, 'cd', cwd, '\&\&', remoteCommand, ...argsIn], {
+    const result = await spawnPromiseAndGet('ssh', [sshCommand, 'cd', cwd, '\&\&', remoteCommand, ...argsIn.map(escapeParamShell)], {
         env: {
             ...process.env,
             ...env,
