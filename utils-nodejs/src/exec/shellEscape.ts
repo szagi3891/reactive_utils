@@ -49,6 +49,13 @@ export class EscapeString {
         }]);
     }
 
+    public static escape(param: string): EscapeString {
+        return new EscapeString([{
+            type: 'escaped',
+            value: param,
+        }]);
+    }
+
     getResultString(escape: (param: string) => string): string {
         const result: Array<string> = [];
 

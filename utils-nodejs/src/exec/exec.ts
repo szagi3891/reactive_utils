@@ -23,7 +23,7 @@ const normalizeArg = (value: string | EscapeString): EscapeString => {
 export async function exec(params: {
     cwd: string,
     commandStr: string,
-    argsIn: Array<string | EscapeString>,
+    argsIn: Array<EscapeString>,
     env: Record<string, string>
 }) {
     const {cwd, commandStr, argsIn, env} = params;
@@ -47,7 +47,7 @@ export async function execSsh(params: {
     cwd: string,
     sshCommand: string,
     remoteCommand: string,
-    argsIn: Array<string | EscapeString>,
+    argsIn: Array<EscapeString>,
     env: Record<string, string>
 }) {
     const {cwd, sshCommand, remoteCommand, argsIn, env} = params;
@@ -69,7 +69,7 @@ export async function execAndGet(
     params: {
         cwd: string,
         commandStr: string,
-        argsIn: Array<string | EscapeString>,
+        argsIn: Array<EscapeString>,
         env: Record<string, string>
     }
 ): Promise<{
@@ -95,7 +95,7 @@ export async function execSshAndGet(params: {
     cwd: string,
     sshCommand: string,
     remoteCommand: string,
-    argsIn: Array<string | EscapeString>,
+    argsIn: Array<EscapeString>,
     env: Record<string, string>
 }): Promise<{
     code: number;

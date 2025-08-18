@@ -1,4 +1,13 @@
 import { exec, execSsh, execAndGet, execSshAndGet } from './exec/exec.ts';
+import { EscapeString } from "./exec/shellEscape.ts";
+
+const escapeArg = (value: string | EscapeString): EscapeString => {
+    if (typeof value === 'string') {
+        return EscapeString.escape(value);
+    }
+
+    return value;
+};
 
 type ShellDirType = {
     type: 'local',
@@ -48,7 +57,7 @@ export class ShellDir {
 
     async exec(params: {
         command: string,
-        args?: Array<string>,
+        args?: Array<string | EscapeString>,
         env?: Record<string, string>
     }): Promise<void> {
         const {command, args = [], env = {}} = params;
@@ -58,7 +67,7 @@ export class ShellDir {
                 await exec({
                     cwd: this.params.cwd,
                     commandStr: command,
-                    argsIn: args,
+                    argsIn: args.map(escapeArg),
                     env,
                 });
                 return;
@@ -68,7 +77,7 @@ export class ShellDir {
                     cwd: this.params.cwd,
                     sshCommand: this.params.sshCommand,
                     remoteCommand: command,
-                    argsIn: args,
+                    argsIn: args.map(escapeArg),
                     env
                 });
                 return;
@@ -76,7 +85,7 @@ export class ShellDir {
         }
     }
 
-    execAndGet(params: { command: string, args?: Array<string>, env?: Record<string, string>}): Promise<{
+    execAndGet(params: { command: string, args?: Array<string | EscapeString>, env?: Record<string, string>}): Promise<{
         code: number;
         stdout: string;
         stderr: string;
@@ -88,7 +97,7 @@ export class ShellDir {
                 return execAndGet({
                     cwd: this.params.cwd,
                     commandStr: command,
-                    argsIn: args,
+                    argsIn: args.map(escapeArg),
                     env,
                 })
             }
@@ -97,7 +106,7 @@ export class ShellDir {
                     cwd: this.params.cwd,
                     sshCommand: this.params.sshCommand,
                     remoteCommand: command,
-                    argsIn: args,
+                    argsIn: args.map(escapeArg),
                     env,
                 });
             }
