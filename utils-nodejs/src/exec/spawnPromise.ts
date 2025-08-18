@@ -3,6 +3,8 @@ import { spawn } from 'node:child_process';
 import process from "node:process";
 import chalk from 'chalk';
 import { Buffer } from "node:buffer";
+import { EscapeString } from "./shellEscape.ts";
+import { escapeParamShell } from "./escape.ts";
 
 const getEnv = (env: NodeJS.ProcessEnv | undefined): Record<string, string> | undefined => {
     const result: Record<string, string> = {};
@@ -30,10 +32,10 @@ const getEnv = (env: NodeJS.ProcessEnv | undefined): Record<string, string> | un
     return result;
 };
 
-export const spawnPromise = (command: string, args: Array<string>, options: SpawnOptionsWithoutStdio): Promise<number> => {
+export const spawnPromise = (command: string, argsIn: Array<EscapeString>, options: SpawnOptionsWithoutStdio, escape: boolean): Promise<number> => {
     console.info(chalk.green(JSON.stringify({
         command,
-        args,
+        args: argsIn,
         options: {
             ...options,
             env: getEnv(options.env),
@@ -41,6 +43,9 @@ export const spawnPromise = (command: string, args: Array<string>, options: Spaw
     }, null, 4)));
 
     return new Promise((resolve, reject) => {
+        const escapeFn = escape ? escapeParamShell : (data: string) => data;
+        const args = argsIn.map(item => item.getResultString(escapeFn));
+    
         const child = spawn(command, args, {
             ...options,
             stdio: 'inherit',
@@ -80,12 +85,13 @@ function isUint8Array(val: unknown): val is Uint8Array {
 
 export const spawnPromiseAndGet = (
     command: string,
-    args: Array<string>,
-    options: SpawnOptionsWithoutStdio
+    argsIn: Array<EscapeString>,
+    options: SpawnOptionsWithoutStdio,
+    escape: boolean
 ): Promise<{ code: number, stdout: string; stderr: string }> => {
     console.info(chalk.green(JSON.stringify({
         command,
-        args,
+        args: argsIn,
         options: {
             ...options,
             env: getEnv(options.env),
@@ -93,6 +99,9 @@ export const spawnPromiseAndGet = (
     }, null, 4)));
 
     return new Promise((resolve, reject) => {
+        const escapeFn = escape ? escapeParamShell : (data: string) => data;
+        const args = argsIn.map(item => item.getResultString(escapeFn));
+
         const child = spawn(command, args, {
             ...options,
             stdio: ["pipe", "pipe", "pipe"], // stdin, stdout, stderr
