@@ -85,11 +85,7 @@ export class ShellDir {
         }
     }
 
-    execAndGet(params: { command: string, args?: Array<string | EscapeString>, env?: Record<string, string>}): Promise<{
-        code: number;
-        stdout: string;
-        stderr: string;
-    }> {
+    execAndGet(params: { command: string, args?: Array<string | EscapeString>, env?: Record<string, string>}): Promise<string> {
         const {command, args = [], env = {}} = params;
 
         switch (this.params.type) {

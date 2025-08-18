@@ -1,6 +1,7 @@
 import process from "node:process";
 import { spawnPromise, spawnPromiseAndGet } from './spawnPromise.ts';
 import { EscapeString } from "./shellEscape.ts";
+import chalk from 'chalk';
 
 const splitCommandStr = (commandStr: string): [string, Array<string>] => {
     const [command, ...args] = commandStr.split(' ');
@@ -72,11 +73,7 @@ export async function execAndGet(
         argsIn: Array<EscapeString>,
         env: Record<string, string>
     }
-): Promise<{
-    code: number;
-    stdout: string;
-    stderr: string;
-}> {
+): Promise<string> {
     const { cwd, commandStr, argsIn, env } = params;
     const [command, args] = splitCommandStr(commandStr);
 
@@ -88,7 +85,15 @@ export async function execAndGet(
         },
     }, false);
 
-    return result;
+    if (result.code !== 0) {
+        throw Error(`Expected codee=0, receive code=${result.code}`);
+    }
+
+    if (result.stderr !== '') {
+        console.info(chalk.red(result.stderr));
+    }
+
+    return result.stdout;
 }
 
 export async function execSshAndGet(params: {
@@ -97,11 +102,7 @@ export async function execSshAndGet(params: {
     remoteCommand: string,
     argsIn: Array<EscapeString>,
     env: Record<string, string>
-}): Promise<{
-    code: number;
-    stdout: string;
-    stderr: string;
-}> {
+}): Promise<string> {
     const {cwd, sshCommand, remoteCommand, argsIn, env} = params;
 
     const result = await spawnPromiseAndGet('ssh', [sshCommand, 'cd', cwd, '&&', remoteCommand, ...argsIn].map(normalizeArg), {
@@ -112,5 +113,13 @@ export async function execSshAndGet(params: {
         // shell: false,           //jeślli jest true, to na ssh serwerze nie działa zaciąganie obazu dokerowego
     }, true);
 
-    return result;
+    if (result.code !== 0) {
+        throw Error(`Expected codee=0, receive code=${result.code}`);
+    }
+
+    if (result.stderr !== '') {
+        console.info(chalk.red(result.stderr));
+    }
+
+    return result.stdout;
 }
