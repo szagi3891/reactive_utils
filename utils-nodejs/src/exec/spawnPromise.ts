@@ -33,9 +33,12 @@ const getEnv = (env: NodeJS.ProcessEnv | undefined): Record<string, string> | un
 };
 
 export const spawnPromise = (command: string, argsIn: Array<EscapeString>, options: SpawnOptionsWithoutStdio, escape: boolean): Promise<number> => {
+    const escapeFn = escape ? escapeParamShell : (data: string) => data;
+    const args = argsIn.map(item => item.getResultString(escapeFn));    
+
     console.info(chalk.green(JSON.stringify({
         command,
-        args: argsIn,
+        args: args,
         options: {
             ...options,
             env: getEnv(options.env),
@@ -43,9 +46,6 @@ export const spawnPromise = (command: string, argsIn: Array<EscapeString>, optio
     }, null, 4)));
 
     return new Promise((resolve, reject) => {
-        const escapeFn = escape ? escapeParamShell : (data: string) => data;
-        const args = argsIn.map(item => item.getResultString(escapeFn));
-    
         const child = spawn(command, args, {
             ...options,
             stdio: 'inherit',
@@ -89,9 +89,12 @@ export const spawnPromiseAndGet = (
     options: SpawnOptionsWithoutStdio,
     escape: boolean
 ): Promise<{ code: number, stdout: string; stderr: string }> => {
+    const escapeFn = escape ? escapeParamShell : (data: string) => data;
+    const args = argsIn.map(item => item.getResultString(escapeFn));
+
     console.info(chalk.green(JSON.stringify({
         command,
-        args: argsIn,
+        args: args,
         options: {
             ...options,
             env: getEnv(options.env),
@@ -99,9 +102,6 @@ export const spawnPromiseAndGet = (
     }, null, 4)));
 
     return new Promise((resolve, reject) => {
-        const escapeFn = escape ? escapeParamShell : (data: string) => data;
-        const args = argsIn.map(item => item.getResultString(escapeFn));
-
         const child = spawn(command, args, {
             ...options,
             stdio: ["pipe", "pipe", "pipe"], // stdin, stdout, stderr
