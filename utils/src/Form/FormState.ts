@@ -1,6 +1,14 @@
-import { Value } from "../Value.ts";
-import { FormNode } from "./FormNode.ts";
+import type { FormNode} from '@reactive/utils';
+import { Value } from '@reactive/utils';
 
+type SubmitResult = {
+    type: 'ok'
+} | {
+    type: 'ignore-event',
+} | {
+    type: 'error-message',
+    message: string,
+}
 
 export class FormState<P> {
     public isLoadingValue: Value<boolean> = new Value(false);
@@ -9,37 +17,58 @@ export class FormState<P> {
         return this.isLoadingValue.getValue();
     }
 
+    constructor(private readonly node: FormNode<P>,) {}
+
+    public get jsx(): React.ReactNode {
+        return this.node.jsx;
+    }
+
+    public get isValid(): boolean {
+        return this.node.value.isValid;
+    }
+
+    public get isModified(): boolean {
+        return this.node.value.isModified;
+    }
+
+    public reset() {
+        this.node.value.reset();
+    }
+
     submit = async (
-        node: FormNode<P>,
         onSubmit: (data: P) => Promise<string | null>,
-        onCancel: () => void,
-        onError: (message: string) => void,
-    ) => {
-        node.value.setAsVisited();
+    ): Promise<SubmitResult> => {
+        this.node.value.setAsVisited();
 
         if (this.isLoading) {
-            return;
+            return {
+                type: 'ignore-event'
+            };
         }
 
         this.isLoadingValue.setValue(true);
 
         try {
-            const result = node.value.result;
+            const result = this.node.value.result;
 
             if (result.type === 'ok') {
                 const response = await onSubmit(result.data);
 
                 if (response === null) {
-                    onCancel();
-                    node.value.reset();
-                    return;
+                    return { type: 'ok' };
                 }
 
-                onError(response);
+                return {
+                    type: 'error-message',
+                    message: response
+                };
             } else {
 
-                onError(`From result.type === false -> ${JSON.stringify(result.error, null, 4)}`);
                 console.error(result.error);
+                return {
+                    type: 'error-message',
+                    message: `From result.type === false -> ${JSON.stringify(result.error, null, 4)}`
+                };
             }
         } finally {
             this.isLoadingValue.setValue(false);

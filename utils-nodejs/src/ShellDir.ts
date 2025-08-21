@@ -95,7 +95,7 @@ export class ShellDir {
                     commandStr: command,
                     argsIn: args.map(escapeArg),
                     env,
-                })
+                });
             }
             case 'ssh': {
                 return execSshAndGet({
