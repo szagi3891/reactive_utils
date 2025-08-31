@@ -35,3 +35,15 @@ export async function* listTopLevelDirs(dirPath: string): AsyncGenerator<string>
     }
 }
 
+export async function* listTopLevelFiles(dirPath: string): AsyncGenerator<string> {
+    const entries = await fs.readdir(dirPath, { withFileTypes: true });
+
+    for (const entry of entries) {
+        const fullPath = path.join(dirPath, entry.name);
+
+        if (entry.isFile()) {
+            // Yield the file path
+            yield fullPath;
+        }
+    }
+}
