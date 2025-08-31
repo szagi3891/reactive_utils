@@ -7,7 +7,7 @@ import { ShellDir } from "../ShellDir.ts";
  * ffmpeg -strict -2 -hide_banner -threads 0 -hwaccel none -i /Users/grzegorz/Desktop/test/MVI_8065.AVI -c:v libvpx-vp9 -row-mt 1 -b:v 444k -speed 4 -map v:0 -c:a libopus -ar 48k -b:a 192k -map a? -pix_fmt yuv420p -sws_flags bicubic -metadata creation_time=2025-08-31T05:35:25.267825Z -y /Users/grzegorz/Desktop/test/MVI_8065.webm
  * 
  */
-export const convertToWebm = async (shell: ShellDir, fileIn: string, fileOut: string) => {
+export const convertToWebm = async (shell: ShellDir, fileIn: string, fileOut: string): Promise<void> => {
     await shell.exec({
         command: 'ffmpeg',
         args: [
