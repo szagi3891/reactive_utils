@@ -15,7 +15,7 @@ export type WebsocketStreamMessageReceived = {
 } | {
     type: 'connected',
     send: (data: string) => void,
-    close: () => void,
+    reconnect: () => void,
 } | {
     type: 'disconnected',
 }
@@ -178,7 +178,7 @@ const createStream = (
                     send: (data: string) => {
                         socket.send(data);
                     },
-                    close: () => {
+                    reconnect: () => {
                         socket.close();
                     },
                 });
