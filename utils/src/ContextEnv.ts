@@ -24,7 +24,7 @@ import { AutoWeakMap } from "./AutoMap/AutoWeakMap.ts";
  * }
  * 
  * 
- * const contextEnv = new ContextEnv();
+ * const contextEnv = new ContextEnv<Common>();
  * const context = React.createContext<ContextModel<Common> | null>(null);
  * 
  * 
