@@ -51,4 +51,6 @@ export { getCssPropertiesForClasses } from './src/css/getCSSRuleForClass.ts';
 export { ComputedStruct } from './src/ComputedStruct.ts';
 export { tryFn, tryFnSync } from './src/tryFn.ts';
 
+export { ContextEnv, ContextModel } from './src/ContextEnv.ts';
+
 //... without jsx
