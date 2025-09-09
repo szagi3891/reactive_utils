@@ -1,5 +1,5 @@
 {
-    "version": "0.5.246",
+    "version": "0.5.247",
     "name": "@reactive/utils",
     "exports": {
         ".": "./index.ts"
@@ -23,11 +23,11 @@
         "zod": "npm:zod@^4.0.0",
         "chalk": "npm:chalk@^*",
         "@typescript-eslint/parser": "npm:@typescript-eslint/parser@^*",
-        "eslint/config": "npm:eslint/config",
-        "@eslint/js": "npm:@eslint/js",
-        "typescript-eslint": "npm:typescript-eslint",
-        "eslint-plugin-react": "npm:eslint-plugin-react",
-        "eslint-plugin-react-hooks": "npm:eslint-plugin-react-hooks"
+        "eslint/config": "npm:eslint/config@^*",
+        "@eslint/js": "npm:@eslint/js@^*",
+        "typescript-eslint": "npm:typescript-eslint@^*",
+        "eslint-plugin-react": "npm:eslint-plugin-react@^*",
+        "eslint-plugin-react-hooks": "npm:eslint-plugin-react-hooks@^*"
     },
     "tasks": {
         "check": "deno -A ./index.ts && deno -A ./src/nodejs/index.ts",
