@@ -52,5 +52,6 @@ export { ComputedStruct } from './src/ComputedStruct.ts';
 export { tryFn, tryFnSync } from './src/tryFn.ts';
 
 export { createCommon } from './src/ContextEnv.ts';
+export { eslintConfig } from './src/eslintConfig.ts';
 
 //... without jsx

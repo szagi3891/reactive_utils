@@ -1,5 +1,5 @@
 {
-    "version": "0.5.245",
+    "version": "0.5.246",
     "name": "@reactive/utils",
     "exports": {
         ".": "./index.ts"
@@ -21,11 +21,17 @@
         "superjson": "npm:superjson@^*",
         "@js-temporal/polyfill": "npm:@js-temporal/polyfill@^*",
         "zod": "npm:zod@^4.0.0",
-        "chalk": "npm:chalk@^*"
+        "chalk": "npm:chalk@^*",
+        "@typescript-eslint/parser": "npm:@typescript-eslint/parser@^*",
+        "eslint/config": "npm:eslint/config",
+        "@eslint/js": "npm:@eslint/js",
+        "typescript-eslint": "npm:typescript-eslint",
+        "eslint-plugin-react": "npm:eslint-plugin-react",
+        "eslint-plugin-react-hooks": "npm:eslint-plugin-react-hooks"
     },
     "tasks": {
         "check": "deno -A ./index.ts && deno -A ./src/nodejs/index.ts",
-        "test": "deno install && deno test --allow-hrtime --allow-env --v8-flags=\"--expose-gc\" --trace-leaks"
+        "test": "deno install && deno test --allow-hrtime --allow-env --allow-sys --v8-flags=\"--expose-gc\" --trace-leaks"
     },
     "compilerOptions": {
         "noUnusedLocals": true,
