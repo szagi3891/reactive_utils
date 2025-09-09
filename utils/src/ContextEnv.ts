@@ -94,8 +94,12 @@ class ContextModel<Common extends WeakKey> {
     }
 }
 
+interface CreateCommonReturnType<ProcessParamsType, Common extends WeakKey> {
+    useCommon: () => Common,
+    CommonWrapper: (props: { children: React.ReactNode, paramsConfig: ProcessParamsType }) => React.ReactElement,
+}
 
-export const createCommon = <ProcessParamsType, Common extends WeakKey>(create: (params: ProcessParamsType) => Common) => {
+export const createCommon = <ProcessParamsType, Common extends WeakKey>(create: (params: ProcessParamsType) => Common): CreateCommonReturnType<ProcessParamsType, Common> => {
     const contextEnv = new ContextEnv<Common>();
     const context = React.createContext<ContextModel<Common> | null>(null);
 
