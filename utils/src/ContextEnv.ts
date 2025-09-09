@@ -1,5 +1,5 @@
 import { AutoWeakMap } from "./AutoMap/AutoWeakMap.ts";
-
+import * as React from 'react';
 
 /**
  * 
@@ -49,7 +49,7 @@ import { AutoWeakMap } from "./AutoMap/AutoWeakMap.ts";
  * 
  */
 
-export class ContextEnv<Common extends WeakKey> {
+class ContextEnv<Common extends WeakKey> {
     public readonly registryDrop: FinalizationRegistry<() => void>;
 
     public globalContextModel: ContextModel<Common> | null = null;
@@ -83,7 +83,7 @@ export class ContextEnv<Common extends WeakKey> {
     }
 }
 
-export class ContextModel<Common extends WeakKey> {
+class ContextModel<Common extends WeakKey> {
     constructor(
         registryDrop: FinalizationRegistry<() => void>,
         public readonly common: Common
@@ -93,3 +93,37 @@ export class ContextModel<Common extends WeakKey> {
         });
     }
 }
+
+
+export const createCommon = <ProcessParamsType, Common extends WeakKey>(create: (params: ProcessParamsType) => Common) => {
+    const contextEnv = new ContextEnv<Common>();
+    const context = React.createContext<ContextModel<Common> | null>(null);
+
+    const useCommon = (): Common => {
+        const state = React.useContext(context);
+
+        if (state === null) {
+            throw Error('Missing provider from Common');
+        }
+
+        return state.common;
+    };
+
+    const CommonWrapper = ({ children, paramsConfig }: { children: React.ReactNode, paramsConfig: ProcessParamsType }) => {    
+
+        const common = contextEnv.getFromBrowserCacheOrCreate(() => create(paramsConfig));
+
+       return React.createElement(
+            context.Provider,
+            {
+                value: common,
+            },
+            children
+        );
+    };
+
+    return {
+        useCommon,
+        CommonWrapper
+    }
+};
