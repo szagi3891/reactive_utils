@@ -22,6 +22,17 @@ import hooksPlugin from 'eslint-plugin-react-hooks';
 // import { defineConfig } from 'eslint/config';
 // export default defineConfig([
 
+/**
+ * Using
+ * 
+ * import { defineConfig } from 'eslint/config';
+ * import { eslintConfig } from '@reactive/utils';
+ * 
+ * export default defineConfig([
+ *     ...eslintConfig,
+ * ]);
+ * 
+ */
 export const eslintConfig = [
     eslint.configs.recommended,
     tseslint.configs.recommended,
