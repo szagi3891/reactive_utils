@@ -96,7 +96,7 @@ class ContextModel<Common extends WeakKey> {
 
 interface CreateCommonReturnType<ProcessParamsType, Common extends WeakKey> {
     useCommon: () => Common,
-    CommonWrapper: (props: { children: React.ReactNode, paramsConfig: ProcessParamsType }) => React.ReactElement,
+    ProviderCommon: (props: { children: React.ReactNode, paramsConfig: ProcessParamsType }) => React.ReactElement,
 }
 
 export const createCommon = <ProcessParamsType, Common extends WeakKey>(create: (params: ProcessParamsType) => Common): CreateCommonReturnType<ProcessParamsType, Common> => {
@@ -113,7 +113,7 @@ export const createCommon = <ProcessParamsType, Common extends WeakKey>(create: 
         return state.common;
     };
 
-    const CommonWrapper = ({ children, paramsConfig }: { children: React.ReactNode, paramsConfig: ProcessParamsType }) => {    
+    const ProviderCommon = ({ children, paramsConfig }: { children: React.ReactNode, paramsConfig: ProcessParamsType }) => {    
 
         const common = contextEnv.getFromBrowserCacheOrCreate(() => create(paramsConfig));
 
@@ -128,6 +128,6 @@ export const createCommon = <ProcessParamsType, Common extends WeakKey>(create: 
 
     return {
         useCommon,
-        CommonWrapper
+        ProviderCommon
     }
 };
