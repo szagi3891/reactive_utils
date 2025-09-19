@@ -1,4 +1,4 @@
-import { AutoWeakMap, AutoWeakRef } from "./AutoMap/AutoWeakMap.ts";
+import { AutoWeakRef, unregister, register } from "./AutoMap/AutoWeakMap.ts";
 import * as React from 'react';
 
 class ContextModel {
@@ -6,8 +6,10 @@ class ContextModel {
         registryDrop: FinalizationRegistry<() => void>,
         public readonly autoWeakRef: AutoWeakRef
     ) {
+        register(autoWeakRef);
+
         registryDrop.register(this, () => {
-            AutoWeakMap.unregister(autoWeakRef);
+            unregister(autoWeakRef);
         });
     }
 }

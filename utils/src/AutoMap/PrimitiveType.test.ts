@@ -1,5 +1,5 @@
 import { expect } from "jsr:@std/expect/expect";
-import { AutoWeakMap, autoWeakMapKey, AutoWeakRef } from "./AutoWeakMap.ts";
+import { AutoWeakMap, autoWeakMapKey, AutoWeakRef, register } from "./AutoWeakMap.ts";
 import { autoMapKeyAsString, reduceComplexSymbol } from "./PrimitiveType.ts";
 
 export class Common {
@@ -9,7 +9,7 @@ export class Common {
     public constructor(
     ) {
         this.autoWeakRef = new AutoWeakRef();
-        AutoWeakMap.register(this.autoWeakRef);        
+        register(this.autoWeakRef);        
     }
 
     [autoWeakMapKey](): AutoWeakRef {
