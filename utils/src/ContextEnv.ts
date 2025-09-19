@@ -41,30 +41,43 @@ const envInit = (): (() => ContextModel) => {
     }
 }
 
-interface CreateCommonReturnType {
-    useAutoWeakRef: () => AutoWeakRef,
-    ProviderAutoWeakRef: (props: { children: React.ReactNode }) => React.ReactElement,
+const contextEnv = envInit();
+
+interface CreateCommonReturnType<C> {
+    useAutoWeakRef: () => C,
+    ProviderAutoWeakRef: (props: {
+        children: React.ReactNode,
+        create: (autoWeakRef: AutoWeakRef) => C
+    }) => React.ReactElement,
 }
 
-export const createAutoWeakRef = (): CreateCommonReturnType => {
-    const contextEnv = envInit();
-    const context = React.createContext<ContextModel | null>(null);
+export const createAutoWeakRef = <C>(): CreateCommonReturnType<C> => {
+    const context = React.createContext<{
+        contextModel: ContextModel,
+        value: C,
+    } | null>(null);
 
-    const useAutoWeakRef = (): AutoWeakRef => {
+    const useAutoWeakRef = (): C => {
         const state = React.useContext(context);
 
         if (state === null) {
             throw Error('Missing provider from autoWeakRef');
         }
 
-        return state.autoWeakRef;
+        return state.value;
     };
 
-    const ProviderAutoWeakRef = ({ children }: { children: React.ReactNode }) => {
+    const ProviderAutoWeakRef = ({ children, create }: { children: React.ReactNode, create: (autoWeakRef: AutoWeakRef) => C }) => {
+        const contextModel = contextEnv();
+        const value = create(contextModel.autoWeakRef);
+
         return React.createElement(
             context.Provider,
             {
-                value: contextEnv(),
+                value: {
+                    contextModel,
+                    value,
+                },
             },
             children
         );
