@@ -9,7 +9,7 @@ export class AutoWeakRef {
     private inner: typeof autoWeakRefSymbol = autoWeakRefSymbol;
 
     constructor() {
-        this.inner
+        console.info('AutoWeakRef constructor', this.inner);
     }
 }
 
