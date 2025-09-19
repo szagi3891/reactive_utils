@@ -1,37 +1,51 @@
 import { AutoMap } from "./AutoMap.ts";
 import { type PrimitiveJSONValue } from "./PrimitiveType.ts";
 
-class CommonRef {
+
+const autoWeakRefSymbol = Symbol();
+
+
+export class AutoWeakRef {
+    private inner: typeof autoWeakRefSymbol = autoWeakRefSymbol;
+
+    constructor() {
+        this.inner
+    }
+}
+
+
+class AutoWeakInner {
     protected nominal?: never;
 }
 
-const translate: WeakMap<WeakKey, CommonRef> = new WeakMap();
 
-const getRef = (common: WeakKey): CommonRef | null => {
-    return translate.get(common) ?? null;
+const translate: WeakMap<AutoWeakRef, AutoWeakInner> = new WeakMap();
+
+const getRef = (autoWeakRef: AutoWeakRef): AutoWeakInner | null => {
+    return translate.get(autoWeakRef) ?? null;
 };
 
-const register = (common: WeakKey): void => {
-    const ref = getRef(common);
+const register = (autoWeakRef: AutoWeakRef): void => {
+    const ref = getRef(autoWeakRef);
     if (ref !== null) {
         throw Error('This object was already registered');
     }
 
-    const newRef = new CommonRef();
-    translate.set(common, newRef);
+    const newRef = new AutoWeakInner();
+    translate.set(autoWeakRef, newRef);
 };
 
-const unregister = (common: WeakKey): void => {
-    const ref = getRef(common);
+const unregister = (autoWeakRef: AutoWeakRef): void => {
+    const ref = getRef(autoWeakRef);
     if (ref === null) {
         throw Error('this object was not registered');
     }
 
-    translate.delete(common);
+    translate.delete(autoWeakRef);
 };
 
-const getRefValue = (common: WeakKey): CommonRef => {
-    const ref = getRef(common);
+const getRefValue = (autoWeakRef: AutoWeakRef): AutoWeakInner => {
+    const ref = getRef(autoWeakRef);
     if (ref === null) {
         throw Error('this object is not registered');
     }
@@ -45,16 +59,16 @@ export class AutoWeakMap {
     public static register = register;
     public static unregister = unregister;
 
-    public static create = <C extends { [autoWeakMapKey]: () => void }, K extends PrimitiveJSONValue[], V>(
+    public static create = <C extends { [autoWeakMapKey]: () => AutoWeakRef }, K extends PrimitiveJSONValue[], V>(
         createValue: (...key: [C, ...K]) => V
     ): ((...key: [C, ...K]) => V) => {
 
-        const week = new WeakMap<CommonRef, AutoMap<K, V>>();
+        const week = new WeakMap<AutoWeakInner, AutoMap<K, V>>();
 
         return (...key: [C, ...K]): V => {
             const [context, ...rest] = key;
 
-            const autoMap = week.get(getRefValue(context));
+            const autoMap = week.get(getRefValue(context[autoWeakMapKey]()));
 
             if (autoMap !== undefined) {
                 return autoMap.get(rest);
@@ -63,7 +77,7 @@ export class AutoWeakMap {
             const newAuto = new AutoMap<K, V>((key) => {
                 return createValue(context, ...key);
             });
-            week.set(getRefValue(context), newAuto);
+            week.set(getRefValue(context[autoWeakMapKey]()), newAuto);
             return newAuto.get(rest);
         };
     };

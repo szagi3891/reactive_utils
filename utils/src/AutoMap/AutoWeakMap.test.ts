@@ -1,5 +1,5 @@
 import { timeout } from '../timeout.ts';
-import { AutoWeakMap, autoWeakMapKey } from './AutoWeakMap.ts';
+import { AutoWeakMap, autoWeakMapKey, AutoWeakRef } from './AutoWeakMap.ts';
 import { gc } from '../gc.ts';
 import { expect } from "jsr:@std/expect";
 
@@ -64,8 +64,14 @@ Deno.test('AutoWeakMap.create', async () => {
     // }
 
     class Common {
-        [autoWeakMapKey](): void {}
-        constructor(public readonly name: string) {}
+        private readonly autoWeakRef: AutoWeakRef;
+
+        [autoWeakMapKey](): AutoWeakRef {
+            return this.autoWeakRef;
+        }
+        constructor(public readonly name: string) {
+            this.autoWeakRef = new AutoWeakRef();
+        }
     }
 
     class Model {
@@ -96,7 +102,7 @@ Deno.test('AutoWeakMap.create', async () => {
 
     (() => {
         const common = createContext('CommonI');
-        AutoWeakMap.register(common);
+        AutoWeakMap.register(common[autoWeakMapKey]());
 
         const model1 = Model.get(common, 'aaa', 111);
         expect(model1.name).toBe('Model - CommonI - aaa - 111');
@@ -107,7 +113,7 @@ Deno.test('AutoWeakMap.create', async () => {
         const model3 = Model.get(common, 'ccc', 555);
         expect(model3.name).toBe('Model - CommonI - ccc - 555');
 
-        AutoWeakMap.unregister(common);
+        AutoWeakMap.unregister(common[autoWeakMapKey]());
     })();
 
     gc();
@@ -119,7 +125,7 @@ Deno.test('AutoWeakMap.create', async () => {
 
     (() => {
         const common = createContext('CommonII');
-        AutoWeakMap.register(common);
+        AutoWeakMap.register(common[autoWeakMapKey]());
 
         const model1 = Model.get(common, 'aaa', 111);
         expect(model1.name).toBe('Model - CommonII - aaa - 111');
@@ -129,7 +135,7 @@ Deno.test('AutoWeakMap.create', async () => {
 
         const model3 = Model.get(common, 'ccc', 555);
         expect(model3.name).toBe('Model - CommonII - ccc - 555');
-        AutoWeakMap.unregister(common);
+        AutoWeakMap.unregister(common[autoWeakMapKey]());
     })();
 
     gc();
@@ -142,19 +148,19 @@ Deno.test('AutoWeakMap.create', async () => {
 
     (() => {
         const common1 = createContext('CommonIII');
-        AutoWeakMap.register(common1);
+        AutoWeakMap.register(common1[autoWeakMapKey]());
 
         const model1 = Model.get(common1, 'aaa', 111);
         expect(model1.name).toBe('Model - CommonIII - aaa - 111');
 
         const common2 = createContext('CommonIV');
-        AutoWeakMap.register(common2);
+        AutoWeakMap.register(common2[autoWeakMapKey]());
 
         const model2 = Model.get(common2, 'aaa', 111);
         expect(model2.name).toBe('Model - CommonIV - aaa - 111');
 
-        AutoWeakMap.unregister(common1);
-        AutoWeakMap.unregister(common2);
+        AutoWeakMap.unregister(common1[autoWeakMapKey]());
+        AutoWeakMap.unregister(common2[autoWeakMapKey]());
     })();
 
     gc();

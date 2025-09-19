@@ -1,15 +1,19 @@
 import { expect } from "jsr:@std/expect/expect";
-import { AutoWeakMap, autoWeakMapKey } from "./AutoWeakMap.ts";
+import { AutoWeakMap, autoWeakMapKey, AutoWeakRef } from "./AutoWeakMap.ts";
 import { autoMapKeyAsString, reduceComplexSymbol } from "./PrimitiveType.ts";
 
 export class Common {
     protected nominal: 'nominal' = 'nominal';
+    private readonly autoWeakRef: AutoWeakRef;
+    
     public constructor(
     ) {
-        AutoWeakMap.register(this);        
+        this.autoWeakRef = new AutoWeakRef();
+        AutoWeakMap.register(this.autoWeakRef);        
     }
 
-    [autoWeakMapKey](): void {
+    [autoWeakMapKey](): AutoWeakRef {
+        return this.autoWeakRef;
     }
 }
 
