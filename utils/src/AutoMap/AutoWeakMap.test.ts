@@ -1,5 +1,5 @@
 import { timeout } from '../timeout.ts';
-import { AutoWeakMap, autoWeakMapKey, AutoWeakRef, unregister, register } from './AutoWeakMap.ts';
+import { AutoWeakMap, autoWeakMapKey, AutoWeakRef, unregister } from './AutoWeakMap.ts';
 import { gc } from '../gc.ts';
 import { expect } from "jsr:@std/expect";
 
@@ -102,7 +102,7 @@ Deno.test('AutoWeakMap.create', async () => {
 
     (() => {
         const common = createContext('CommonI');
-        register(common[autoWeakMapKey]());
+        // register(common[autoWeakMapKey]());
 
         const model1 = Model.get(common, 'aaa', 111);
         expect(model1.name).toBe('Model - CommonI - aaa - 111');
@@ -125,7 +125,7 @@ Deno.test('AutoWeakMap.create', async () => {
 
     (() => {
         const common = createContext('CommonII');
-        register(common[autoWeakMapKey]());
+        // register(common[autoWeakMapKey]());
 
         const model1 = Model.get(common, 'aaa', 111);
         expect(model1.name).toBe('Model - CommonII - aaa - 111');
@@ -148,13 +148,13 @@ Deno.test('AutoWeakMap.create', async () => {
 
     (() => {
         const common1 = createContext('CommonIII');
-        register(common1[autoWeakMapKey]());
+        // register(common1[autoWeakMapKey]());
 
         const model1 = Model.get(common1, 'aaa', 111);
         expect(model1.name).toBe('Model - CommonIII - aaa - 111');
 
         const common2 = createContext('CommonIV');
-        register(common2[autoWeakMapKey]());
+        // register(common2[autoWeakMapKey]());
 
         const model2 = Model.get(common2, 'aaa', 111);
         expect(model2.name).toBe('Model - CommonIV - aaa - 111');

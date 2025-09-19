@@ -10,6 +10,7 @@ export class AutoWeakRef {
 
     constructor() {
         console.info('AutoWeakRef constructor', this.inner);
+        register(this);
     }
 }
 
@@ -25,7 +26,7 @@ const getRef = (autoWeakRef: AutoWeakRef): AutoWeakInner | null => {
     return translate.get(autoWeakRef) ?? null;
 };
 
-export const register = (autoWeakRef: AutoWeakRef): void => {
+const register = (autoWeakRef: AutoWeakRef): void => {
     const ref = getRef(autoWeakRef);
     if (ref !== null) {
         throw Error('AutoWeakMap register: This object was already registered');
