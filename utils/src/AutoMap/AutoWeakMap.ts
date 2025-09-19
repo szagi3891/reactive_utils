@@ -20,7 +20,7 @@ class AutoWeakInner {
 }
 
 
-let translate: WeakMap<AutoWeakRef, AutoWeakInner> = new WeakMap();
+let translate: Map<AutoWeakRef, AutoWeakInner> = new Map();
 
 const getRef = (autoWeakRef: AutoWeakRef): AutoWeakInner | null => {
     return translate.get(autoWeakRef) ?? null;
@@ -46,7 +46,13 @@ export const unregister = (autoWeakRef: AutoWeakRef): void => {
 };
 
 export const resetAll = (): void => {
-    translate = new WeakMap();
+    const newTranslate = new Map();
+
+    for (const key of translate.keys()) {
+        newTranslate.set(key, new AutoWeakInner())
+    }
+
+    translate = newTranslate;
 };
 
 const getRefValue = (autoWeakRef: AutoWeakRef): AutoWeakInner => {
