@@ -28,7 +28,7 @@ const getRef = (autoWeakRef: AutoWeakRef): AutoWeakInner | null => {
 export const register = (autoWeakRef: AutoWeakRef): void => {
     const ref = getRef(autoWeakRef);
     if (ref !== null) {
-        throw Error('This object was already registered');
+        throw Error('AutoWeakMap register: This object was already registered');
     }
 
     const newRef = new AutoWeakInner();
@@ -38,10 +38,20 @@ export const register = (autoWeakRef: AutoWeakRef): void => {
 export const unregister = (autoWeakRef: AutoWeakRef): void => {
     const ref = getRef(autoWeakRef);
     if (ref === null) {
-        throw Error('this object was not registered');
+        throw Error('AutoWeakMap unregister: this object was not registered');
     }
 
     translate.delete(autoWeakRef);
+};
+
+export const reset = (autoWeakRef: AutoWeakRef): void => {
+    const ref = getRef(autoWeakRef);
+    if (ref === null) {
+        throw Error('AutoWeakMap reset: this object was not registered');
+    }
+
+    const newRef = new AutoWeakInner();
+    translate.set(autoWeakRef, newRef);
 };
 
 const getRefValue = (autoWeakRef: AutoWeakRef): AutoWeakInner => {
@@ -55,6 +65,8 @@ const getRefValue = (autoWeakRef: AutoWeakRef): AutoWeakInner => {
 export const autoWeakMapKey = Symbol('AutoWeakMapKey');
 
 export class AutoWeakMap {
+
+    public static reset = reset;
 
     public static create = <C extends { [autoWeakMapKey]: () => AutoWeakRef }, K extends PrimitiveJSONValue[], V>(
         createValue: (...key: [C, ...K]) => V
