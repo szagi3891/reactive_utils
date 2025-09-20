@@ -1,6 +1,0 @@
-{
-    "version": "0.1.32",
-    "name": "@reactive/utils-nodejs",
-    "license": "MIT",
-    "exports": "./index.ts"
-}
