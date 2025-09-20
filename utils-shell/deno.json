@@ -3,7 +3,7 @@
     "version": "0.1.0",
     "license": "MIT",
     "exports": {
-        ".": "./mod.ts",
+        ".": "./index.ts",
         "./test-hello": "./src/test-hello.ts"
     },
     "imports": {
