@@ -1,0 +1,64 @@
+{
+  "version": "5",
+  "specifiers": {
+    "jsr:@reactive/utils@~0.5.259": "0.5.259",
+    "npm:@js-temporal/polyfill@*": "0.5.1",
+    "npm:mobx@*": "6.13.7",
+    "npm:react@*": "19.1.1",
+    "npm:superjson@*": "2.2.2",
+    "npm:zod@4": "4.1.5"
+  },
+  "jsr": {
+    "@reactive/utils@0.5.259": {
+      "integrity": "2ac271990fc121db806861bd71e9c6d1f8a9fa8aca3216bfec183143e4a2c2ec",
+      "dependencies": [
+        "jsr:@reactive/utils",
+        "npm:@js-temporal/polyfill",
+        "npm:mobx",
+        "npm:react",
+        "npm:superjson",
+        "npm:zod"
+      ]
+    }
+  },
+  "npm": {
+    "@js-temporal/polyfill@0.5.1": {
+      "integrity": "sha512-hloP58zRVCRSpgDxmqCWJNlizAlUgJFqG2ypq79DCvyv9tHjRYMDOcPFjzfl/A1/YxDvRCZz8wvZvmapQnKwFQ==",
+      "dependencies": [
+        "jsbi"
+      ]
+    },
+    "copy-anything@3.0.5": {
+      "integrity": "sha512-yCEafptTtb4bk7GLEQoM8KVJpxAfdBJYaXyzQEgQQQgYrZiDp8SJmGKlYza6CYjEDNstAdNdKA3UuoULlEbS6w==",
+      "dependencies": [
+        "is-what"
+      ]
+    },
+    "is-what@4.1.16": {
+      "integrity": "sha512-ZhMwEosbFJkA0YhFnNDgTM4ZxDRsS6HqTo7qsZM08fehyRYIYa0yHu5R6mgo1n/8MgaPBXiPimPD77baVFYg+A=="
+    },
+    "jsbi@4.3.2": {
+      "integrity": "sha512-9fqMSQbhJykSeii05nxKl4m6Eqn2P6rOlYiS+C5Dr/HPIU/7yZxu5qzbs40tgaFORiw2Amd0mirjxatXYMkIew=="
+    },
+    "mobx@6.13.7": {
+      "integrity": "sha512-aChaVU/DO5aRPmk1GX8L+whocagUUpBQqoPtJk+cm7UOXUk87J4PeWCh6nNmTTIfEhiR9DI/+FnA8dln/hTK7g=="
+    },
+    "react@19.1.1": {
+      "integrity": "sha512-w8nqGImo45dmMIfljjMwOGtbmC/mk4CMYhWIicdSflH91J9TyCyczcPFXJzrZ/ZXcgGRFeP6BU0BEJTw6tZdfQ=="
+    },
+    "superjson@2.2.2": {
+      "integrity": "sha512-5JRxVqC8I8NuOUjzBbvVJAKNM8qoVuH0O77h4WInc/qC2q5IreqKxYwgkga3PfA22OayK2ikceb/B26dztPl+Q==",
+      "dependencies": [
+        "copy-anything"
+      ]
+    },
+    "zod@4.1.5": {
+      "integrity": "sha512-rcUUZqlLJgBC33IT3PNMgsCq6TzLQEG/Ei/KTCU0PedSWRMAXoOUN+4t/0H+Q8bdnLPdqUYnvboJT0bn/229qg=="
+    }
+  },
+  "workspace": {
+    "dependencies": [
+      "jsr:@reactive/utils@~0.5.259"
+    ]
+  }
+}

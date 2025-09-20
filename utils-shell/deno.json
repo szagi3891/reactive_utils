@@ -1,0 +1,12 @@
+{
+    "name": "@reactive/utills-shell",
+    "version": "0.1.0",
+    "license": "MIT",
+    "exports": {
+        ".": "./mod.ts",
+        "./test-hello": "./src/test-hello.ts"
+    },
+    "imports": {
+        "@reactive/utils": "jsr:@reactive/utils@^0.5.259"
+    }
+}
