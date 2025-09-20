@@ -12,7 +12,7 @@ const throwNever = (): never => {
 
 const main = async (): Promise<void> => {
 
-    const content = ContentZod.parse(JSON.parse((await fs.promises.readFile('./jsr.json')).toString()));
+    const content = ContentZod.parse(JSON.parse((await fs.promises.readFile('./deno.json')).toString()));
 
     const version = content.version;
 
@@ -26,13 +26,9 @@ const main = async (): Promise<void> => {
     const nextVersion = chunks.join('.');
     content.version = nextVersion;
 
-    await fs.promises.writeFile('./jsr.json', JSON.stringify(content, null, 4));
+    await fs.promises.writeFile('./deno.json', JSON.stringify(content, null, 4));
 
     console.info(`git add . && git commit -am "version ${nextVersion}" && npx jsr publish && git push origin main:main`);
-
-    const contentDenoJson = ContentZod.parse(JSON.parse((await fs.promises.readFile('./deno.json')).toString()));
-    contentDenoJson.version = nextVersion;
-    await fs.promises.writeFile('./deno.json', JSON.stringify(contentDenoJson, null, 4));
 };
 
 main().then(() => {
