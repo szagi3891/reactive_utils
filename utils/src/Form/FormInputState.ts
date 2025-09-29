@@ -1,6 +1,6 @@
 import { FormModel } from './FormModel.ts';
 import { FormBoxValue } from './FormBoxValue.ts';
-import { FormChildTrait, FormChildType, FormErrorMessage, FormModelTrait, FormModelType } from './FormTypes.ts';
+import { FormChildTrait, FormChildType, FormErrorMessage, FormModelTrait, FormModelType, StateForViewType } from './FormTypes.ts';
 import { Result } from '../Result.ts';
 import { FormNode } from "./FormNode.ts";
 
@@ -83,6 +83,10 @@ export class FormInputState<K, M> implements FormModelType<M> {
 
     public get errorForView(): string | null {
         return this.model.errorForView;
+    }
+
+    public get stateForView(): StateForViewType {
+        return this.model.stateForView;
     }
 
     public get isValid(): boolean {

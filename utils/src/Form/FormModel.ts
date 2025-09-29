@@ -1,5 +1,5 @@
 import { Result } from '../Result.ts';
-import { FormErrorMessage, FormChildTrait, FormChildType, FormModelTrait, FormModelType, errorForView } from './FormTypes.ts';
+import { FormErrorMessage, FormChildTrait, FormChildType, FormModelTrait, FormModelType, errorForView, StateForViewType } from './FormTypes.ts';
 import { groupFormModel } from "./groupFormModel.ts";
 
 export class FormModel<V> implements FormModelType<V> {
@@ -46,11 +46,38 @@ export class FormModel<V> implements FormModelType<V> {
         return result;
     }
 
+    /**
+     * @deprecated - use stateForView
+     */
     public get errorForView(): string | null {
         if (this.result.type === 'error') {
             return errorForView(this.result.error);
         }
         return null;
+    }
+
+    public get stateForView(): StateForViewType {
+        if (this.result.type === 'error') {
+            const error = errorForView(this.result.error);
+
+            if (error !== null) {
+                return {
+                    type: "error",
+                    message: error,
+                }
+            }
+        }
+
+        if (this.isVisited() === false) {
+            return {
+                type: 'not-visited'
+            };
+        }
+
+
+        return {
+            type: 'ok',
+        }
     }
 
     public get isValid(): boolean {

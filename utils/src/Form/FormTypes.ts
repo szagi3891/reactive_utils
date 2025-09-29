@@ -43,6 +43,15 @@ export class FormErrorMessage {
     }
 }
 
+export type StateForViewType = {
+    type: 'ok',
+} | {
+    type: 'error',
+    message: string
+} | {
+    type: 'not-visited'
+};
+
 //widok grupy ma za zadanie obsłuzyc swoje komunikaty z błędem, czyli te, które mają path === []
 export const errorForView = (errors: Array<FormErrorMessage>): string | null => {
     for (const message of errors) {

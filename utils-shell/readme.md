@@ -1,5 +1,5 @@
 
 command run:
 
-deno run jsr:@reactive/utills-shell/test-hello
+deno run -A jsr:@reactive/utills-shell/test-hello
 
