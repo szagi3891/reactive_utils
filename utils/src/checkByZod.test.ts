@@ -479,3 +479,64 @@ Deno.test('jsonParseUnknown', () => {
     });
 });
 
+
+Deno.test('ndjson - one', () => {
+
+    const object1 = {
+        a: 'a1',
+        b: 'b1'
+    };
+
+
+    const message = [
+        JSON.stringify(object1),
+    ].join('\n');
+
+    const check = CheckByZod.create('test validator', z.object({
+        a: z.string(),
+        b: z.string(),
+    }));
+
+    const result = check.ndjsonParse(message);
+
+    if (result.type === 'error') {
+        throw Error('Success expected');
+    }
+
+    expect(result.data.length).toBe(1);
+    expect(result.data[0]).toEqual(object1);
+});
+
+
+Deno.test('ndjson - many', () => {
+
+    const object1 = {
+        a: 'a1',
+        b: 'b1'
+    };
+
+    const object2 = {
+        a: 'a2',
+        b: 'b2'
+    };
+
+    const message = [
+        JSON.stringify(object1),
+        JSON.stringify(object2),
+    ].join('\n');
+
+    const check = CheckByZod.create('test validator', z.object({
+        a: z.string(),
+        b: z.string(),
+    }));
+
+    const result = check.ndjsonParse(message);
+
+    if (result.type === 'error') {
+        throw Error('Success expected');
+    }
+
+    expect(result.data.length).toBe(2);
+    expect(result.data[0]).toEqual(object1);
+    expect(result.data[1]).toEqual(object2);
+});

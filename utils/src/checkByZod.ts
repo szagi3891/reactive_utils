@@ -47,6 +47,16 @@ export class CheckByZodError {
     }
 }
 
+const jsonParseRaw = (text: string): Result<JSONValue, null> => {
+    try {
+        const json = JSON.parse(text);
+        return Result.ok(json);
+    } catch (_error) {
+        return Result.error(null);
+    }
+};
+
+
 export class CheckByZod<T> {
     private constructor(
         private readonly description: string,
@@ -94,16 +104,38 @@ export class CheckByZod<T> {
         ));
     }
 
-    jsonParse = (text: string): Result<T, CheckByZodError> => {
-        const jsonParseRaw = (text: string): Result<JSONValue, null> => {
-            try {
-                const json = JSON.parse(text);
-                return Result.ok(json);
-            } catch (_error) {
-                return Result.error(null);
-            }
-        };
+    ndjsonParse = (text: string): Result<Array<T>, CheckByZodError> => {
+        const messages = text.split('\n');
+
+        const result: Array<T> = [];
+
+        for (const [index, message] of messages.entries()) {
+            const json = jsonParseRaw(message);
         
+            if (json.type === 'error') {
+                return Result.error(new CheckByZodError(
+                    `CheckByZod: ${this.description}`,
+                    [{
+                        field: '---',
+                        message: `ndjsonParse: Parsing error index=${index}`,
+                    }],
+                    message,
+                ));
+            }
+
+            const checkResult = this.check(json.data);
+
+            if (checkResult.type === 'error') {
+                return checkResult;
+            }
+
+            result.push(checkResult.data);
+        }
+
+        return Result.ok(result);
+    }
+
+    jsonParse = (text: string): Result<T, CheckByZodError> => {
         const json = jsonParseRaw(text);
     
         if (json.type === 'error') {
@@ -116,10 +148,8 @@ export class CheckByZod<T> {
                 text,
             ));
         }
-    
-        const dataRaw: JSONValue = json.data;
-    
-        return this.check(dataRaw);
+
+        return this.check(json.data);
     }
 
     jsonParseUnknown = (data: unknown): Result<T, CheckByZodError> => {
@@ -137,4 +167,6 @@ export class CheckByZod<T> {
         return this.jsonParse(data);
     }
 }
+
+
 
