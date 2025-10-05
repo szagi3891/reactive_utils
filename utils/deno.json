@@ -1,5 +1,5 @@
 {
-    "version": "0.5.262",
+    "version": "0.5.263",
     "name": "@reactive/utils",
     "exports": {
         ".": "./index.ts"
@@ -14,18 +14,19 @@
         }
     },
     "imports": {
-        "@types/react": "npm:@types/react@^*",
-        "mobx": "npm:mobx@^*",
-        "mobx-react-lite": "npm:mobx-react-lite@^*",
-        "react": "npm:react@^*",
-        "superjson": "npm:superjson@^*",
-        "@js-temporal/polyfill": "npm:@js-temporal/polyfill@^*",
-        "zod": "npm:zod@^4.0.0",
-        "chalk": "npm:chalk@^*"
+        "@types/react": "npm:@types/react@19.2.0",
+        "mobx": "npm:mobx@6.15.0",
+        "mobx-react-lite": "npm:mobx-react-lite@4.1.1",
+        "react": "npm:react@19.2.0",
+        "superjson": "npm:superjson@2.2.2",
+        "@js-temporal/polyfill": "npm:@js-temporal/polyfill@0.5.1",
+        "zod": "npm:zod@^4.1.11",
+        "chalk": "npm:chalk@5.6.2"
     },
     "tasks": {
         "check": "deno -A ./index.ts && deno -A ./src/nodejs/index.ts",
-        "test": "deno install && deno test --allow-hrtime --allow-env --allow-sys --v8-flags=\"--expose-gc\" --trace-leaks"
+        "test": "deno install && deno test --allow-hrtime --allow-env --allow-sys --allow-write --v8-flags=\"--expose-gc\" --trace-leaks",
+        "test-inspect": "deno install && deno test --allow-hrtime --allow-env --allow-sys --allow-write --v8-flags=\"--expose-gc\" --trace-leaks --inspect-brk src/AutoMap/AutoWeakMap.test.ts"
     },
     "compilerOptions": {
         "noUnusedLocals": true,

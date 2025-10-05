@@ -27,7 +27,7 @@ const envInit = (): (() => ContextModel) => {
             return new ContextModel(
                 registryDrop,
                 new AutoWeakRef()
-            );;
+            );
         }
 
         if (globalContextModel !== null) {

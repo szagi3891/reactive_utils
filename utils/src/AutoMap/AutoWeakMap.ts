@@ -1,5 +1,11 @@
 import { AutoMap } from "./AutoMap.ts";
+import { AllocationCounter } from "./AllocationCounter.ts";
 import { type PrimitiveJSONValue } from "./PrimitiveType.ts";
+
+
+const counterAutoWeakRef = new AllocationCounter();
+const counterWeakMap = new AllocationCounter();
+
 
 
 const autoWeakRefSymbol = Symbol();
@@ -10,6 +16,7 @@ export class AutoWeakRef {
 
     constructor() {
         console.info('AutoWeakRef constructor', this.inner);
+        counterAutoWeakRef.up(this);
         register(this);
     }
 }
@@ -75,21 +82,38 @@ export class AutoWeakMap {
 
         const week = new WeakMap<AutoWeakInner, AutoMap<K, V>>();
 
+        counterWeakMap.up(week);
+
         return (...key: [C, ...K]): V => {
             const [context, ...rest] = key;
+            const weekKey = getRefValue(context[autoWeakMapKey]());
+            const weekContet: WeakRef<C> = new WeakRef(context);
 
-            const autoMap = week.get(getRefValue(context[autoWeakMapKey]()));
+            const autoMap = week.get(weekKey);
 
             if (autoMap !== undefined) {
                 return autoMap.get(rest);
             }
 
             const newAuto = new AutoMap<K, V>((key) => {
+                const context = weekContet.deref();
+
+                if (context === undefined) {
+                    throw Error('context expected');
+                }
+
                 return createValue(context, ...key);
             });
-            week.set(getRefValue(context[autoWeakMapKey]()), newAuto);
+            week.set(weekKey, newAuto);
             return newAuto.get(rest);
         };
     };
 
+    public static counterAutoWeakRef(): number {
+        return counterAutoWeakRef.getCounter();
+    }
+
+    public static counterWeakMap(): number {
+        return counterWeakMap.getCounter();
+    }
 }
