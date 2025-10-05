@@ -87,7 +87,7 @@ export class AutoWeakMap {
         return (...key: [C, ...K]): V => {
             const [context, ...rest] = key;
             const weekKey = getRefValue(context[autoWeakMapKey]());
-            const weekContet: WeakRef<C> = new WeakRef(context);
+            // const weekContet: WeakRef<C> = new WeakRef(context);
 
             const autoMap = week.get(weekKey);
 
@@ -96,11 +96,11 @@ export class AutoWeakMap {
             }
 
             const newAuto = new AutoMap<K, V>((key) => {
-                const context = weekContet.deref();
+                // const context = weekContet.deref();
 
-                if (context === undefined) {
-                    throw Error('context expected');
-                }
+                // if (context === undefined) {
+                //     throw Error('context expected');
+                // }
 
                 return createValue(context, ...key);
             });
