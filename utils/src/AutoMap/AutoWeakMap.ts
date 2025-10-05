@@ -26,7 +26,7 @@ export class AutoWeakRef {
     private inner: typeof autoWeakRefSymbol = autoWeakRefSymbol;
 
     private constructor() {
-        console.info('AutoWeakRef constructor', this.inner);
+        console.info(`AutoWeakRef constructor objectCounter=${counterAutoWeakRef.getCounter()}`, this.inner);
         counterAutoWeakRef.up(this);
         register(this);
     }
@@ -46,7 +46,7 @@ export class AutoWeakRef {
 
                 isDeref = true;
 
-                console.info('AutoWeakRef unregister');
+                console.info(`AutoWeakRef unregister objectCounter=${counterAutoWeakRef.getCounter()}`);
                 unregister(ref);
             }
         ]

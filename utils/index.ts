@@ -51,6 +51,4 @@ export { getCssPropertiesForClasses } from './src/css/getCSSRuleForClass.ts';
 export { ComputedStruct } from './src/ComputedStruct.ts';
 export { tryFn, tryFnSync } from './src/tryFn.ts';
 
-export { createAutoWeakRef } from './src/ContextEnv.ts';
-
 //... without jsx
