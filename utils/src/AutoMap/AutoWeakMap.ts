@@ -9,6 +9,18 @@ const counterWeakMap = new AllocationCounter();
 
 const autoWeakRefSymbol = Symbol();
 
+function runCallback(callback: () => void) {
+    callback();
+};
+
+const registryDrop: FinalizationRegistry<() => void> = new FinalizationRegistry(runCallback);
+
+const symbolDeref = (deref: () => void): symbol => {
+    const derefSymbol = Symbol();
+    registryDrop.register(derefSymbol, deref);
+    return derefSymbol;
+};
+
 
 export class AutoWeakRef {
     private inner: typeof autoWeakRefSymbol = autoWeakRefSymbol;
@@ -38,6 +50,10 @@ export class AutoWeakRef {
                 unregister(ref);
             }
         ]
+    }
+
+    public static symbolDeref(deref: () => void): symbol {
+        return symbolDeref(deref);
     }
 
     public static objectCounter(): number {
