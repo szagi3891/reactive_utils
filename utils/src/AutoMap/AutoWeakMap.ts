@@ -3,7 +3,9 @@ import { AllocationCounter } from "./AllocationCounter.ts";
 import { type PrimitiveJSONValue } from "./PrimitiveType.ts";
 
 
-const counterAutoWeakRef = new AllocationCounter();
+const counterAutoWeakRef = new AllocationCounter((count: number) => {
+    console.info(`AutoWeakRef count=${count}`);
+});
 const counterWeakMap = new AllocationCounter();
 
 
@@ -26,7 +28,7 @@ export class AutoWeakRef {
     private inner: typeof autoWeakRefSymbol = autoWeakRefSymbol;
 
     private constructor() {
-        console.info(`AutoWeakRef constructor objectCounter=${counterAutoWeakRef.getCounter()}`, this.inner);
+        console.info(`AutoWeakRef constructor`, this.inner);
         counterAutoWeakRef.up(this);
         register(this);
     }
@@ -46,7 +48,7 @@ export class AutoWeakRef {
 
                 isDeref = true;
 
-                console.info(`AutoWeakRef unregister objectCounter=${counterAutoWeakRef.getCounter()}`);
+                console.info(`AutoWeakRef unregister`);
                 unregister(ref);
             }
         ]
