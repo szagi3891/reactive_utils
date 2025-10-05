@@ -1,15 +1,19 @@
-import { AutoWeakRef, unregister } from "./AutoMap/AutoWeakMap.ts";
+import { AutoWeakRef } from "./AutoMap/AutoWeakMap.ts";
 import * as React from 'react';
 
 class ContextModel {
+    public readonly autoWeakRef: AutoWeakRef
+
     constructor(
         registryDrop: FinalizationRegistry<() => void>,
-        public readonly autoWeakRef: AutoWeakRef
     ) {
+        const [ref, deref] = AutoWeakRef.create();
         // register(autoWeakRef);
 
+        this.autoWeakRef = ref;
+
         registryDrop.register(this, () => {
-            unregister(autoWeakRef);
+            deref();
         });
     }
 }
@@ -26,7 +30,6 @@ const envInit = (): (() => ContextModel) => {
         if (typeof window === 'undefined') {
             return new ContextModel(
                 registryDrop,
-                new AutoWeakRef()
             );
         }
 
@@ -36,7 +39,6 @@ const envInit = (): (() => ContextModel) => {
 
         globalContextModel = new ContextModel(
             registryDrop,
-            new AutoWeakRef()
         );
 
         return globalContextModel;

@@ -1,5 +1,5 @@
 import { timeout } from '../timeout.ts';
-import { AutoWeakMap, autoWeakMapKey, AutoWeakRef, unregister } from './AutoWeakMap.ts';
+import { AutoWeakMap, autoWeakMapKey, AutoWeakRef } from './AutoWeakMap.ts';
 import { gc } from '../gc.ts';
 import { expect } from "jsr:@std/expect";
 import { AllocationCounter } from "./AllocationCounter.ts";
@@ -100,8 +100,15 @@ Deno.test('memory leak - fix', async () => {
             [autoWeakMapKey](): AutoWeakRef {
                 return this.autoWeakRef;
             }
+
+            public readonly deref: () => void;
+
             constructor(public readonly name: string) {
-                this.autoWeakRef = new AutoWeakRef();
+
+                const [ref, deref] = AutoWeakRef.create();
+
+                this.autoWeakRef = ref;
+                this.deref = deref;
 
                 counterAutoWeakRef.up(this.autoWeakRef);
 
@@ -150,13 +157,13 @@ Deno.test('memory leak - fix', async () => {
             const model3 = Model.get(common, 'ccc', 555);
             expect(model3.name).toBe('Model - CommonI - ccc - 555');
 
-            unregister(common[autoWeakMapKey]());
+            common.deref();
         })();
 
         await gc();
 
-        expect(AutoWeakMap.counterAutoWeakRef()).toBe(1);
-        expect(AutoWeakMap.counterWeakMap()).toBe(1);
+        expect(AutoWeakRef.objectCounter()).toBe(1);
+        expect(AutoWeakMap.objectCounter()).toBe(1);
 
     })();
 
@@ -167,8 +174,8 @@ Deno.test('memory leak - fix', async () => {
         commons: counterCommon.getCounter(),
         autoWeakRefs: counterAutoWeakRef.getCounter(),
 
-        counterAutoWeakRef: AutoWeakMap.counterAutoWeakRef(),
-        counterWeakMap: AutoWeakMap.counterWeakMap(),
+        counterAutoWeakRef: AutoWeakRef.objectCounter(),
+        counterWeakMap: AutoWeakMap.objectCounter(),
 
     });
 
@@ -179,8 +186,8 @@ Deno.test('memory leak - fix', async () => {
         commons: counterCommon.getCounter(),
         autoWeakRefs: counterAutoWeakRef.getCounter(),
 
-        counterAutoWeakRef: AutoWeakMap.counterAutoWeakRef(),
-        counterWeakMap: AutoWeakMap.counterWeakMap(),
+        counterAutoWeakRef: AutoWeakRef.objectCounter(),
+        counterWeakMap: AutoWeakMap.objectCounter(),
 
     }).toEqual({
         models: 0,
@@ -204,8 +211,14 @@ Deno.test('AutoWeakMap.create', async () => {
             [autoWeakMapKey](): AutoWeakRef {
                 return this.autoWeakRef;
             }
+            public readonly deref: () => void;
+
             constructor(public readonly name: string) {
-                this.autoWeakRef = new AutoWeakRef();
+
+                const [ref, deref] = AutoWeakRef.create();
+
+                this.autoWeakRef = ref;
+                this.deref = deref;
 
                 counterAutoWeakRef.up(this.autoWeakRef);
 
@@ -254,7 +267,7 @@ Deno.test('AutoWeakMap.create', async () => {
             const model3 = Model.get(common, 'ccc', 555);
             expect(model3.name).toBe('Model - CommonI - ccc - 555');
 
-            unregister(common[autoWeakMapKey]());
+            common.deref();
         })();
 
         await gc();
@@ -276,7 +289,7 @@ Deno.test('AutoWeakMap.create', async () => {
 
             const model3 = Model.get(common, 'ccc', 555);
             expect(model3.name).toBe('Model - CommonII - ccc - 555');
-            unregister(common[autoWeakMapKey]());
+            common.deref();
         })();
 
         await gc();
@@ -302,12 +315,12 @@ Deno.test('AutoWeakMap.create', async () => {
 
             expect(counterModel.getCounter()).toBe(2);
 
-            unregister(common1[autoWeakMapKey]());
-            unregister(common2[autoWeakMapKey]());
+            common1.deref();
+            common2.deref();
         })();
 
-        expect(AutoWeakMap.counterAutoWeakRef()).toBe(4);
-        expect(AutoWeakMap.counterWeakMap()).toBe(1);
+        expect(AutoWeakRef.objectCounter()).toBe(4);
+        expect(AutoWeakMap.objectCounter()).toBe(1);
 
         await gc();
 
@@ -323,7 +336,7 @@ Deno.test('AutoWeakMap.create', async () => {
     expect(counterModel.getCounter()).toBe(0);
     expect(counterCommon.getCounter()).toBe(0);
     expect(counterAutoWeakRef.getCounter()).toBe(0);
-    expect(AutoWeakMap.counterAutoWeakRef()).toBe(0);
-    expect(AutoWeakMap.counterWeakMap()).toBe(0);           //jeśli sama struktura weakmapy nie będzie się dealokować to nie ma tragedii
+    expect(AutoWeakRef.objectCounter()).toBe(0);
+    expect(AutoWeakMap.objectCounter()).toBe(0);           //jeśli sama struktura weakmapy nie będzie się dealokować to nie ma tragedii
 
 });

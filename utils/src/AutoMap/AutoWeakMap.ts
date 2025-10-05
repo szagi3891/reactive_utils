@@ -7,17 +7,41 @@ const counterAutoWeakRef = new AllocationCounter();
 const counterWeakMap = new AllocationCounter();
 
 
-
 const autoWeakRefSymbol = Symbol();
 
 
 export class AutoWeakRef {
     private inner: typeof autoWeakRefSymbol = autoWeakRefSymbol;
 
-    constructor() {
+    private constructor() {
         console.info('AutoWeakRef constructor', this.inner);
         counterAutoWeakRef.up(this);
         register(this);
+    }
+
+    public static create(): [AutoWeakRef, () => void] {
+        const ref = new AutoWeakRef();
+
+        let isDeref = false;
+
+        return [
+            ref,
+            (): void => {
+                if (isDeref === true) {
+                    console.error('AutoWeakRef: deref: The object had already been released.');
+                    return;
+                }
+
+                isDeref = true;
+
+                console.info('AutoWeakRef unregister');
+                unregister(ref);
+            }
+        ]
+    }
+
+    public static objectCounter(): number {
+        return counterAutoWeakRef.getCounter();
     }
 }
 
@@ -43,7 +67,7 @@ const register = (autoWeakRef: AutoWeakRef): void => {
     translate.set(autoWeakRef, newRef);
 };
 
-export const unregister = (autoWeakRef: AutoWeakRef): void => {
+const unregister = (autoWeakRef: AutoWeakRef): void => {
     const ref = getRef(autoWeakRef);
     if (ref === null) {
         throw Error('AutoWeakMap unregister: this object was not registered');
@@ -109,11 +133,7 @@ export class AutoWeakMap {
         };
     };
 
-    public static counterAutoWeakRef(): number {
-        return counterAutoWeakRef.getCounter();
-    }
-
-    public static counterWeakMap(): number {
+    public static objectCounter(): number {
         return counterWeakMap.getCounter();
     }
 }

@@ -8,7 +8,8 @@ export class Common {
     
     public constructor(
     ) {
-        this.autoWeakRef = new AutoWeakRef();
+        const [ ref ] = AutoWeakRef.create();
+        this.autoWeakRef = ref;
         // register(this.autoWeakRef);        
     }
 
