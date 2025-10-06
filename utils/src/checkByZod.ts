@@ -119,7 +119,7 @@ export class CheckByZod<T> {
                         field: '---',
                         message: `ndjsonParse: Parsing error index=${index}`,
                     }],
-                    message,
+                    text,
                 ));
             }
 
