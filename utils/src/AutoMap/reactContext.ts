@@ -3,7 +3,7 @@ import { AutoWeakRef } from "./AutoWeakMap.ts";
 
 export class AutoWeakMapReactContext<Common> {
 
-    public readonly contextCommon = React.createContext<Common | null>(null);
+    public readonly contextCommon: React.Context<Common | null> = React.createContext<Common | null>(null);
 
     public readonly useCommon = (): Common => {
         const state = React.useContext(this.contextCommon);
@@ -15,7 +15,7 @@ export class AutoWeakMapReactContext<Common> {
         return state;
     };
 
-    public readonly useCreateCommon = (create: (autoWeakRef: AutoWeakRef) => Common) => {
+    public readonly useCreateCommon = (create: (autoWeakRef: AutoWeakRef) => Common): Common => {
         const [autoWeakRef, deref] = AutoWeakRef.create();
         React.useState(AutoWeakRef.symbolDeref(deref));
 
