@@ -52,3 +52,5 @@ export { ComputedStruct } from './src/ComputedStruct.ts';
 export { tryFn, tryFnSync } from './src/tryFn.ts';
 
 export { AutoWeakMapReactContext } from './src/AutoMap/reactContext.ts';
+export { AllocationCounter } from './src/AutoMap/AllocationCounter.ts';
+export { whenDrop } from './src/AutoMap/whenDrop.ts';
