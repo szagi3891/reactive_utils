@@ -17,9 +17,9 @@ export class AutoWeakMapReactContext<Common> {
 
     public readonly useCreateCommon = (create: (autoWeakRef: AutoWeakRef) => Common): Common => {
         const [autoWeakRef, deref] = AutoWeakRef.create();
-        React.useState(AutoWeakRef.symbolDeref(deref));
+        React.useState(() => AutoWeakRef.symbolDeref(deref));
 
-        const [ common ] = React.useState(create(autoWeakRef));
+        const [ common ] = React.useState(() => create(autoWeakRef));
         return common;
     }
 
