@@ -96,7 +96,6 @@ class AutoWeakMap0<C extends { [autoWeakMapKey]: () => AutoWeakRef }, K extends 
         this.week = new Map();
 
         subscriptionManager.add((autoWeakRef) => {
-            console.info('czyszczę ', this.week.get(autoWeakRef)?.size);
             this.week.delete(autoWeakRef);
         });
     }
