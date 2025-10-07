@@ -1,7 +1,5 @@
 
-const counterFinalizationRegistry: FinalizationRegistry<() => void> = new FinalizationRegistry((callback) => {
-    callback();
-});
+import { whenDrop } from "./whenDrop.ts";
 
 export class AllocationCounter<T extends WeakKey> {
     private counter: number = 0;
@@ -18,7 +16,7 @@ export class AllocationCounter<T extends WeakKey> {
 
     up(target: T) {
         this.counter++;
-        counterFinalizationRegistry.register(target, this.down)
+        whenDrop(target, this.down)
 
         if (this.whenChange !== undefined) {
             this.whenChange(this.counter);

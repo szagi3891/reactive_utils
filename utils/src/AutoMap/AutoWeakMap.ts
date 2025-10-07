@@ -1,57 +1,81 @@
 import { AutoMap } from "./AutoMap.ts";
 import { AllocationCounter } from "./AllocationCounter.ts";
 import { type PrimitiveJSONValue } from "./PrimitiveType.ts";
+import { whenDrop } from "./whenDrop.ts";
 
 
 const counterAutoWeakRef = new AllocationCounter((count: number) => {
     console.info(`AutoWeakRef count=${count}`);
 });
-const counterWeakMap = new AllocationCounter();
 
 
 const autoWeakRefSymbol = Symbol();
 
-function runCallback(callback: () => void) {
-    callback();
-};
-
-const registryDrop: FinalizationRegistry<() => void> = new FinalizationRegistry(runCallback);
-
 const symbolDeref = (deref: () => void): symbol => {
     const derefSymbol = Symbol();
-    registryDrop.register(derefSymbol, deref);
+    whenDrop(derefSymbol, deref);
     return derefSymbol;
 };
 
+class SubscriptionManager {
+
+    private data: Set<(autoWeakRef: AutoWeakRef) => void> = new Set();
+
+    unregister(autoWeakRef: AutoWeakRef) {
+        for (const callback of this.data) {
+            callback(autoWeakRef);
+        }
+    }
+
+    add(callback: (autoWeakRef: AutoWeakRef) => void) {
+        this.data.add(callback);
+    }
+}
+
+const subscriptionManager = new SubscriptionManager();
+
 
 export class AutoWeakRef {
+    private isDeref: boolean = false;
     private inner: typeof autoWeakRefSymbol = autoWeakRefSymbol;
 
     private constructor() {
         console.info(`AutoWeakRef constructor`, this.inner);
         counterAutoWeakRef.up(this);
-        register(this);
     }
 
     public static create(): [AutoWeakRef, () => void] {
         const ref = new AutoWeakRef();
 
-        let isDeref = false;
+        // let isDeref = false;
 
         return [
             ref,
-            (): void => {
-                if (isDeref === true) {
-                    console.error('AutoWeakRef: deref: The object had already been released.');
-                    return;
-                }
+            ref.deref,
+            // (): void => {
+            //     if (isDeref === true) {
+            //         console.error('AutoWeakRef: deref: The object had already been released.');
+            //         return;
+            //     }
 
-                isDeref = true;
+            //     isDeref = true;
 
-                console.info(`AutoWeakRef unregister`);
-                unregister(ref);
-            }
+            //     console.info(`AutoWeakRef unregister`);
+            //     subscriptionManager.unregister(ref);
+            // }
         ]
+    }
+
+    private deref = () => {
+        if (this.isDeref === true) {
+            console.error('AutoWeakRef: deref: The object had already been released.');
+            return;
+        }
+
+        this.isDeref = true;
+
+        console.info(`AutoWeakRef unregister`);
+        subscriptionManager.unregister(this);
     }
 
     public static symbolDeref(deref: () => void): symbol {
@@ -63,95 +87,100 @@ export class AutoWeakRef {
     }
 }
 
-
-class AutoWeakInner {
-    protected nominal?: never;
-}
-
-
-let translate: Map<AutoWeakRef, AutoWeakInner> = new Map();
-
-const getRef = (autoWeakRef: AutoWeakRef): AutoWeakInner | null => {
-    return translate.get(autoWeakRef) ?? null;
-};
-
-const register = (autoWeakRef: AutoWeakRef): void => {
-    const ref = getRef(autoWeakRef);
-    if (ref !== null) {
-        throw Error('AutoWeakMap register: This object was already registered');
-    }
-
-    const newRef = new AutoWeakInner();
-    translate.set(autoWeakRef, newRef);
-};
-
-const unregister = (autoWeakRef: AutoWeakRef): void => {
-    const ref = getRef(autoWeakRef);
-    if (ref === null) {
-        throw Error('AutoWeakMap unregister: this object was not registered');
-    }
-
-    translate.delete(autoWeakRef);
-};
-
-export const resetAll = (): void => {
-    const newTranslate = new Map();
-
-    for (const key of translate.keys()) {
-        newTranslate.set(key, new AutoWeakInner())
-    }
-
-    translate = newTranslate;
-};
-
-const getRefValue = (autoWeakRef: AutoWeakRef): AutoWeakInner => {
-    const ref = getRef(autoWeakRef);
-    if (ref === null) {
-        throw Error('this object is not registered');
-    }
-    return ref;
-};
-
 export const autoWeakMapKey = Symbol('AutoWeakMapKey');
 
+class AutoWeakMap0<C extends { [autoWeakMapKey]: () => AutoWeakRef }, K extends PrimitiveJSONValue[], V> {
+    private readonly week: Map<AutoWeakRef, AutoMap<K, V>>;
+
+    constructor(private readonly createValue: (...key: [C, ...K]) => V) {
+        this.week = new Map();
+
+        subscriptionManager.add((autoWeakRef) => {
+            console.info('czyszczę ', this.week.get(autoWeakRef)?.size);
+            this.week.delete(autoWeakRef);
+        });
+    }
+
+    create = (...key: [C, ...K]): V => {
+        const [context, ...rest] = key;
+        const weekKey = context[autoWeakMapKey]();
+        const weekContet: WeakRef<C> = new WeakRef(context);
+
+        const autoMap = this.week.get(weekKey);
+
+        if (autoMap !== undefined) {
+            return autoMap.get(rest);
+        }
+
+        const newAuto = new AutoMap<K, V>((key) => {
+            const context = weekContet.deref();
+
+            if (context === undefined) {
+                throw Error('context expected');
+            }
+
+            return this.createValue(context, ...key);
+        });
+        this.week.set(weekKey, newAuto);
+        return newAuto.get(rest);
+    };
+}
+
 export class AutoWeakMap {
-
-    public static resetAll = resetAll;
-
     public static create = <C extends { [autoWeakMapKey]: () => AutoWeakRef }, K extends PrimitiveJSONValue[], V>(
         createValue: (...key: [C, ...K]) => V
     ): ((...key: [C, ...K]) => V) => {
 
-        const week = new WeakMap<AutoWeakInner, AutoMap<K, V>>();
-
-        counterWeakMap.up(week);
-
-        return (...key: [C, ...K]): V => {
-            const [context, ...rest] = key;
-            const weekKey = getRefValue(context[autoWeakMapKey]());
-            const weekContet: WeakRef<C> = new WeakRef(context);
-
-            const autoMap = week.get(weekKey);
-
-            if (autoMap !== undefined) {
-                return autoMap.get(rest);
-            }
-
-            const newAuto = new AutoMap<K, V>((key) => {
-                const context = weekContet.deref();
-
-                if (context === undefined) {
-                    throw Error('context expected');
-                }
-
-                return createValue(context, ...key);
-            });
-            week.set(weekKey, newAuto);
-            return newAuto.get(rest);
-        };
+        const state = new AutoWeakMap0(createValue);
+        return state.create;
     };
 
-    public static objectCounter(): number {
-        return counterWeakMap.getCounter();
-    }
+    // public static objectCounter(): number {
+    //     return counterWeakMap.getCounter();
+    // }
 }
+
+// export class AutoWeakMap {
+
+//     public static create = <C extends { [autoWeakMapKey]: () => AutoWeakRef }, K extends PrimitiveJSONValue[], V>(
+//         createValue: (...key: [C, ...K]) => V
+//     ): ((...key: [C, ...K]) => V) => {
+
+//         const week = new Map<AutoWeakRef, AutoMap<K, V>>();
+
+//         subscriptionManager.add((autoWeakRef) => {
+//             console.info('czyszczę ', week.get(autoWeakRef)?.size);
+//             week.delete(autoWeakRef);
+//         });
+
+//         // counterWeakMap.up(week);
+
+//         return (...key: [C, ...K]): V => {
+//             const [context, ...rest] = key;
+//             const weekKey = context[autoWeakMapKey]();
+//             const weekContet: WeakRef<C> = new WeakRef(context);
+
+//             const autoMap = week.get(weekKey);
+
+//             if (autoMap !== undefined) {
+//                 return autoMap.get(rest);
+//             }
+
+//             const newAuto = new AutoMap<K, V>((key) => {
+//                 const context = weekContet.deref();
+
+//                 if (context === undefined) {
+//                     throw Error('context expected');
+//                 }
+
+//                 return createValue(context, ...key);
+//             });
+//             week.set(weekKey, newAuto);
+//             return newAuto.get(rest);
+//         };
+//     };
+
+//     // public static objectCounter(): number {
+//     //     return counterWeakMap.getCounter();
+//     // }
+// }

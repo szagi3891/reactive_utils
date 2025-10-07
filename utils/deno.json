@@ -1,5 +1,5 @@
 {
-    "version": "0.5.273",
+    "version": "0.5.274",
     "name": "@reactive/utils",
     "exports": {
         ".": "./index.ts"
@@ -26,6 +26,7 @@
     "tasks": {
         "check": "deno -A ./index.ts && deno -A ./src/nodejs/index.ts",
         "test": "deno install && deno test --allow-hrtime --allow-env --allow-sys --allow-write --v8-flags=\"--expose-gc\" --trace-leaks",
+        "test-auto-weak-map": "deno install && deno test --allow-hrtime --allow-env --allow-sys --allow-write --v8-flags=\"--expose-gc\" --trace-leaks src/AutoMap/AutoWeakMap.test.ts",
         "test-inspect": "deno install && deno test --allow-hrtime --allow-env --allow-sys --allow-write --v8-flags=\"--expose-gc\" --trace-leaks --inspect-brk src/AutoMap/AutoWeakMap.test.ts"
     },
     "compilerOptions": {

@@ -8,17 +8,17 @@ import { AllocationCounter } from "./AllocationCounter.ts";
 
 class MemoryHelper {
     private registry: FinalizationRegistry<unknown>;
-    public readonly logs: Array<unknown> = [];
+    public readonly logs: Array<string> = [];
 
     public constructor() {
-        this.registry = new FinalizationRegistry((objectId) => {
+        this.registry = new FinalizationRegistry<string>((objectId) => {
             this.logs.push(objectId);
         });
 
         this.registry;
     }
 
-    public register(target: WeakKey, heldValue: unknown) {
+    public register(target: WeakKey, heldValue: string) {
         this.registry.register(target, heldValue);
     }
 
@@ -61,61 +61,55 @@ Deno.test('MemoryHelper', async () => {
     await memoryHelper.whenRemoved('id1');
 });
 
-// const getSnapshot = async (fileSnapshot: string) => {
+class Common {
+    public static counterCommon = new AllocationCounter();
 
-//     // Otwórz strumień zapisu do pliku
-//     const writeStream = fs.createWriteStream(fileSnapshot); //"heap.heapsnapshot"
+    private readonly autoWeakRef: AutoWeakRef;
 
-//     // Pobierz strumień zrzutu sterty
-//     const heapSnapshotStream = v8.getHeapSnapshot();
+    [autoWeakMapKey](): AutoWeakRef {
+        return this.autoWeakRef;
+    }
 
-//     // Przekieruj dane bezpośrednio do pliku
-//     heapSnapshotStream.pipe(writeStream);
+    public readonly deref: () => void;
 
-//     const result = Promise.withResolvers<void>();
+    constructor(public readonly name: string) {
 
-//     // Opcjonalnie: poczekaj na zakończenie zapisu, aby upewnić się, że program nie zakończy się zbyt wcześnie
-//     writeStream.on('finish', () => {
-//         console.log("heap.heapsnapshot saved.");
+        const [ref, deref] = AutoWeakRef.create();
 
-//         return result.resolve();
-//     });
+        this.autoWeakRef = ref;
+        this.deref = deref;
 
-//     return result.promise;
-// }
+        Common.counterCommon.up(this);
+    }
+
+    public static getCounter(): number {
+        return Common.counterCommon.getCounter();
+    }
+}
+
+
+class LeakContext {
+    private leakContext: Array<Common> = [];
+
+    createContext(name: string): Common {
+        const inst = new Common(name);
+        this.leakContext.push(inst);
+        return inst;
+    }
+
+    clean() {
+        this.leakContext = [];
+    }
+}
+
 
 Deno.test('memory leak - fix', async () => {
-    // if (typeof global.gc !== 'function') {
-    //     throw new Error('Garbage collector is not exposed. Run node with --expose-gc.');
-    // }
-
     const counterModel = new AllocationCounter();
-    const counterCommon = new AllocationCounter();
-    const counterAutoWeakRef = new AllocationCounter();
     
+    // console.info('ROZPOCZNINJ NAGRYWANIE');
+    debugger;
+
     await (async () => {
-        class Common {
-            private readonly autoWeakRef: AutoWeakRef;
-
-            [autoWeakMapKey](): AutoWeakRef {
-                return this.autoWeakRef;
-            }
-
-            public readonly deref: () => void;
-
-            constructor(public readonly name: string) {
-
-                const [ref, deref] = AutoWeakRef.create();
-
-                this.autoWeakRef = ref;
-                this.deref = deref;
-
-                counterAutoWeakRef.up(this.autoWeakRef);
-
-                counterCommon.up(this);
-            }
-        }
-
         const Model = class {
             public static get = AutoWeakMap.create((common: Common, id1: string, id2: number) => {
                 const model = new Model(common, id1, id2);
@@ -133,20 +127,13 @@ Deno.test('memory leak - fix', async () => {
         }
 
         //symulacja, wyciekająych kontekstów do globalnej przestrzeni
-        const leakContext: Array<Common> = [];
-
-        const createContext = (name: string): Common => {
-            const inst = new Common(name);
-            leakContext.push(inst);
-            return inst;
-        }
+        const leakContext = new LeakContext();
 
         const memoryHelper = new MemoryHelper();
 
 
         (() => {
-            const common = createContext('CommonI');
-            // register(common[autoWeakMapKey]());
+            const common = leakContext.createContext('CommonI');
 
             const model1 = Model.get(common, 'aaa', 111);
             expect(model1.name).toBe('Model - CommonI - aaa - 111');
@@ -162,70 +149,57 @@ Deno.test('memory leak - fix', async () => {
 
         await gc();
 
-        expect(AutoWeakRef.objectCounter()).toBe(1);
-        expect(AutoWeakMap.objectCounter()).toBe(1);
 
+        console.info('liczniki', {
+            models: counterModel.getCounter(),
+            commons: Common.getCounter(),
+            counterAutoWeakRef: AutoWeakRef.objectCounter(),
+        });
+
+        expect({
+            models: counterModel.getCounter(),
+            commons: Common.getCounter(),
+            counterAutoWeakRef: AutoWeakRef.objectCounter(),
+        }).toEqual({
+            models: 0,
+            commons: 1,                 //Symulacja wycieku common do pamięci. Modele powinny się zwolnić
+            counterAutoWeakRef: 1,
+        });
+
+        leakContext.clean();
     })();
 
     await gc();
 
-    console.info({
+
+    console.info('liczniki', {
         models: counterModel.getCounter(),
-        commons: counterCommon.getCounter(),
-        autoWeakRefs: counterAutoWeakRef.getCounter(),
-
+        commons: Common.getCounter(),
         counterAutoWeakRef: AutoWeakRef.objectCounter(),
-        counterWeakMap: AutoWeakMap.objectCounter(),
-
     });
 
-    // debugger;
+    // console.info('ZATRZYMAJ NAGRYWANIE');
+    debugger;
+
+
+    //TODO - tutaj te wycieki pamięci powinny zniknąć
 
     expect({
         models: counterModel.getCounter(),
-        commons: counterCommon.getCounter(),
-        autoWeakRefs: counterAutoWeakRef.getCounter(),
-
+        commons: Common.getCounter(),
         counterAutoWeakRef: AutoWeakRef.objectCounter(),
-        counterWeakMap: AutoWeakMap.objectCounter(),
-
     }).toEqual({
         models: 0,
         commons: 0,
-        autoWeakRefs: 0,
-
         counterAutoWeakRef: 0,
-        counterWeakMap: 0,
     });
 });
 
 Deno.test('AutoWeakMap.create', async () => {
     const counterModel = new AllocationCounter();
     const counterCommon = new AllocationCounter();
-    const counterAutoWeakRef = new AllocationCounter();
     
     await (async () => {
-        class Common {
-            private readonly autoWeakRef: AutoWeakRef;
-
-            [autoWeakMapKey](): AutoWeakRef {
-                return this.autoWeakRef;
-            }
-            public readonly deref: () => void;
-
-            constructor(public readonly name: string) {
-
-                const [ref, deref] = AutoWeakRef.create();
-
-                this.autoWeakRef = ref;
-                this.deref = deref;
-
-                counterAutoWeakRef.up(this.autoWeakRef);
-
-                counterCommon.up(this);
-            }
-        }
-
         const Model = class {
             public static get = AutoWeakMap.create((common: Common, id1: string, id2: number) => {
                 const model = new Model(common, id1, id2);
@@ -243,19 +217,15 @@ Deno.test('AutoWeakMap.create', async () => {
         }
 
         //symulacja, wyciekająych kontekstów do globalnej przestrzeni
-        const leakContext: Array<Common> = [];
-
-        const createContext = (name: string): Common => {
-            const inst = new Common(name);
-            leakContext.push(inst);
-            return inst;
-        }
+        const leakContext = new LeakContext();
 
         const memoryHelper = new MemoryHelper();
 
+        // console.info('ROZPOCZNINJ NAGRYWANIE');
+        debugger;
 
         (() => {
-            const common = createContext('CommonI');
+            const common = leakContext.createContext('CommonI');
             // register(common[autoWeakMapKey]());
 
             const model1 = Model.get(common, 'aaa', 111);
@@ -271,14 +241,16 @@ Deno.test('AutoWeakMap.create', async () => {
         })();
 
         await gc();
-        
+
+        console.info(memoryHelper.logs);
+
         await memoryHelper.whenRemoved('CommonI-aaa-111');
         await memoryHelper.whenRemoved('CommonI-bbb-222');
         await memoryHelper.whenRemoved('CommonI-ccc-555');
         expect(memoryHelper.removedLength).toBe(3);
 
         (() => {
-            const common = createContext('CommonII');
+            const common = leakContext.createContext('CommonII');
             // register(common[autoWeakMapKey]());
 
             const model1 = Model.get(common, 'aaa', 111);
@@ -301,13 +273,13 @@ Deno.test('AutoWeakMap.create', async () => {
 
 
         (() => {
-            const common1 = createContext('CommonIII');
+            const common1 = leakContext.createContext('CommonIII');
             // register(common1[autoWeakMapKey]());
 
             const model1 = Model.get(common1, 'aaa', 111);
             expect(model1.name).toBe('Model - CommonIII - aaa - 111');
 
-            const common2 = createContext('CommonIV');
+            const common2 = leakContext.createContext('CommonIV');
             // register(common2[autoWeakMapKey]());
 
             const model2 = Model.get(common2, 'aaa', 111);
@@ -319,8 +291,13 @@ Deno.test('AutoWeakMap.create', async () => {
             common2.deref();
         })();
 
+        await gc();
+
+        // console.info('ZATRZYMAJ NAGRYWANIE');
+        debugger;
+
         expect(AutoWeakRef.objectCounter()).toBe(4);
-        expect(AutoWeakMap.objectCounter()).toBe(1);
+        // expect(AutoWeakMap.objectCounter()).toBe(1);
 
         await gc();
 
@@ -329,14 +306,14 @@ Deno.test('AutoWeakMap.create', async () => {
 
         expect(memoryHelper.removedLength).toBe(8);
 
+        leakContext.clean();
     })();
 
     await gc();
 
     expect(counterModel.getCounter()).toBe(0);
     expect(counterCommon.getCounter()).toBe(0);
-    expect(counterAutoWeakRef.getCounter()).toBe(0);
     expect(AutoWeakRef.objectCounter()).toBe(0);
-    expect(AutoWeakMap.objectCounter()).toBe(0);           //jeśli sama struktura weakmapy nie będzie się dealokować to nie ma tragedii
+    // expect(AutoWeakMap.objectCounter()).toBe(0);           //jeśli sama struktura weakmapy nie będzie się dealokować to nie ma tragedii
 
 });

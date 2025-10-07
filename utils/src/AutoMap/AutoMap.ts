@@ -21,6 +21,10 @@ class AutoMapSerialized<K, V> {
         this.data.set(idString, newItem);
         return newItem;
     }
+
+    public get size(): number {
+        return this.data.size;
+    }
 }
 
 export class AutoMap<K extends PrimitiveJSONValue, V> {
@@ -49,4 +53,8 @@ export class AutoMap<K extends PrimitiveJSONValue, V> {
             return data.get(newKey);
         };
     };
+
+    public get size(): number {
+        return this.data.size;
+    }
 }
