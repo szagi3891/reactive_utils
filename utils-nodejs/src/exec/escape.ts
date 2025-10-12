@@ -3,6 +3,10 @@
 // import { quote } from 'shell-quote/quote';
 
 export const escapeParamShell = (s: string): string => {
+    if (s.includes(' ')) {
+        return `"${s}"`;
+    }
+
     return s;
 
     // if (s === '') {

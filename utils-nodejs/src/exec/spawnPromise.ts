@@ -4,7 +4,6 @@ import process from "node:process";
 import chalk from 'chalk';
 import { Buffer } from "node:buffer";
 import { EscapeString } from "./shellEscape.ts";
-import { escapeParamShell } from "./escape.ts";
 
 const getEnv = (env: NodeJS.ProcessEnv | undefined): Record<string, string> | undefined => {
     const result: Record<string, string> = {};
@@ -32,9 +31,8 @@ const getEnv = (env: NodeJS.ProcessEnv | undefined): Record<string, string> | un
     return result;
 };
 
-export const spawnPromise = (command: string, argsIn: Array<EscapeString>, options: SpawnOptionsWithoutStdio, escape: boolean): Promise<number> => {
-    const escapeFn = escape ? escapeParamShell : (data: string) => data;
-    const args = argsIn.map(item => item.getResultString(escapeFn));    
+export const spawnPromise = (command: string, argsIn: Array<EscapeString>, options: SpawnOptionsWithoutStdio): Promise<number> => {
+    const args = argsIn.map(item => item.getResultString());    
 
     console.info(chalk.green(JSON.stringify({
         command,
@@ -87,10 +85,8 @@ export const spawnPromiseAndGet = (
     command: string,
     argsIn: Array<EscapeString>,
     options: SpawnOptionsWithoutStdio,
-    escape: boolean
 ): Promise<{ code: number, stdout: string; stderr: string }> => {
-    const escapeFn = escape ? escapeParamShell : (data: string) => data;
-    const args = argsIn.map(item => item.getResultString(escapeFn));
+    const args = argsIn.map(item => item.getResultString());
 
     console.info(chalk.green(JSON.stringify({
         command,

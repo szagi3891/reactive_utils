@@ -1,12 +1,12 @@
 import { exec, execSsh, execAndGet, execSshAndGet } from './exec/exec.ts';
 import { EscapeString } from "./exec/shellEscape.ts";
 
-const escapeArg = (value: string | EscapeString): EscapeString => {
-    if (typeof value === 'string') {
+const escapeArg = (value: string): EscapeString => {
+    // if (typeof value === 'string') {
         return EscapeString.escape(value);
-    }
+    // }
 
-    return value;
+    // return value;
 };
 
 type ShellDirType = {
@@ -57,7 +57,7 @@ export class ShellDir {
 
     async exec(params: {
         command: string,
-        args?: Array<string | EscapeString>,
+        args?: Array<string>,
         env?: Record<string, string>
     }): Promise<void> {
         const {command, args = [], env = {}} = params;
@@ -85,7 +85,7 @@ export class ShellDir {
         }
     }
 
-    execAndGet(params: { command: string, args?: Array<string | EscapeString>, env?: Record<string, string>}): Promise<string> {
+    execAndGet(params: { command: string, args?: Array<string>, env?: Record<string, string>}): Promise<string> {
         const {command, args = [], env = {}} = params;
 
         switch (this.params.type) {

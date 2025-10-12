@@ -37,7 +37,7 @@ export async function exec(params: {
             ...env,
         },
         // shell: true,
-    }, false);
+    });
 
     if (code !== 0) {
         throw Error(`Expected codee=0, receive code=${code}`);
@@ -59,7 +59,7 @@ export async function execSsh(params: {
             ...env,
         },
         // shell: false,           //jeślli jest true, to na ssh serwerze nie działa zaciąganie obazu dokerowego
-    }, true);
+    });
 
     if (code !== 0) {
         throw Error(`Expected codee=0, receive code=${code}`);
@@ -83,7 +83,7 @@ export async function execAndGet(
             ...process.env,
             ...env,
         },
-    }, false);
+    });
 
     if (result.code !== 0) {
         console.info(chalk.red(result.stderr));
@@ -114,7 +114,7 @@ export async function execSshAndGet(params: {
             ...env,
         },
         // shell: false,           //jeślli jest true, to na ssh serwerze nie działa zaciąganie obazu dokerowego
-    }, true);
+    });
 
     if (result.code !== 0) {
         console.info(chalk.red(result.stderr));
