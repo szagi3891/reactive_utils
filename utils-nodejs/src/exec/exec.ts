@@ -86,6 +86,9 @@ export async function execAndGet(
     }, false);
 
     if (result.code !== 0) {
+        console.info(chalk.red(result.stderr));
+        console.info(chalk.red(result.stdout));
+
         throw Error(`Expected codee=0, receive code=${result.code}`);
     }
 
@@ -114,6 +117,9 @@ export async function execSshAndGet(params: {
     }, true);
 
     if (result.code !== 0) {
+        console.info(chalk.red(result.stderr));
+        console.info(chalk.red(result.stdout));
+
         throw Error(`Expected codee=0, receive code=${result.code}`);
     }
 
