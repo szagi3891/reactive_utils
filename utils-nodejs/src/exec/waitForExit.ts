@@ -1,7 +1,8 @@
-import type { ChildProcessWithoutNullStreams} from 'node:child_process';
+import type { ChildProcessByStdio, ChildProcessWithoutNullStreams} from 'node:child_process';
 import process from "node:process";
+import { Writable } from "node:stream";
 
-export const waitForExit = (child: ChildProcessWithoutNullStreams): Promise<number> => {
+export const waitForExit = (child: ChildProcessWithoutNullStreams | ChildProcessByStdio<Writable, null, null>): Promise<number> => {
     const onSigint = () => {
         console.log("Caught SIGINT. Killing child process.");
         child.kill();

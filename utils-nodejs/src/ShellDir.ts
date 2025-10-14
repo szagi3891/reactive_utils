@@ -89,7 +89,7 @@ export class ShellDir {
         const child = spawn(command, args, {
             cwd,
             env,
-            stdio: 'pipe',
+            stdio: ['pipe', "inherit", "inherit"],
         });
     
         if (input !== undefined) {
