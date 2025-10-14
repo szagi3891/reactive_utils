@@ -60,10 +60,6 @@ export class ShellDir {
     }): SpawnArgsType => {
         const {command, args = [], env = {}} = params;
 
-        if (command.includes(' ')) {
-            throw Error('"command" cannot contain spaces');
-        }
-
         const [ commandFirst, argsRest ] = this.getArgs(command, args);
 
         const spawnArgs: SpawnArgsType = {
