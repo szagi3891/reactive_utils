@@ -4,6 +4,7 @@ import { showLog } from './exec/getEnv.ts';
 import { convertArgs, type SpawnArgsType } from './exec/SpawnArgsType.ts';
 import { waitForExit } from './exec/waitForExit.ts';
 import { BufferData } from './exec/BufferData.ts';
+import process from "node:process";
 
 type ShellDirType = {
     sshLogin: string | null,
@@ -35,6 +36,23 @@ export class ShellDir {
         });
     }
 
+    private getArgs = (command: string, args?: Array<string>,): [string, Array<string>] => {
+        const chunks = command
+            .split(' ')
+            .map(item => item.trim())
+            .filter(item => item !== '');
+
+        const all = [...chunks, ...(args ?? [])];
+
+        const [ commandFirst, ...rest ] = all;
+
+        if (commandFirst === undefined) {
+            throw Error(`Command musi coś zawierać = "${command}"`);
+        }
+
+        return [ commandFirst, rest ];
+    };
+
     private readonly getSpawnArgs = (params: {
         command: string,
         args?: Array<string>,
@@ -46,9 +64,11 @@ export class ShellDir {
             throw Error('"command" cannot contain spaces');
         }
 
+        const [ commandFirst, argsRest ] = this.getArgs(command, args);
+
         const spawnArgs: SpawnArgsType = {
-            command,
-            args,
+            command: commandFirst,
+            args: argsRest,
             sshLogin: this.params.sshLogin,
             cwd: this.params.cwd,
             env: {
