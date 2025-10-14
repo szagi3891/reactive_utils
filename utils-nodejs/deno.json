@@ -1,5 +1,5 @@
 {
-    "version": "0.1.42",
+    "version": "0.1.43",
     "name": "@reactive/utils-nodejs",
     "exports": {
         ".": "./index.ts"
@@ -14,6 +14,7 @@
         }
     },
     "imports": {
+        "@reactive/utils": "jsr:@reactive/utils@^0.5.279",
         "@types/react": "npm:@types/react@^*",
         "mobx": "npm:mobx@^*",
         "mobx-react-lite": "npm:mobx-react-lite@^*",
