@@ -110,6 +110,10 @@ export class CheckByZod<T> {
         const result: Array<T> = [];
 
         for (const [index, message] of messages.entries()) {
+            if (message.trim() === '') {
+                continue;
+            }
+
             const json = jsonParseRaw(message);
         
             if (json.type === 'error') {
