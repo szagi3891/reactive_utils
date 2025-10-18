@@ -11,7 +11,7 @@ type SubmitResult = {
 }
 
 export class FormState<P> {
-    public isProcessingValue: Value<boolean> = new Value(false);
+    private isProcessingValue: Value<boolean> = new Value(false);
 
     public get isProcessing(): boolean {
         return this.isProcessingValue.getValue();
