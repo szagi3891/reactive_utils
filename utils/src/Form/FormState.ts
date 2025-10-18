@@ -11,10 +11,10 @@ type SubmitResult = {
 }
 
 export class FormState<P> {
-    public isLoadingValue: Value<boolean> = new Value(false);
+    public isProcessingValue: Value<boolean> = new Value(false);
 
-    public get isLoading(): boolean {
-        return this.isLoadingValue.getValue();
+    public get isProcessing(): boolean {
+        return this.isProcessingValue.getValue();
     }
 
     constructor(private readonly node: FormNode<P>,) {}
@@ -40,13 +40,13 @@ export class FormState<P> {
     ): Promise<SubmitResult> => {
         this.node.value.setAsVisited();
 
-        if (this.isLoading) {
+        if (this.isProcessing) {
             return {
                 type: 'ignore-event'
             };
         }
 
-        this.isLoadingValue.setValue(true);
+        this.isProcessingValue.setValue(true);
 
         try {
             const result = this.node.value.result;
@@ -71,7 +71,7 @@ export class FormState<P> {
                 };
             }
         } finally {
-            this.isLoadingValue.setValue(false);
+            this.isProcessingValue.setValue(false);
         }
     }
 }
