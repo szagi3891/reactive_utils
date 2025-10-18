@@ -13,6 +13,7 @@ export class FormInputState<K, M> implements FormModelType<M> {
         this.model = model;
     }
 
+    // public static from<K>(getValue: () => Result<K, string>): FormInputState<K, K> {     //TODO - znaleźć sposób na propagowanie błłędow
     public static from<K>(getValue: () => K): FormInputState<K, K> {
         const box = new FormBoxValue<K>(getValue);
         const model = new FormModel<K>(
@@ -23,9 +24,9 @@ export class FormInputState<K, M> implements FormModelType<M> {
         return new FormInputState<K, K>(box, model);
     }
 
-    public static fromAndMap<K, T>(getValue: () => K, map: (value: K) => T): FormInputState<T, T> {
-        return FormInputState.from(() => map(getValue()));
-    }
+    // public static fromAndMap<K, T>(getValue: () => K, map: (value: K) => T): FormInputState<T, T> {
+    //     return FormInputState.from(() => map(getValue()));
+    // }
 
     public render(render: (input: FormInputState<K, unknown>) => React.ReactNode): FormNode<M> {
         return FormNode.fromFormInputState(
