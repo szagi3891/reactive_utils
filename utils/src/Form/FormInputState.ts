@@ -13,17 +13,7 @@ export class FormInputState<K, M> implements FormModelType<M> {
         this.model = model;
     }
 
-    private static fromValue<K>(value: K): FormInputState<K, K> {
-        const box = new FormBoxValue<K>(() => value);
-        const model = new FormModel(
-            () => [box],
-            (): Result<K, Array<FormErrorMessage>> => Result.ok(box.getValue())
-        );
-
-        return new FormInputState(box, model);
-    }
-
-    private static fromModel<K>(getValue: () => K): FormInputState<K, K> {
+    public static from<K>(getValue: () => K): FormInputState<K, K> {
         const box = new FormBoxValue<K>(getValue);
         const model = new FormModel<K>(
             () => [box],
@@ -33,24 +23,8 @@ export class FormInputState<K, M> implements FormModelType<M> {
         return new FormInputState<K, K>(box, model);
     }
 
-    public static from<K>(getValue: (() => K) | K): FormInputState<K, K> {
-        if (typeof getValue === 'function') {
-            //@ts-expect-error ...
-            const getValueType: () => K = getValue;
-            return FormInputState.fromModel(getValueType);
-        }
-
-        return FormInputState.fromValue(getValue);
-    }
-
-    public static fromAndMap<K, T>(getValue: (() => K) | K, map: (value: K) => T): FormInputState<T, T> {
-        if (typeof getValue === 'function') {
-            //@ts-expect-error ...
-            const getValueType: () => K = getValue;
-            return FormInputState.fromModel(() => map(getValueType()));
-        }
-
-        return FormInputState.fromValue(map(getValue));
+    public static fromAndMap<K, T>(getValue: () => K, map: (value: K) => T): FormInputState<T, T> {
+        return FormInputState.from(() => map(getValue()));
     }
 
     public render(render: (input: FormInputState<K, unknown>) => React.ReactNode): FormNode<M> {
