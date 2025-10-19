@@ -90,7 +90,7 @@ export class FormNode<T> {
         );
     }
 
-    public mapJsx(map: (jsx: React.ReactNode, message: string | null) => React.ReactElement): FormNode<T> {
+    public mapJsxError(map: (jsx: React.ReactNode, message: string | null) => React.ReactElement): FormNode<T> {
 
         const getErrorMessage = (): string | null => {
             const value = this.value.stateForView;
