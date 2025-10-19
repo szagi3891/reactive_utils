@@ -3,6 +3,7 @@ import { FormModel } from "./FormModel.ts";
 import { FormChildTrait, FormChildType, FormErrorMessage, FormModelTrait, FormModelType } from "./FormTypes.ts";
 import { Result } from "../Result.ts";
 import { FormInputState } from "./FormInputState.ts";
+import { FormChildList } from "./FormChildList.ts";
 
 /*
     //TODO
@@ -25,9 +26,9 @@ export class FormNode<T> {
         const jsx = render(value);
 
         const model = new FormModel(
-            () => [{
+            new FormChildList([{
                 [FormChildTrait]: () => value,
-            }],
+            }]),
             () => value.result
         );
 
@@ -37,7 +38,10 @@ export class FormNode<T> {
     public static group = <IN extends Record<keyof IN, FormNode<unknown>>>(fields: IN): FormModel<{
         readonly [P in keyof IN]: IN[P] extends FormNode<infer O> ? O : never;
     }> => {
-        const fieldsValules: Array<{ [FormChildTrait](): FormChildType, [FormModelTrait](): FormModelType<unknown> }> = [];
+        const fieldsValules: Array<{
+            [FormChildTrait](): FormChildType,
+            [FormModelTrait](): FormModelType<unknown>
+        }> = [];
 
         for (const item of Object.values(fields)) {
             //@ts-expect-error ...
@@ -55,9 +59,7 @@ export class FormNode<T> {
         type TypeOut = Model<IN>;
 
         return new FormModel(
-            () => {
-                return fieldsValules;
-            },
+            new FormChildList(fieldsValules),
             (): Result<TypeOut, Array<FormErrorMessage>> => {
                 //@ts-expect-error ...
                 const modelOut: TypeOut = {};

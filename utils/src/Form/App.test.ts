@@ -18,7 +18,11 @@ Deno.test('validateRange', () => {
 });
 
 Deno.test('grupa', () => {
-    const field1 = FormInputState.from(() => '')
+    const field1 = FormInputState
+        .from({
+            default: '',
+            getValue: () => Result.ok('')
+        })
         .map(validateConvertToNumber('Input1: Not number'))
         .map((value): Result<number, string> => {
             if (value > 10) {
@@ -28,7 +32,11 @@ Deno.test('grupa', () => {
             }
         });
 
-    const field2 = FormInputState.from(() => '')
+    const field2 = FormInputState
+        .from({
+            default: '',
+            getValue: () => Result.ok('')
+        })
         .map(validateConvertToNumber('Input2: Not number'))
         .map((value): Result<number, string> => {
             if (value > 10) {
@@ -86,9 +94,11 @@ Deno.test('grupa', () => {
     });
 
     field1.setValue('8');
+    console.info(field1);
 
     expect(field1.value).toEqual('8');
     expect(field2.value).toEqual('');
+    console.info('result !!!!!!', field1.result);
     expect(field1.errorForView).toEqual(null);
     expect(field2.errorForView).toEqual('Input2: Not number');
     expect(form.errorForView).toEqual(null);

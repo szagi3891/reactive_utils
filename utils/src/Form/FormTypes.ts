@@ -13,8 +13,8 @@ export interface FormChildType {
 
 export interface FormModelType<V> extends FormChildType {
     get result(): Result<V, Array<FormErrorMessage>>; //na tym będzie odpowiedni getter dla widoku
-    get errorForView(): string | null;
-    get isValid(): boolean;
+    // get errorForView(): string | null;
+    // get isValid(): boolean;
 }
 
 

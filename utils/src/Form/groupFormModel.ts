@@ -1,4 +1,5 @@
 import { Result } from "../Result.ts";
+import { FormChildList } from "./FormChildList.ts";
 import { FormModel } from "./FormModel.ts";
 import { FormErrorMessage, FormChildTrait, FormChildType, FormModelTrait, FormModelType } from './FormTypes.ts';
 
@@ -26,9 +27,7 @@ export const groupFormModel = <IN extends FormRecordBox>(fields: IN): FormModel<
     type TypeOut = Model<IN>;
 
     return new FormModel(
-        () => {
-            return fieldsValules;
-        },
+        new FormChildList(fieldsValules),
         (): Result<TypeOut, Array<FormErrorMessage>> => {
             //@ts-expect-error ...
             const modelOut: TypeOut = {};

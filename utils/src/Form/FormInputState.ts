@@ -3,30 +3,45 @@ import { FormBoxValue } from './FormBoxValue.ts';
 import { FormChildTrait, FormChildType, FormErrorMessage, FormModelTrait, FormModelType, StateForViewType } from './FormTypes.ts';
 import { Result } from '../Result.ts';
 import { FormNode } from "./FormNode.ts";
+import { FormChildList } from "./FormChildList.ts";
+
+interface Params<K> {
+    default: K,
+    getValue: () => Result<K, string>
+}
 
 export class FormInputState<K, M> implements FormModelType<M> {
-    private readonly box: FormBoxValue<K>;
-    private readonly model: FormModel<M>;
-
-    private constructor(box: FormBoxValue<K>, model: FormModel<M>) {
-        this.box = box;
-        this.model = model;
+    private constructor(
+        private readonly defaultValue: K,
+        private readonly box: FormBoxValue<K>,
+        private readonly model: FormModel<M>) {
     }
 
-    // public static from<K>(getValue: () => Result<K, string>): FormInputState<K, K> {     //TODO - znaleźć sposób na propagowanie błłędow
-    public static from<K>(getValue: () => K): FormInputState<K, K> {
-        const box = new FormBoxValue<K>(getValue);
+    public static from<K>(params: Params<K>): FormInputState<K, K> {
+        const box = new FormBoxValue<K>(params.getValue);
+
         const model = new FormModel<K>(
-            () => [box],
-            (): Result<K, Array<FormErrorMessage>> => Result.ok(box.getValue())
+            new FormChildList([box]),
+            (): Result<K, Array<FormErrorMessage>> => {
+
+                // const value = getValue();
+
+                // if (value.type === 'error') {
+                //     return Result.error([new FormErrorMessage([], box.isVisited(), value.error)]);
+                // }
+
+                const boxValue = box.getValue();
+
+                if (boxValue.type === 'error') {
+                    return Result.error([new FormErrorMessage([], box.isVisited(), boxValue.error)]);
+                }
+
+                return boxValue;
+            }
         );
 
-        return new FormInputState<K, K>(box, model);
+        return new FormInputState<K, K>(params.default, box, model);
     }
-
-    // public static fromAndMap<K, T>(getValue: () => K, map: (value: K) => T): FormInputState<T, T> {
-    //     return FormInputState.from(() => map(getValue()));
-    // }
 
     public render(render: (input: FormInputState<K, unknown>) => React.ReactNode): FormNode<M> {
         return FormNode.fromFormInputState(
@@ -40,7 +55,13 @@ export class FormInputState<K, M> implements FormModelType<M> {
     }
 
     public get value(): K {
-        return this.box.getValue();
+        const value = this.box.getValue();
+
+        if (value.type === 'ok') {
+            return value.data;
+        }
+
+        return this.defaultValue;
     }
 
     public isVisited(): boolean {
@@ -48,8 +69,11 @@ export class FormInputState<K, M> implements FormModelType<M> {
     }
 
     public map<M2>(convert: (value: M) => Result<M2, string>): FormInputState<K, M2> {
-        const model2 = this.model.map(convert);
-        return new FormInputState(this.box, model2);
+        return new FormInputState(
+            this.defaultValue,
+            this.box,
+            this.model.map(convert)
+        );
     }
 
     public get result(): Result<M, Array<FormErrorMessage>> {

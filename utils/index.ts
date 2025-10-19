@@ -33,7 +33,6 @@ export {
     validateConvertToNumber,
     validateNotEmpty,
     validateRange,
-    validateTemporalPlainDate,
     validateNotNull,
     validateMinLength,
     validateEmail

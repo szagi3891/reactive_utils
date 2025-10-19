@@ -1,4 +1,5 @@
 
+import { Result } from "../Result.ts";
 import { Value } from '../Value.ts';
 import { FormChildTrait, FormChildType } from './FormTypes.ts';
 
@@ -13,7 +14,7 @@ export class FormBoxValue<K> {
     private value: Value<Option<K>>;
     private visited: Value<boolean>;
 
-    public constructor(private initValue: () => K) {
+    public constructor(private readonly getInitValue: () => Result<K, string>) {
         this.value = new Value({
             type: 'none',
         });
@@ -35,14 +36,14 @@ export class FormBoxValue<K> {
         });
     }
 
-    public getValue(): K {
+    public getValue(): Result<K, string> {
         const value = this.value.getValue();
 
         if (value.type === 'some') {
-            return value.value;
+            return Result.ok(value.value);
         }
 
-        return this.initValue();
+        return this.getInitValue();
     }
 
     public get isModified(): boolean {
@@ -52,7 +53,13 @@ export class FormBoxValue<K> {
             return false;
         }
 
-        return value.value !== this.initValue();
+        const initValue = this.getInitValue();
+
+        if (initValue.type === 'error') {
+            return false;
+        }
+
+        return value.value !== initValue.data;
     }
 
     public reset(): void {

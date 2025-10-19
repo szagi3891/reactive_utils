@@ -8,7 +8,6 @@
     "jsr:@std/expect@*": "1.0.5",
     "jsr:@std/internal@^1.0.4": "1.0.4",
     "jsr:@std/testing@*": "1.0.3",
-    "npm:@js-temporal/polyfill@*": "0.4.4",
     "npm:@types/node@*": "22.5.4",
     "npm:@types/react@*": "18.3.12",
     "npm:chalk@*": "5.4.1",
@@ -50,13 +49,6 @@
     }
   },
   "npm": {
-    "@js-temporal/polyfill@0.4.4": {
-      "integrity": "sha512-2X6bvghJ/JAoZO52lbgyAPFj8uCflhTo2g7nkFzEQdXd/D8rEeD4HtmTEpmtGCva260fcd66YNXBOYdnmHqSOg==",
-      "dependencies": [
-        "jsbi",
-        "tslib"
-      ]
-    },
     "@types/node@22.5.4": {
       "integrity": "sha512-FDuKUJQm/ju9fT/SeX/6+gBzoPzlVCzfzmGkwKvRHQVxi4BntVbyIwf6a4Xn62mrvndLiml6z/UBXIdEVjQLXg==",
       "dependencies": [
@@ -88,9 +80,6 @@
     "is-what@4.1.16": {
       "integrity": "sha512-ZhMwEosbFJkA0YhFnNDgTM4ZxDRsS6HqTo7qsZM08fehyRYIYa0yHu5R6mgo1n/8MgaPBXiPimPD77baVFYg+A=="
     },
-    "jsbi@4.3.0": {
-      "integrity": "sha512-SnZNcinB4RIcnEyZqFPdGPVgrg2AcnykiBy0sHVJQKHYeaLUvi3Exj+iaPpLnFVkDPZIV4U0yvgC9/R4uEAZ9g=="
-    },
     "mobx-react-lite@4.1.0_mobx@6.13.7_react@19.1.1": {
       "integrity": "sha512-QEP10dpHHBeQNv1pks3WnHRCem2Zp636lq54M2nKO2Sarr13pL4u6diQXf65yzXUn0mkk18SyIDCm9UOJYTi1w==",
       "dependencies": [
@@ -111,9 +100,6 @@
         "copy-anything"
       ]
     },
-    "tslib@2.8.0": {
-      "integrity": "sha512-jWVzBLplnCmoaTr13V9dYbiQ99wvZRd0vNWaDRg+aVYRcjDF3nDksxFDE/+fkXnKhpnUUkmx5pK/v8mCtLVqZA=="
-    },
     "undici-types@6.19.8": {
       "integrity": "sha512-ve2KP6f/JnbPBFyobGHuerC9g1FYGn/F8n1LWTwNxCEzd6IfqTwUQcNXgEtmmQ6DlRrC1hrSrBnCZPokRrDHjw=="
     },
@@ -129,7 +115,6 @@
   },
   "workspace": {
     "dependencies": [
-      "npm:@js-temporal/polyfill@*",
       "npm:@types/react@*",
       "npm:chalk@*",
       "npm:mobx-react-lite@*",

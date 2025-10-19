@@ -7,13 +7,18 @@ const errorMessage = 'Przynajmnie dwa znaki wprowadz';
 const createError = (): Result<string, string> => Result.error(errorMessage);
 
 Deno.test('Visited', () => {
-    const field = FormInputState.from(() => '').map((value: string): Result<string, string> => {
-        if (value.length < 2) {
-            return createError();
-        }
-        
-        return Result.ok(value);
-    });
+    const field = FormInputState
+        .from({
+            default: '',
+            getValue: () => Result.ok('')
+        })
+        .map((value: string): Result<string, string> => {
+            if (value.length < 2) {
+                return createError();
+            }
+            
+            return Result.ok(value);
+        });
 
     expect(field.result).toEqual({
         "type": "error",
@@ -34,6 +39,8 @@ Deno.test('Visited', () => {
     expect(field.errorForView).toEqual(errorMessage);
 
     field.setValue('a');
+    expect(field.value).toBe('a');
+
     expect(field.result).toEqual({
         "type": "error",
         "error": [
@@ -43,6 +50,8 @@ Deno.test('Visited', () => {
     expect(field.errorForView).toEqual(errorMessage);
 
     field.setValue('aa');
+    expect(field.value).toBe('aa');
+
     expect(field.result).toEqual(Result.ok('aa'));
     expect(field.errorForView).toEqual(null);
 });

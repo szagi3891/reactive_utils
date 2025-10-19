@@ -1,4 +1,3 @@
-import { Temporal } from "@js-temporal/polyfill";
 import { Result } from '../Result.ts';
 
 const parseNumber = (input: string): number | null => {
@@ -61,19 +60,6 @@ export const validateRange = (from: number, to: number, message: string) => (val
     from <= value && value <= to ? Result.ok(value) : Result.error(message)
 ;
 
-export const validateTemporalPlainDate = (value: string): Result<Temporal.PlainDate | null, string> => {
-    const valueTrim = value.trim();
-    if (valueTrim === '') {
-        return Result.ok(null);
-    }
-
-    try {
-        const date = Temporal.PlainDate.from(valueTrim);
-        return Result.ok(date);
-    } catch (error) {
-        return Result.error(`Bład pocczas konwersji na Temporal.PlainDate, wejściowy tekst ${value}`);
-    }
-}
 export const validateNotNull = <T>(value: T | null): Result<T, string> => {
     if (value === null) {
         return Result.error(`Uzupełnij pole`);
