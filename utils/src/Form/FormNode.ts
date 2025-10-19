@@ -8,15 +8,13 @@ import { FormChildList } from "./FormChildList.ts";
 export class FormNode<T> {
     constructor(
         public readonly value: FormModel<T>,
-        public readonly jsx: React.ReactNode,
+        public readonly jsx: () => React.ReactNode,
     ) {}
 
     public static fromFormInputState<T, M>(
         value: FormInputState<T, M>,
         render: (value: FormInputState<T, unknown>) => React.ReactNode
     ): FormNode<M> {
-        const jsx = render(value);
-
         const model = new FormModel(
             new FormChildList([{
                 [FormChildTrait]: () => value,
@@ -24,7 +22,7 @@ export class FormNode<T> {
             () => value.result
         );
 
-        return new FormNode(model, jsx);
+        return new FormNode(model, () => render(value));
     }
 
     public static group = <IN extends Record<keyof IN, FormNode<unknown>>>(fields: IN): FormModel<{
@@ -104,7 +102,7 @@ export class FormNode<T> {
 
         return new FormNode(
             this.value,
-            map(this.jsx, getErrorMessage())
+            () => map(this.jsx(), getErrorMessage())
         );
     } 
 }

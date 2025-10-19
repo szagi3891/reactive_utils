@@ -47,8 +47,8 @@ export const groupFields = <P extends Record<keyof P, FormNode<unknown>>,>(param
     const jsx = React.createElement(React.Fragment, null, result);
 
     if (renderWrapper === undefined) {
-        return new FormNode(group, jsx);
+        return new FormNode(group, () => jsx);
     } else {
-        return new FormNode(group, renderWrapper(jsx));
+        return new FormNode(group, () => renderWrapper(jsx));
     }
 }

@@ -20,7 +20,7 @@ export class FormState<P> {
     constructor(private readonly node: FormNode<P>,) {}
 
     public get jsx(): React.ReactNode {
-        return this.node.jsx;
+        return this.node.jsx();
     }
 
     public get isValid(): boolean {
