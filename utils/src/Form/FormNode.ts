@@ -8,12 +8,12 @@ import { FormChildList } from "./FormChildList.ts";
 export class FormNode<T> {
     constructor(
         public readonly value: FormModel<T>,
-        public readonly jsx: () => React.ReactNode,
+        public readonly jsx: () => React.ReactElement,
     ) {}
 
     public static fromFormInputState<T, M>(
         value: FormInputState<T, M>,
-        render: (value: FormInputState<T, unknown>) => React.ReactNode
+        render: (value: FormInputState<T, unknown>) => React.ReactElement
     ): FormNode<M> {
         const model = new FormModel(
             new FormChildList([{

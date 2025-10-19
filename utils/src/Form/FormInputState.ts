@@ -43,7 +43,7 @@ export class FormInputState<K, M> implements FormModelType<M> {
         return new FormInputState<K, K>(params.default, box, model);
     }
 
-    public render(render: (input: FormInputState<K, unknown>) => React.ReactNode): FormNode<M> {
+    public render(render: (input: FormInputState<K, unknown>) => React.ReactElement): FormNode<M> {
         return FormNode.fromFormInputState(
             this,
             render
