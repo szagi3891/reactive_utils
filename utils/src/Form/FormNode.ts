@@ -5,14 +5,6 @@ import { Result } from "../Result.ts";
 import { FormInputState } from "./FormInputState.ts";
 import { FormChildList } from "./FormChildList.ts";
 
-/*
-    //TODO
-    użycie FormInputState może się zamknąć w obrębie fromFormInputState
-    wszędzie dalej, można używać FormModel
-
-    funkcje group może działać na parametrach FormModel, można się pozbyć tych kilku symboli
-*/
-
 export class FormNode<T> {
     constructor(
         public readonly value: FormModel<T>,
@@ -97,6 +89,22 @@ export class FormNode<T> {
             this.jsx,
         );
     }
-}
 
-// React.createElement()
+    public mapJsx(map: (jsx: React.ReactNode, message: string | null) => React.ReactElement): FormNode<T> {
+
+        const getErrorMessage = (): string | null => {
+            const value = this.value.stateForView;
+
+            if (value.type === 'error') {
+                return value.message;
+            }
+
+            return null;
+        };
+
+        return new FormNode(
+            this.value,
+            map(this.jsx, getErrorMessage())
+        );
+    } 
+}
