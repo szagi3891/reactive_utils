@@ -25,7 +25,6 @@ export type { JSONValue } from './src/Json.ts';
 export { throwError } from './src/throwError.ts';
 export { FormInputState } from './src/Form/FormInputState.ts';
 export { FormModel } from './src/Form/FormModel.ts';
-export type { FormChildType, FormModelType } from './src/Form/FormTypes.ts';
 export { FormNode } from './src/Form/FormNode.ts';
 export { FormChildTrait, FormModelTrait } from './src/Form/FormTypes.ts';
 export {
