@@ -1,7 +1,6 @@
 import { Result } from '../Result.ts';
 import { FormChildList } from "./FormChildList.ts";
 import { FormErrorMessage, FormChildTrait, FormChildType, FormModelTrait, FormModelType, errorForView, StateForViewType } from './FormTypes.ts';
-import { groupFormModel } from "./groupFormModel.ts";
 
 export class FormModel<V> implements FormModelType<V> {
 
@@ -32,11 +31,6 @@ export class FormModel<V> implements FormModelType<V> {
                 return Result.error([error]);
             });
     }
-
-    /**
-     * @deprecated - do usunięcia ta funkcja
-     */
-    public static group = groupFormModel;
 
     public get result(): Result<V, Array<FormErrorMessage>> {
         const result = this.getValue();
