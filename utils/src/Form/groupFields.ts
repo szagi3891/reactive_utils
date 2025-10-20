@@ -3,7 +3,6 @@ import { FormNode } from "./FormNode.ts";
 import React from "react";
 import { typedEntries2 } from "./typedEntries2.ts";
 import { throwError } from "../throwError.ts";
-import { ComputedStruct } from "@reactive/utils";
 
 interface RenderRowType {
     fieldId: string,
@@ -29,12 +28,12 @@ export const groupFields = <P extends Record<string, FormNode<unknown>>,>(params
         readonly [K in keyof P]: P[K] extends FormNode<infer R> ? R : never;
     }> = FormNode.group(model);
 
-    const jsx = ComputedStruct.initIdentity(() => {
+    const getJsx = () => {
         const result: Array<React.ReactElement> = [];
 
         typedEntries2(model, (fieldId, field) => {
             const label: string = labels[fieldId] ?? throwError(`The label should be defined for the key "${fieldId}".`);
-            const jsx: React.ReactElement = field.jsx.getValue();
+            const jsx: React.ReactElement = field.jsx;
 
             const row = renderRow({ fieldId, label, jsx });
             const rowWithKey = React.cloneElement(row, { key: fieldId });
@@ -48,7 +47,7 @@ export const groupFields = <P extends Record<string, FormNode<unknown>>,>(params
         } else {
             return renderWrapper(jsx);
         }
-    });
+    };
 
-    return new FormNode(group, jsx);
+    return new FormNode(group, getJsx());
 }

@@ -5,12 +5,11 @@ import { Result } from "../Result.ts";
 import { FormInputState } from "./FormInputState.ts";
 import { FormChildList } from "./FormChildList.ts";
 import { typedEntries2 } from "./typedEntries2.ts";
-import { ComputedStruct } from "../ComputedStruct.ts";
 
 export class FormNode<T> {
     constructor(
         public readonly value: FormModel<T>,
-        public readonly jsx: ComputedStruct<React.ReactElement>,
+        public readonly jsx: React.ReactElement,
     ) {}
 
     public static fromFormInputState<T, M>(
@@ -24,7 +23,7 @@ export class FormNode<T> {
             () => value.result
         );
 
-        return new FormNode(model, ComputedStruct.initIdentity(() => render(value)));
+        return new FormNode(model, render(value));
     }
 
     public static group = <IN extends Record<keyof IN, FormNode<unknown>>>(fields: IN): FormModel<{
@@ -88,21 +87,10 @@ export class FormNode<T> {
         );
     }
 
-    public mapJsxError(map: (jsx: React.ReactNode, message: string | null) => React.ReactElement): FormNode<T> {
-
-        const getErrorMessage = (): string | null => {
-            const value = this.value.stateForView;
-
-            if (value.type === 'error') {
-                return value.message;
-            }
-
-            return null;
-        };
-
+    public renderError(render: (node: FormNode<T>) => React.ReactElement): FormNode<T> {
         return new FormNode(
             this.value,
-            ComputedStruct.initIdentity(() => map(this.jsx.getValue(), getErrorMessage()))
+            render(this)
         );
     } 
 }
