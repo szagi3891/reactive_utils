@@ -3,6 +3,7 @@ import { FormNode } from "./FormNode.ts";
 import React from "react";
 import { typedEntries2 } from "./typedEntries2.ts";
 import { throwError } from "../throwError.ts";
+import { ComputedStruct } from "@reactive/utils";
 
 interface RenderRowType {
     fieldId: string,
@@ -28,22 +29,26 @@ export const groupFields = <P extends Record<string, FormNode<unknown>>,>(params
         readonly [K in keyof P]: P[K] extends FormNode<infer R> ? R : never;
     }> = FormNode.group(model);
 
-    const result: Array<React.ReactElement> = [];
+    const jsx = ComputedStruct.initIdentity(() => {
+        const result: Array<React.ReactElement> = [];
 
-    typedEntries2(model, (fieldId, field) => {
-        const label: string = labels[fieldId] ?? throwError(`The label should be defined for the key "${fieldId}".`);
-        const jsx: React.ReactElement = field.jsx();
+        typedEntries2(model, (fieldId, field) => {
+            const label: string = labels[fieldId] ?? throwError(`The label should be defined for the key "${fieldId}".`);
+            const jsx: React.ReactElement = field.jsx.getValue();
 
-        const row = renderRow({ fieldId, label, jsx });
-        const rowWithKey = React.cloneElement(row, { key: fieldId });
-        result.push(rowWithKey);
-    })
+            const row = renderRow({ fieldId, label, jsx });
+            const rowWithKey = React.cloneElement(row, { key: fieldId });
+            result.push(rowWithKey);
+        })
 
-    const jsx = React.createElement(React.Fragment, null, result);
+        const jsx = React.createElement(React.Fragment, null, result);
 
-    if (renderWrapper === undefined) {
-        return new FormNode(group, () => jsx);
-    } else {
-        return new FormNode(group, () => renderWrapper(jsx));
-    }
+        if (renderWrapper === undefined) {
+            return jsx;
+        } else {
+            return renderWrapper(jsx);
+        }
+    });
+
+    return new FormNode(group, jsx);
 }

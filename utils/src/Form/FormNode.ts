@@ -5,11 +5,12 @@ import { Result } from "../Result.ts";
 import { FormInputState } from "./FormInputState.ts";
 import { FormChildList } from "./FormChildList.ts";
 import { typedEntries2 } from "./typedEntries2.ts";
+import { ComputedStruct } from "../ComputedStruct.ts";
 
 export class FormNode<T> {
     constructor(
         public readonly value: FormModel<T>,
-        public readonly jsx: () => React.ReactElement,
+        public readonly jsx: ComputedStruct<React.ReactElement>,
     ) {}
 
     public static fromFormInputState<T, M>(
@@ -23,7 +24,7 @@ export class FormNode<T> {
             () => value.result
         );
 
-        return new FormNode(model, () => render(value));
+        return new FormNode(model, ComputedStruct.initIdentity(() => render(value)));
     }
 
     public static group = <IN extends Record<keyof IN, FormNode<unknown>>>(fields: IN): FormModel<{
@@ -101,7 +102,7 @@ export class FormNode<T> {
 
         return new FormNode(
             this.value,
-            () => map(this.jsx(), getErrorMessage())
+            ComputedStruct.initIdentity(() => map(this.jsx.getValue(), getErrorMessage()))
         );
     } 
 }
