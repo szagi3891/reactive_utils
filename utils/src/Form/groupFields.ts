@@ -2,6 +2,7 @@ import type { FormModel } from "./FormModel.ts";
 import { FormNode } from "./FormNode.ts";
 import React from "react";
 import { typedEntries2 } from "./typedEntries2.ts";
+import { throwError } from "../throwError.ts";
 
 interface RenderRowType {
     fieldId: string,
@@ -30,7 +31,7 @@ export const groupFields = <P extends Record<string, FormNode<unknown>>,>(params
     const result: Array<React.ReactElement> = [];
 
     typedEntries2(model, (fieldId, field) => {
-        const label: string = labels[fieldId];
+        const label: string = labels[fieldId] ?? throwError(`The label should be defined for the key "${fieldId}".`);
         const jsx: React.ReactElement = field.jsx();
 
         const row = renderRow({ fieldId, label, jsx });
