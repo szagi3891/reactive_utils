@@ -1,6 +1,7 @@
 import type { FormModel } from "./FormModel.ts";
 import { FormNode } from "./FormNode.ts";
 import React from "react";
+import { typedEntries2 } from "./typedEntries2.ts";
 
 interface RenderRowType {
     fieldId: string,
@@ -17,7 +18,7 @@ interface Params<P extends Record<keyof P, FormNode<unknown>>,> {
     renderWrapper?: (jsx: React.ReactElement) => React.ReactElement,
 }
 
-export const groupFields = <P extends Record<keyof P, FormNode<unknown>>,>(params: Params<P>): FormNode<{
+export const groupFields = <P extends Record<string, FormNode<unknown>>,>(params: Params<P>): FormNode<{
     readonly [K in keyof P]: P[K] extends FormNode<infer R> ? R : never;
 }> => {
     const {model, labels, renderRow, renderWrapper } = params;
@@ -26,23 +27,16 @@ export const groupFields = <P extends Record<keyof P, FormNode<unknown>>,>(param
         readonly [K in keyof P]: P[K] extends FormNode<infer R> ? R : never;
     }> = FormNode.group(model);
 
-    const result = [];
+    const result: Array<React.ReactElement> = [];
 
-    for (const [fieldId, field] of Object.entries(model)) {
-        //@ts-expect-error ...
-        // eslint-disable-next-line @typescript-eslint/no-unsafe-assignment
+    typedEntries2(model, (fieldId, field) => {
         const label: string = labels[fieldId];
-
-        //@ts-expect-error ...
-        // eslint-disable-next-line @typescript-eslint/no-unsafe-assignment
-        const jsx: React.ReactElement = field.jsx;
+        const jsx: React.ReactElement = field.jsx();
 
         const row = renderRow({ fieldId, label, jsx });
-
         const rowWithKey = React.cloneElement(row, { key: fieldId });
-
         result.push(rowWithKey);
-    }
+    })
 
     const jsx = React.createElement(React.Fragment, null, result);
 

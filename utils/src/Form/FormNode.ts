@@ -4,6 +4,7 @@ import { FormChildTrait, FormChildType, FormErrorMessage, FormModelTrait, FormMo
 import { Result } from "../Result.ts";
 import { FormInputState } from "./FormInputState.ts";
 import { FormChildList } from "./FormChildList.ts";
+import { typedEntries2 } from "./typedEntries2.ts";
 
 export class FormNode<T> {
     constructor(
@@ -33,11 +34,10 @@ export class FormNode<T> {
             [FormModelTrait](): FormModelType<unknown>
         }> = [];
 
-        for (const item of Object.values(fields)) {
-            //@ts-expect-error ...
+        typedEntries2(fields, (_key, item) => {
             const itemType: FormNode<unknown> = item;
             fieldsValules.push(itemType.value);
-        }
+        });
 
         type Model<T extends Record<keyof IN, FormNode<unknown>>> = {
             readonly [P in keyof T]:
@@ -56,8 +56,7 @@ export class FormNode<T> {
 
                 const errors: Array<FormErrorMessage> = [];
         
-                for (const [key, item2] of Object.entries(fields)) {
-                    //@ts-expect-error ...
+                typedEntries2(fields, (key, item2) => {
                     const item: FormNode<unknown> = item2;
                     const result = item.value[FormModelTrait]().result;
                     if (result.type === 'ok') {
@@ -70,7 +69,7 @@ export class FormNode<T> {
                             errors.push(error.unshiftPath(key));
                         }
                     }
-                }
+                });
 
                 if (errors.length === 0) {
                     return Result.ok(modelOut);
