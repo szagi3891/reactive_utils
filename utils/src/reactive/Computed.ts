@@ -53,8 +53,15 @@ export class Computed<T> {
     }
 
 
-
+    /**
+     * @deprecated - please use "get" instead of
+     * @returns 
+     */
     getValue(): T {
+        return this.get();
+    }
+
+    get(): T {
         return this.computedValue.get();
     }
 }

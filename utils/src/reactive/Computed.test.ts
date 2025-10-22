@@ -7,7 +7,7 @@ Deno.test('ComputedStruct', () => {
     const sourceValue = new Signal<Array<{name: string}>>([]);
 
     const computed = Computed.initStructural(() => {
-        return sourceValue.getValue();
+        return sourceValue.get();
     });
 
     let counter: number = 0;
@@ -15,21 +15,21 @@ Deno.test('ComputedStruct', () => {
     const dispose = autorun(() => {
         counter++;
 
-        computed.getValue();
+        computed.get();
     });
 
     expect(counter).toBe(1);
-    sourceValue.setValue([]);
+    sourceValue.set([]);
     expect(counter).toBe(1);
 
-    sourceValue.setValue([{ name: 'aaa' }]);
+    sourceValue.set([{ name: 'aaa' }]);
     expect(counter).toBe(2);
-    sourceValue.setValue([{ name: 'aaa' }]);
+    sourceValue.set([{ name: 'aaa' }]);
     expect(counter).toBe(2);
 
-    sourceValue.setValue([{ name: 'aaa' }, { name: 'bbb'}]);
+    sourceValue.set([{ name: 'aaa' }, { name: 'bbb'}]);
     expect(counter).toBe(3);
-    sourceValue.setValue([{ name: 'aaa' }, { name: 'bbb'}]);
+    sourceValue.set([{ name: 'aaa' }, { name: 'bbb'}]);
     expect(counter).toBe(3);
 
     dispose();

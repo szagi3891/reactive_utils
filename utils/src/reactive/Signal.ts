@@ -9,14 +9,30 @@ export class Signal<T> {
         this.valueUnsafe = new ValueUnsafe(value, onConnect);
     }
 
-    public setValue(value: T): void {
+    public set(value: T): void {
         this.valueUnsafe.value = value;
         this.valueUnsafe.atom.reportChanged();
     }
 
-    public getValue(): T {
+    public get(): T {
         this.valueUnsafe.atom.reportObserved();
         return this.valueUnsafe.value;
+    }
+
+    /**
+     * @deprecated - please use "set" instead of
+     * @returns 
+     */
+    setValue(value: T): void {
+        return this.set(value);
+    }
+
+    /**
+     * @deprecated - please use "get" instead of
+     * @returns 
+     */
+    getValue(): T {
+        return this.get();
     }
 
     public isObserved(): boolean {

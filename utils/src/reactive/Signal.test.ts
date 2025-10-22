@@ -6,9 +6,9 @@ import { timeout } from '../timeout.ts';
 
 Deno.test('basic', () => {
     const value = new Signal<number>(1);
-    expect(value.getValue()).toBe(1);
-    value.setValue(444);
-    expect(value.getValue()).toBe(444);
+    expect(value.get()).toBe(1);
+    value.set(444);
+    expect(value.get()).toBe(444);
 });
 
 Deno.test('observed', () => {
@@ -16,7 +16,7 @@ Deno.test('observed', () => {
 
     expect(value.isObserved()).toBe(false);
     const dispose = autorun(() => {
-        value.getValue();
+        value.get();
     });
 
     expect(value.isObserved()).toBe(true);
@@ -39,29 +39,29 @@ Deno.test('connect', () => {
     });
 
     expect(connect).toBe(false);
-    expect(value.getValue()).toBe(1);
+    expect(value.get()).toBe(1);
 
     const dispose = autorun(() => {
-        value.getValue();
+        value.get();
     });
 
     expect(connect).toBe(true);
-    expect(value.getValue()).toBe(1);
+    expect(value.get()).toBe(1);
 
     set(55);
 
     expect(connect).toBe(true);
-    expect(value.getValue()).toBe(55);
+    expect(value.get()).toBe(55);
 
     set(99);
 
     expect(connect).toBe(true);
-    expect(value.getValue()).toBe(99);
+    expect(value.get()).toBe(99);
 
     dispose();
 
     expect(connect).toBe(false);
-    expect(value.getValue()).toBe(99);
+    expect(value.get()).toBe(99);
 });
 
 Deno.test('withKeepAlive', async () => {
@@ -81,32 +81,32 @@ Deno.test('withKeepAlive', async () => {
 
     expect(connectCount).toBe(0);
     expect(connect).toBe(false);
-    expect(value.getValue()).toBe(1);
+    expect(value.get()).toBe(1);
 
     const dispose = autorun(() => {
-        value.getValue();
+        value.get();
     });
 
     expect(connectCount).toBe(1);
     expect(connect).toBe(true);
-    expect(value.getValue()).toBe(1);
+    expect(value.get()).toBe(1);
 
     set(55);
 
     expect(connect).toBe(true);
-    expect(value.getValue()).toBe(55);
+    expect(value.get()).toBe(55);
 
     set(99);
 
     expect(connectCount).toBe(1);
     expect(connect).toBe(true);
-    expect(value.getValue()).toBe(99);
+    expect(value.get()).toBe(99);
 
     dispose();
 
     expect(connectCount).toBe(1);
     expect(connect).toBe(true);
-    expect(value.getValue()).toBe(99);
+    expect(value.get()).toBe(99);
 
     await timeout(100);
     expect(connect).toBe(true);
@@ -121,7 +121,7 @@ Deno.test('withKeepAlive', async () => {
 
     expect(connectCount).toBe(1);
     const dispose2 = autorun(() => {
-        value.getValue();
+        value.get();
     });
 
     expect(connectCount).toBe(2);
@@ -131,7 +131,7 @@ Deno.test('withKeepAlive', async () => {
     await timeout(100);
 
     const dispose3 = autorun(() => {
-        value.getValue();
+        value.get();
     });
 
     expect(connect).toBe(true);
