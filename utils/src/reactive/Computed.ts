@@ -13,7 +13,7 @@ export const compareArray = <T>(list1: Array<T>, list2: Array<T>): boolean => {
     return true;
 };
 
-export class ComputedStruct<T> {
+export class Computed<T> {
 
     private readonly computedValue: IComputedValue<T>;
 
@@ -30,16 +30,16 @@ export class ComputedStruct<T> {
 
     //https://mobx.js.org/computeds.html#built-in-comparers
 
-    static initIdentity<T>(value: () => T): ComputedStruct<T> {
-        return new ComputedStruct(value, comparer.identity);
+    static initIdentity<T>(value: () => T): Computed<T> {
+        return new Computed(value, comparer.identity);
     }
 
-    static initShallow<T>(value: () => T): ComputedStruct<T> {
-        return new ComputedStruct(value, comparer.shallow);
+    static initShallow<T>(value: () => T): Computed<T> {
+        return new Computed(value, comparer.shallow);
     }
 
-    static initShallowArray<K extends Array<unknown> | null>(value: () => K): ComputedStruct<K> {
-        return new ComputedStruct(value, (a: K, b: K) => {
+    static initShallowArray<K extends Array<unknown> | null>(value: () => K): Computed<K> {
+        return new Computed(value, (a: K, b: K) => {
             if (a === null || b === null) {
                 return a === b;
             }
@@ -48,8 +48,8 @@ export class ComputedStruct<T> {
         });
     }
 
-    static initStructural<T>(value: () => T): ComputedStruct<T> {
-        return new ComputedStruct(value, comparer.structural);
+    static initStructural<T>(value: () => T): Computed<T> {
+        return new Computed(value, comparer.structural);
     }
 
 

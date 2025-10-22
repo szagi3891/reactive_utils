@@ -1,18 +1,18 @@
 import { expect } from "jsr:@std/expect";
 // import { timeout } from './timeout';
-import { Value } from './Value.ts';
+import { Signal } from './Signal.ts';
 import { autorun } from 'mobx';
-import { timeout } from './timeout.ts';
+import { timeout } from '../timeout.ts';
 
 Deno.test('basic', () => {
-    const value = new Value<number>(1);
+    const value = new Signal<number>(1);
     expect(value.getValue()).toBe(1);
     value.setValue(444);
     expect(value.getValue()).toBe(444);
 });
 
 Deno.test('observed', () => {
-    const value = new Value<number>(1);
+    const value = new Signal<number>(1);
 
     expect(value.isObserved()).toBe(false);
     const dispose = autorun(() => {
@@ -29,7 +29,7 @@ Deno.test('connect', () => {
     let connect: boolean = false;
     let set: ((value: number) => void) = () => {};
 
-    const value = new Value(1, (setValue) => {
+    const value = new Signal(1, (setValue) => {
         set = setValue;
         connect = true;
 
@@ -69,7 +69,7 @@ Deno.test('withKeepAlive', async () => {
     let connect: boolean = false;
     let set: ((value: number) => void) = () => {};
 
-    const value = Value.withKeepAlive(200, 1, (setValue) => {
+    const value = Signal.withKeepAlive(200, 1, (setValue) => {
         connectCount++;
         set = setValue;
         connect = true;

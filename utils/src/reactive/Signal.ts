@@ -1,8 +1,8 @@
 
-import { assertNever } from "./assertNever.ts";
-import { ValueUnsafe, type ConnectType, type UnsubscrbeType } from "./ValueUnsafe.ts";
+import { assertNever } from "../assertNever.ts";
+import { ValueUnsafe, type ConnectType, type UnsubscrbeType } from "../ValueUnsafe.ts";
 
-export class Value<T> {
+export class Signal<T> {
     private readonly valueUnsafe: ValueUnsafe<T>;
 
     public constructor(value: NoInfer<T>, onConnect?: ConnectType<T>) {
@@ -23,7 +23,7 @@ export class Value<T> {
         return this.valueUnsafe.atom.isBeingObserved;
     }
 
-    public static withKeepAlive<T>(timeMs: number, value: T, onConnect: ConnectType<T>): Value<T> {
+    public static withKeepAlive<T>(timeMs: number, value: T, onConnect: ConnectType<T>): Signal<T> {
         let state: {
             type: 'off',
         } | {
@@ -37,7 +37,7 @@ export class Value<T> {
             type: 'off',
         };
 
-        return new Value(value, (setValue: (value: T) => void): (() => void) => {
+        return new Signal(value, (setValue: (value: T) => void): (() => void) => {
         
             if (state.type === 'off') {
                 state = {

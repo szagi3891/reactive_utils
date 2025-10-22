@@ -1,12 +1,12 @@
-import { Value } from './Value.ts';
-import { ComputedStruct } from './ComputedStruct.ts';
+import { Signal } from './Signal.ts';
+import { Computed } from './Computed.ts';
 import { autorun } from 'mobx';
 import { expect } from "jsr:@std/expect";
 
 Deno.test('ComputedStruct', () => {
-    const sourceValue = new Value<Array<{name: string}>>([]);
+    const sourceValue = new Signal<Array<{name: string}>>([]);
 
-    const computed = ComputedStruct.initStructural(() => {
+    const computed = Computed.initStructural(() => {
         return sourceValue.getValue();
     });
 

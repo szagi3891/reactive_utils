@@ -1,6 +1,6 @@
 
 import { Result } from "../Result.ts";
-import { Value } from '../Value.ts';
+import { Signal } from '../reactive/Signal.ts';
 import { FormChildTrait, FormChildType } from './FormTypes.ts';
 
 type Option<K> = {
@@ -11,14 +11,14 @@ type Option<K> = {
 };
 
 export class FormBoxValue<K> {
-    private value: Value<Option<K>>;
-    private visited: Value<boolean>;
+    private value: Signal<Option<K>>;
+    private visited: Signal<boolean>;
 
     public constructor(private readonly getInitValue: () => Result<K, string>) {
-        this.value = new Value({
+        this.value = new Signal({
             type: 'none',
         });
-        this.visited = new Value(false);
+        this.visited = new Signal(false);
     }
 
     public setAsVisited(): void {

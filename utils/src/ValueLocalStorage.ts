@@ -1,5 +1,5 @@
 import z from 'zod';
-import { Value } from './Value.ts';
+import { Signal } from './reactive/Signal.ts';
 import { autorun } from 'mobx';
 
 type UnsubscrbeType = () => void;
@@ -60,14 +60,14 @@ const getInitValue = <T>(storage: Storage, localStorageKey: string, value: T, de
 };
 
 export class ValueLocalStorage<T> {
-    private readonly value: Value<T>;
+    private readonly value: Signal<T>;
 
     constructor(storageType: 'localStorage' | 'sessionStorage', localStorageKey: string, value: T, decoder: z.ZodType<T>, onConnect?: ConnectType<T>) {
         const storage = new Storage(storageType);
 
         const initValue = getInitValue(storage, localStorageKey, value, decoder);
 
-        this.value = new Value(initValue, onConnect);
+        this.value = new Signal(initValue, onConnect);
 
         if (!isServer()) {
             autorun(() => {

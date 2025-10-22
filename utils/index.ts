@@ -1,5 +1,11 @@
 export { assertNever } from './src/assertNever.ts';
-export { Value } from './src/Value.ts';
+export {
+    Signal,
+    /**
+     * @deprecated - please use Signal instead of
+     */
+    Signal as Value
+} from './src/reactive/Signal.ts';
 export { ValueLocalStorage } from './src/ValueLocalStorage.ts';
 export { ValueDeferred } from './src/ValueDeferred.ts';
 export { Resource } from './src/Resource.ts';
@@ -46,7 +52,13 @@ export { ResizableUint8Array } from './src/ResizableUint8Array.ts';
 export { CheckByZod } from './src/checkByZod.ts';
 export { superJsonCustom } from './src/superJsonCustom.ts';
 export { getCssPropertiesForClasses } from './src/css/getCSSRuleForClass.ts';
-export { ComputedStruct } from './src/ComputedStruct.ts';
+export {
+    Computed,
+    /**
+     * @deprecated - please use Computed instead of
+     */
+    Computed as ComputedStruct
+} from './src/reactive/Computed.ts';
 export { tryFn, tryFnSync } from './src/tryFn.ts';
 
 export { AutoWeakMapReactContext } from './src/AutoMap/reactContext.ts';
