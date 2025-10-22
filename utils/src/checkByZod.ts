@@ -1,5 +1,6 @@
 import { z } from "zod";
-import { Result, stringifySort, type JSONValue } from '@reactive/utils';
+import { JSONValue, stringifySort } from "./Json.ts";
+import { Result } from "./Result.ts";
 
 interface FormatZodErrorsType {
     field: string;

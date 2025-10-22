@@ -1,4 +1,4 @@
-import { AllocationCounter } from "@reactive/utils";
+import { AllocationCounter } from "./AllocationCounter.ts";
 import { gc } from '../gc.ts';
 import { expect } from "jsr:@std/expect";
 

@@ -1,5 +1,5 @@
-import type { FormNode} from '@reactive/utils';
-import { Value } from '@reactive/utils';
+import type { FormNode} from './FormNode.ts';
+import { Signal } from '../reactive/Signal.ts';
 
 type SubmitResult = {
     type: 'ok'
@@ -11,7 +11,7 @@ type SubmitResult = {
 }
 
 export class FormState<P> {
-    private isProcessingValue: Value<boolean> = new Value(false);
+    private isProcessingValue: Signal<boolean> = new Signal(false);
 
     public get isProcessing(): boolean {
         return this.isProcessingValue.getValue();

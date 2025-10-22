@@ -1,14 +1,14 @@
-import { Value } from "@reactive/utils";
+import { Signal } from "./reactive/Signal.ts";
 
 export class ValueDeferred<T> {
 
     private value: T;
-    private readonly valueDeferred: Value<T>;
+    private readonly valueDeferred: Signal<T>;
 
     public constructor(initValue: T, timeIntervalMs: number) {
         this.value = initValue;
 
-        this.valueDeferred = new Value(initValue, (setValue) => {
+        this.valueDeferred = new Signal(initValue, (setValue) => {
 
             setValue(this.value);
 
