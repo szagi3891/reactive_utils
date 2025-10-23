@@ -1,7 +1,7 @@
 import { AutoMap } from "./AutoMap.ts";
-import { AllocationCounter } from "./AllocationCounter.ts";
+import { AllocationCounter } from "../reactive/AllocationCounter.ts";
 import { type PrimitiveJSONValue } from "./PrimitiveType.ts";
-import { whenDrop } from "./whenDrop.ts";
+import { whenDrop } from "../reactive/whenDrop.ts";
 
 
 const counterAutoWeakRef = new AllocationCounter((count: number) => {

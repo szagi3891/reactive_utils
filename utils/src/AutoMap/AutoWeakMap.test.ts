@@ -2,7 +2,7 @@ import { timeout } from '../timeout.ts';
 import { AutoWeakMap, autoWeakMapKey, AutoWeakRef } from './AutoWeakMap.ts';
 import { gc } from '../gc.ts';
 import { expect } from "jsr:@std/expect";
-import { AllocationCounter } from "./AllocationCounter.ts";
+import { AllocationCounter } from "../reactive/AllocationCounter.ts";
 // import v8 from 'node:v8';
 // import fs from 'node:fs'; 
 

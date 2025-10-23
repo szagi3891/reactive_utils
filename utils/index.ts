@@ -5,10 +5,7 @@ export { ValueDeferred } from './src/ValueDeferred.ts';
 export { Resource } from './src/Resource.ts';
 export { ResourceResult } from './src/Resource.ts';
 export { PromiseBox, PromiseBoxOptimistic } from './src/PromiseBox.ts';
-export { AutoMap } from './src/AutoMap/AutoMap.ts';
-export { autoMapKeyAsString, reduceComplexSymbol } from './src/AutoMap/PrimitiveType.ts';
-export type { PrimitiveJSONValue } from './src/AutoMap/PrimitiveType.ts';
-export { AutoWeakMap, autoWeakMapKey, AutoWeakRef } from './src/AutoMap/AutoWeakMap.ts';
+
 export { EventEmitter, ValueEmitter, type EventEmitterReceiver } from './src/EventEmitter.ts';
 export { timeout } from './src/timeout.ts';
 export { getValueCache } from './src/getValueCache.ts';
@@ -49,6 +46,17 @@ export { getCssPropertiesForClasses } from './src/css/getCSSRuleForClass.ts';
 export { Computed } from './src/reactive/Computed.ts';
 export { tryFn, tryFnSync } from './src/tryFn.ts';
 
+export { AllocationCounter } from './src/reactive/AllocationCounter.ts';
+export { whenDrop } from './src/reactive/whenDrop.ts';
+
+
+//TODO - do wywalenia wszystko
+export { AutoMap } from './src/AutoMap/AutoMap.ts';
+export { autoMapKeyAsString, reduceComplexSymbol } from './src/AutoMap/PrimitiveType.ts';
+export type { PrimitiveJSONValue } from './src/AutoMap/PrimitiveType.ts';
+export { AutoWeakMap, autoWeakMapKey, AutoWeakRef } from './src/AutoMap/AutoWeakMap.ts';
 export { AutoWeakMapReactContext } from './src/AutoMap/reactContext.ts';
-export { AllocationCounter } from './src/AutoMap/AllocationCounter.ts';
-export { whenDrop } from './src/AutoMap/whenDrop.ts';
+
+export { cacheFnStrong } from './src/reactive/cacheFnStrong.ts';
+export { cacheFnWeak } from './src/reactive/cacheFnWeak.ts';
+
