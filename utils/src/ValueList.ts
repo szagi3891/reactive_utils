@@ -3,9 +3,31 @@ import { assertNever } from './assertNever.ts';
 import { Result } from "./Result.ts";
 import { ValueUnsafe } from "./ValueUnsafe.ts";
 import type { JSONValue } from "../index.ts";
-import { MapJson } from "./AutoMap/MapJson.ts";
 import { EventEmitter } from "./EventEmitter.ts";
 import { stringifySort } from "./Json.ts";
+
+
+export class MapJson<K extends JSONValue, V> {
+
+    private readonly data: Map<string, V> = new Map();
+
+    public set(key: K, value: V) {
+        const idString = stringifySort(key);
+        this.data.set(idString, value);
+    }
+
+    public get(key: K): V | undefined {
+        const idString = stringifySort(key);
+        return this.data.get(idString);
+    }
+
+    public delete(key: K) {
+        const idString = stringifySort(key);
+        return this.data.delete(idString);
+    }
+}
+
+
 
 //Najlepiej żeby klucz pozwalał na posortowanie listy. Po to, żeby wyrenderować szkielet, bez zagłębiania się w 
 //jeśli klucz będzie bardziej złożony, to wtedy można wykorzystać AutoMap w celu nadania porównywalności po referencji, a potem sortować

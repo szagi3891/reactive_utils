@@ -50,13 +50,6 @@ export { AllocationCounter } from './src/reactive/AllocationCounter.ts';
 export { whenDrop } from './src/reactive/whenDrop.ts';
 
 
-//TODO - do wywalenia wszystko
-export { AutoMap } from './src/AutoMap/AutoMap.ts';
-export { autoMapKeyAsString, reduceComplexSymbol } from './src/AutoMap/PrimitiveType.ts';
-export type { PrimitiveJSONValue } from './src/AutoMap/PrimitiveType.ts';
-export { AutoWeakMap, autoWeakMapKey, AutoWeakRef } from './src/AutoMap/AutoWeakMap.ts';
-export { AutoWeakMapReactContext } from './src/AutoMap/reactContext.ts';
-
 export { cacheFnStrong } from './src/reactive/cacheFnStrong.ts';
 export { cacheFnWeak } from './src/reactive/cacheFnWeak.ts';
 
