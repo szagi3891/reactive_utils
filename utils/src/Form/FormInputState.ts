@@ -80,6 +80,9 @@ export class FormInputState<K, M> implements FormModelType<M> {
         return this.model.result;
     }
 
+    /**
+     * @deprecated - use stateForView
+     */
     public get errorForView(): string | null {
         return this.model.errorForView;
     }
