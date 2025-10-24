@@ -50,6 +50,6 @@ export { AllocationCounter } from './src/reactive/AllocationCounter.ts';
 export { whenDrop } from './src/reactive/whenDrop.ts';
 
 
-export { cacheFnStrong } from './src/reactive/cacheFnStrong.ts';
+export { cacheFnStrong, cacheFnNeverRelease } from './src/reactive/cacheFnStrong.ts';
 export { cacheFnWeak } from './src/reactive/cacheFnWeak.ts';
 
