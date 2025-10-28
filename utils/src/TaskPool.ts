@@ -18,6 +18,7 @@ export class TaskPool<RESOURCE> {
         this.query = new AsyncQuery();
     }
 
+
     public addWorkerResource(resource: RESOURCE) {
         (async () => {
             const consumer = this.query.subscribe();
@@ -40,18 +41,29 @@ export class TaskPool<RESOURCE> {
         return result;
     }
 
-    public async execScenarioList<R, P>(list: Array<P>, scenario: (page: RESOURCE, param: P) => Promise<R>): Promise<Array<R>> {
-        const tasks: Array<Promise<R>> = [];
+    public static async execScenarioList<R, P>(task: number, list: Array<P>, scenario: (param: P) => Promise<R>): Promise<Array<R>> {
+        const pool = new TaskPool();
 
-        for (const param of list) {
-            const task = this.execScenario((page) => {
-                return scenario(page, param);
-            });
+        try {
+            for (let i = 0; i <= task; i++) {
+                pool.addWorkerResource(undefined);
+            }
 
-            tasks.push(task);
+            const tasks: Array<Promise<R>> = [];
+
+            for (const param of list) {
+                const task = pool.execScenario((_resource) => {
+                    return scenario(param);
+                });
+
+                tasks.push(task);
+            }
+
+            const result = await Promise.all(tasks);
+            return result;
+
+        } finally {
+            pool.query.close();
         }
-
-        const result = await Promise.all(tasks);
-        return result;
     }
 }
