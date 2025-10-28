@@ -39,4 +39,19 @@ export class TaskPool<RESOURCE> {
         this.query.push(task);
         return result;
     }
+
+    public async execScenarioList<R, P>(list: Array<P>, scenario: (page: RESOURCE, param: P) => Promise<R>): Promise<Array<R>> {
+        const tasks: Array<Promise<R>> = [];
+
+        for (const param of list) {
+            const task = this.execScenario((page) => {
+                return scenario(page, param);
+            });
+
+            tasks.push(task);
+        }
+
+        const result = await Promise.all(tasks);
+        return result;
+    }
 }
