@@ -45,7 +45,7 @@ export class TaskPool<RESOURCE> {
         const pool = new TaskPool();
 
         try {
-            for (let i = 0; i <= task; i++) {
+            for (let i = 1; i <= task; i++) {
                 pool.addWorkerResource(undefined);
             }
 
