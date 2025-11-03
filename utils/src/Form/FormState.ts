@@ -14,7 +14,7 @@ export class FormState<P> {
     private isProcessingValue: Signal<boolean> = new Signal(false);
 
     public get isProcessing(): boolean {
-        return this.isProcessingValue.getValue();
+        return this.isProcessingValue.get();
     }
 
     constructor(private readonly node: FormNode<P>,) {}
@@ -46,7 +46,7 @@ export class FormState<P> {
             };
         }
 
-        this.isProcessingValue.setValue(true);
+        this.isProcessingValue.set(true);
 
         try {
             const result = this.node.value.result;
@@ -71,7 +71,7 @@ export class FormState<P> {
                 };
             }
         } finally {
-            this.isProcessingValue.setValue(false);
+            this.isProcessingValue.set(false);
         }
     }
 }

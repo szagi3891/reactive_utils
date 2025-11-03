@@ -19,22 +19,6 @@ export class Signal<T> {
         return this.valueUnsafe.value;
     }
 
-    /**
-     * @deprecated - please use "set" instead of
-     * @returns 
-     */
-    setValue(value: T): void {
-        return this.set(value);
-    }
-
-    /**
-     * @deprecated - please use "get" instead of
-     * @returns 
-     */
-    getValue(): T {
-        return this.get();
-    }
-
     public isObserved(): boolean {
         return this.valueUnsafe.atom.isBeingObserved;
     }

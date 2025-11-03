@@ -22,22 +22,22 @@ export class FormBoxValue<K> {
     }
 
     public setAsVisited(): void {
-        this.visited.setValue(true);
+        this.visited.set(true);
     }
 
     public isVisited(): boolean {
-        return this.visited.getValue();
+        return this.visited.get();
     }
 
     public setValue(value: K) {
-        this.value.setValue({
+        this.value.set({
             type: 'some',
             value
         });
     }
 
     public getValue(): Result<K, string> {
-        const value = this.value.getValue();
+        const value = this.value.get();
 
         if (value.type === 'some') {
             return Result.ok(value.value);
@@ -47,7 +47,7 @@ export class FormBoxValue<K> {
     }
 
     public get isModified(): boolean {
-        const value = this.value.getValue();
+        const value = this.value.get();
 
         if (value.type === 'none') {
             return false;
@@ -63,10 +63,10 @@ export class FormBoxValue<K> {
     }
 
     public reset(): void {
-        this.value.setValue({
+        this.value.set({
             type: 'none'
         });
-        this.visited.setValue(false);
+        this.visited.set(false);
     }
 
     [FormChildTrait](): FormChildType {

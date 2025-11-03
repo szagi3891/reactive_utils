@@ -31,6 +31,6 @@ export class ValueDeferred<T> {
     }
 
     public observe(): T {
-        return this.valueDeferred.getValue();
+        return this.valueDeferred.get();
     }
 }

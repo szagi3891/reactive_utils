@@ -71,17 +71,17 @@ export class ValueLocalStorage<T> {
 
         if (!isServer()) {
             autorun(() => {
-                const serialized = JSON.stringify(this.value.getValue());
+                const serialized = JSON.stringify(this.value.get());
                 storage.set(localStorageKey, serialized);
             });
         }
     }
 
-    public setValue(value: T) {
-        this.value.setValue(value);
+    public set(value: T) {
+        this.value.set(value);
     }
 
-    public getValue(): T {
-        return this.value.getValue();
+    public get(): T {
+        return this.value.get();
     }
 }
