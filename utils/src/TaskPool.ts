@@ -14,13 +14,14 @@ const createTask = <RESOURCE, R>(task: (page: RESOURCE) => Promise<R>): [(page: 
 };
 
 const execTask = async <RESOURCE>(
+    retryCount: number,
     task: (page: RESOURCE) => Promise<void>,
     resource: RESOURCE | null,
     createResource: () => Promise<RESOURCE>
-): Promise<RESOURCE> => {
+): Promise<RESOURCE | null> => {
     let currentResource: RESOURCE | null = resource;
 
-    while (true) {
+    for (let i = 1; i <= retryCount; i++) {
         try {
             currentResource ??= await createResource();
             await task(currentResource);
@@ -30,28 +31,30 @@ const execTask = async <RESOURCE>(
             await timeout(5000);
         }
     }
+
+    return currentResource;
 };
 
 const startWorker = async <RESOURCE>(
+    retryCount: number,
     query: AsyncQuery<(page: RESOURCE) => Promise<void>>,
     createResource: () => Promise<RESOURCE>
 ) => {
     let resource: RESOURCE | null = null;
 
     for await (const task of query.subscribe()) {
-        resource = await execTask(task, resource, createResource);
+        resource = await execTask(retryCount, task, resource, createResource);
     }
 };
-
 
 export class TaskPool<RESOURCE> {
     private readonly query: AsyncQuery<(page: RESOURCE) => Promise<void>>;
 
-    constructor(size: number, createResource: () => Promise<RESOURCE>) {
+    constructor(size: number, retryCount: number, createResource: () => Promise<RESOURCE>) {
         this.query = new AsyncQuery();
 
         for (let i=1; i<=size; i++) {
-            startWorker(this.query, createResource).catch(console.error);
+            startWorker(retryCount, this.query, createResource).catch(console.error);
         }
     }
 
@@ -62,8 +65,8 @@ export class TaskPool<RESOURCE> {
         return result;
     }
 
-    public static async execScenarioList<R, P>(task: number, list: Array<P>, scenario: (param: P) => Promise<R>): Promise<Array<R>> {
-        const pool = new TaskPool(task, () => Promise.resolve(null));
+    public static async execScenarioList<R, P>(task: number, retryCount: number, list: Array<P>, scenario: (param: P) => Promise<R>): Promise<Array<R>> {
+        const pool = new TaskPool(task, retryCount, () => Promise.resolve(null));
 
         try {
             const tasks: Array<Promise<R>> = [];
