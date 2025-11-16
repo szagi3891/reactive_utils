@@ -7,6 +7,7 @@ export class DockerContainer {
     private env: Record<string, string> = {};
     private readonly ports: Array<[number, number]> = [];
     private readonly volumes: Array<[string, string]> = [];
+    private hostGateway: boolean = false;
     private command: Array<string> | null = null;
 
     private constructor(
@@ -43,6 +44,11 @@ export class DockerContainer {
         return this;
     }
 
+    setHostGateway(value: boolean): DockerContainer {
+        this.hostGateway = value;
+        return this;
+    }
+
     setCommand(command: Array<string>): DockerContainer {
         if (this.command !== null) {
             throw Error('Duplicate command');
@@ -76,6 +82,10 @@ export class DockerContainer {
         for (const [hostPath, containerPath] of this.volumes) {
             args.push('-v');
             args.push(`${hostPath}:${containerPath}`);
+        }
+
+        if (this.hostGateway) {
+            args.push('--add-host=host.docker.internal:host-gateway');
         }
 
         if (this.command !== null) {
