@@ -18,14 +18,15 @@ const execTask = async <RESOURCE>(
     resource: RESOURCE | null,
     createResource: () => Promise<RESOURCE>
 ): Promise<RESOURCE> => {
-    let currentResource: RESOURCE = resource ?? (await createResource());
+    let currentResource: RESOURCE | null = resource;
 
     while (true) {
         try {
+            currentResource ??= await createResource();
             await task(currentResource);
             return currentResource;
         } catch {
-            currentResource = await createResource();
+            currentResource = null;
             await timeout(5000);
         }
     }
@@ -62,7 +63,7 @@ export class TaskPool<RESOURCE> {
     }
 
     public static async execScenarioList<R, P>(task: number, list: Array<P>, scenario: (param: P) => Promise<R>): Promise<Array<R>> {
-        const pool = new TaskPool(task, async () => null);
+        const pool = new TaskPool(task, () => Promise.resolve(null));
 
         try {
             const tasks: Array<Promise<R>> = [];
@@ -83,3 +84,4 @@ export class TaskPool<RESOURCE> {
         }
     }
 }
+

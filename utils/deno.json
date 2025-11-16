@@ -1,5 +1,5 @@
 {
-    "version": "0.5.311",
+    "version": "0.5.312",
     "name": "@reactive/utils",
     "exports": {
         ".": "./index.ts"
