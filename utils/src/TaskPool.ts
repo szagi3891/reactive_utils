@@ -15,10 +15,10 @@ const createTask = <RESOURCE, R>(task: (page: RESOURCE) => Promise<R>): [(page: 
 
 const execTask = async <RESOURCE>(
     task: (page: RESOURCE) => Promise<void>,
-    resource: RESOURCE,
+    resource: RESOURCE | null,
     createResource: () => Promise<RESOURCE>
 ): Promise<RESOURCE> => {
-    let currentResource: RESOURCE = resource;
+    let currentResource: RESOURCE = resource ?? (await createResource());
 
     while (true) {
         try {
@@ -35,7 +35,7 @@ const startWorker = async <RESOURCE>(
     query: AsyncQuery<(page: RESOURCE) => Promise<void>>,
     createResource: () => Promise<RESOURCE>
 ) => {
-    let resource = await createResource();
+    let resource: RESOURCE | null = null;
 
     for await (const task of query.subscribe()) {
         resource = await execTask(task, resource, createResource);
