@@ -8,3 +8,4 @@ export { copyFile } from './src/shellUtils/copyFile.ts';
 export { convertToWebm } from './src/shellUtils/convertToWebm.ts';
 export { convertToWebp } from './src/shellUtils/convertToWebp.ts';
 export { DockerContainer } from './src/shellUtils/DockerContainer.ts';
+export { WorkerWrapper, installWorker } from './src/WorkerWrapper.ts';
