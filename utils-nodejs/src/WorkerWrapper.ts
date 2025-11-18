@@ -1,6 +1,6 @@
 import { PromiseBox } from '@reactive/utils';
-import type { Worker } from 'worker_threads';
-import { isMainThread, threadId, parentPort } from 'worker_threads';
+import type { Worker } from 'node:worker_threads';
+import { isMainThread, threadId, parentPort } from 'node:worker_threads';
 
 type Request<P> = {
     id: number,
