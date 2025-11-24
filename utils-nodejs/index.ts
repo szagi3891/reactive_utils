@@ -9,3 +9,8 @@ export { convertToWebm } from './src/shellUtils/convertToWebm.ts';
 export { convertToWebp } from './src/shellUtils/convertToWebp.ts';
 export { DockerContainer } from './src/shellUtils/DockerContainer.ts';
 export { WorkerWrapper, installWorker } from './src/WorkerWrapper.ts';
+
+export { getBranchCommitCount } from './src/shellUtils/git/getBranchCommitCount.ts';
+export { getBranchCommits } from './src/shellUtils/git/getBranchCommits.ts';
+export { getBranchName } from './src/shellUtils/git/getBranchName.ts';
+
