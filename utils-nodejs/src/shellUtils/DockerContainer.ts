@@ -88,11 +88,11 @@ export class DockerContainer {
             args.push('--add-host=host.docker.internal:host-gateway');
         }
 
+        args.push(`${this.image}:${this.tag}`);
+
         if (this.command !== null) {
             args.push(...this.command);
         }
-
-        args.push(`${this.image}:${this.tag}`);
 
         console.info('tworzę kontener', {
             command: 'docker',
