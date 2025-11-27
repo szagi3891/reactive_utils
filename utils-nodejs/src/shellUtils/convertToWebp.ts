@@ -1,4 +1,4 @@
-import { type ShellDir } from "@reactive/utils-nodejs";
+import { ShellDir } from "../ShellDir.ts";
 
 export const convertToWebp = async (shell: ShellDir, fileIn: string, fileOut: string): Promise<void> => {
 

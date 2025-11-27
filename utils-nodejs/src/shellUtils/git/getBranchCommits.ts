@@ -1,4 +1,4 @@
-import type { ShellDir } from "@reactive/utils-nodejs";
+import { ShellDir } from "../../ShellDir.ts";
 import { getBranchCommitCount } from "./getBranchCommitCount.ts";
 
 export const getBranchCommits = async (dir: ShellDir, branch: string): Promise<Array<string>> => {

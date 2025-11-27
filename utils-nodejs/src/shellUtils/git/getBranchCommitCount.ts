@@ -1,4 +1,4 @@
-import type { ShellDir } from '@reactive/utils-nodejs';
+import { ShellDir } from "../../ShellDir.ts";
 
 export const getBranchCommitCount = async (dir: ShellDir, branch: string): Promise<number> => {  
     const result = await dir.execAndGet({ command: `git rev-list --count`, args: [ branch ] });
