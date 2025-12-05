@@ -1,21 +1,28 @@
-import { PromiseBox } from '@reactive/utils';
-import type { Worker } from 'node:worker_threads';
-import { isMainThread, threadId, parentPort } from 'node:worker_threads';
+/* eslint-disable */
+import { PromiseBox, Result } from '@reactive/utils';
+import type { Worker } from 'worker_threads';
+import { parentPort } from 'worker_threads';
 
 type Request<P> = {
     id: number,
+    method: string,
     params: P,
+};
+
+type InitRequest<D> = {
+    type: 'INIT',
+    data: D,
 };
 
 type Response<R> = {
     id: number,
-    response: R,
+    response: Result<R, string>,
 }
 
 const getId = (() => {
 
     let id = 1;
-    
+
     return () => {
         try {
             return id;
@@ -26,20 +33,34 @@ const getId = (() => {
 })();
 
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
-export class WorkerWrapper<FT extends { default: (...arg1: any[]) => Promise<any> }> {
+type MethodsObject = any;
+
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
+type WorkerFactory<InitData, Methods extends MethodsObject> = (initData: InitData) => Methods;
+
+// Extract init data type from worker module
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
+type ExtractInitData<T> = T extends { default: WorkerFactory<infer D, any> } ? D : never;
+
+// Extract methods object type from worker module
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
+type ExtractMethods<T> = T extends { default: WorkerFactory<any, infer M> } ? M : never;
+
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
+export class WorkerWrapper<FT extends { default: WorkerFactory<any, any> }> {
     private readonly worker: Worker;
-    private readonly response: Map<number, PromiseBox<Awaited<ReturnType<FT['default']>>>>;
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    private readonly response: Map<number, PromiseBox<any>>;
 
     constructor(
         worker: Worker,
+        initData: ExtractInitData<FT>,
     ) {
         this.worker = worker;
         this.response = new Map();
 
-        console.trace('WorkerWrapper - Tworzę konstruktor', {isMainThread, threadId});
-
-        worker.on("message", (response: Response<Awaited<ReturnType<FT['default']>>>) => {
-
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
+        worker.on("message", async (response: Response<any>) => {
             const box = this.response.get(response.id);
             this.response.delete(response.id);
 
@@ -47,20 +68,35 @@ export class WorkerWrapper<FT extends { default: (...arg1: any[]) => Promise<any
                 throw Error('panic');
             }
 
-            box.resolve(response.response);
+            if (response.response.type === 'ok') {
+                box.resolve(response.response.data);
+            } else {
+                box.reject(response.response.error);
+            }
         });
+
+        // Send init data to worker
+        const initRequest: InitRequest<ExtractInitData<FT>> = {
+            type: 'INIT',
+            data: initData,
+        };
+        this.worker.postMessage(initRequest);
     }
 
 
-    exec(...params: Parameters<FT['default']>): Promise<Awaited<ReturnType<FT['default']>>> {
+    private async exec<K extends keyof ExtractMethods<FT>>(
+        method: K,
+        ...params: Parameters<ExtractMethods<FT>[K]>
+    ): Promise<Awaited<ReturnType<ExtractMethods<FT>[K]>>> {
         const id = getId();
-        const responseBox = new PromiseBox<Awaited<ReturnType<FT['default']>>>();
+        const responseBox = new PromiseBox<Awaited<ReturnType<ExtractMethods<FT>[K]>>>();
         this.response.set(id, responseBox);
 
-        console.info('set id', id);
+        console.info('set id', id, 'method', method);
 
-        const request: Request<Parameters<FT['default']>> = {
+        const request: Request<Parameters<ExtractMethods<FT>[K]>> = {
             id,
+            method: method as string,
             params,
         };
 
@@ -73,34 +109,79 @@ export class WorkerWrapper<FT extends { default: (...arg1: any[]) => Promise<any
         const code = await this.worker.terminate();
         return code;
     }
+
+    public get proxy(): ExtractMethods<FT> {
+        // eslint-disable-next-line @typescript-eslint/no-this-alias
+        const self = this;
+
+        return new Proxy({}, {
+            get: (_target, prop) => {
+                return (...args: any[]) => {
+                    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+                    return self.exec(prop as any, ...(args as any));
+                };
+            }
+        }) as ExtractMethods<FT>;
+    }
 }
 
 
-export const installWorker = <P extends unknown[], R>(callback: (...param: P) => Promise<R>): ((...param: P) => Promise<R>) => {
-    
-    console.trace('WorkerWrapper - installWorker', {isMainThread, threadId});
+export const installWorker = <InitData, T extends MethodsObject>(
+    factory: WorkerFactory<InitData, T>
+): WorkerFactory<InitData, T> => {
 
     if (parentPort === null) {
         throw Error('Oczekiwano interfejsu workera 1');
     }
 
-    parentPort.on("message", async (msg: Request<P>) => {
+    let methods: T | null = null;
+
+    parentPort.on("message", async (msg: Request<unknown[]> | InitRequest<InitData>) => {
 
         if (parentPort === null) {
             throw Error('Oczekiwano interfejsu workera 2');
         }
 
-        console.info('msg ===>', msg);
+        // Handle initialization
+        if ('type' in msg && msg.type === 'INIT') {
+            methods = factory(msg.data);
+            return;
+        }
 
-        const fff = await callback(...msg.params);
-        const responsse: Response<R> = {
-            id: msg.id,
-            response: fff,
-        }; 
+        // Handle method calls
+        if (!methods) {
+            throw Error('Worker not initialized - INIT message must be sent first');
+        }
 
-        parentPort.postMessage(responsse);
+        // At this point, msg is Request<unknown[]>
+        const request = msg as Request<unknown[]>;
+
+        try {
+            // eslint-disable-next-line @typescript-eslint/no-explicit-any
+            const method = (methods as any)[request.method];
+
+            if (!method) {
+                throw Error(`Method ${request.method} not found in worker`);
+            }
+
+            const result = await method.call(methods, ...request.params);
+            const response: Response<unknown> = {
+                id: request.id,
+                response: Result.ok(result),
+            };
+
+            parentPort.postMessage(response);
+        } catch (error) {
+            console.info('error przetwarzania metody w workerze', error);
+
+            const errorResponse: Response<unknown> = {
+                id: request.id,
+                response: Result.error(error instanceof Error ? error.message : String(error)),
+            };
+
+            parentPort.postMessage(errorResponse);
+        }
     });
 
-    return callback;
+    return factory;
 };
-
