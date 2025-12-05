@@ -46,6 +46,41 @@ type ExtractInitData<T> = T extends { default: WorkerFactory<infer D, any> } ? D
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
 type ExtractMethods<T> = T extends { default: WorkerFactory<any, infer M> } ? M : never;
 
+/**
+ * A type-safe wrapper around `node:worker_threads`.
+ * It allows calling methods defined in the worker as if they were standard async functions in the main thread.
+ *
+ * Features:
+ * - **Full Typing**: TypeScript infers methods and argument types from the worker in the main thread.
+ * - **Error Handling**: Errors thrown in the worker are captured and returned as `Result.error` (or a rejected Promise).
+ * - **Initialization**: Support for passing initial data to the worker upon creation.
+ *
+ * @template FT The type of the worker module (usually `typeof import('./path/to/worker')`).
+ *
+ * @example
+ * // 1. Worker Code (CalculatorWorker.ts)
+ * import { installWorker } from '@reactive/utils-nodejs/WorkerWrapper/WorkerWrapper';
+ *
+ * class Calculator {
+ *     async add(a: number, b: number): Promise<number> {
+ *         return a + b;
+ *     }
+ * }
+ *
+ * export default installWorker(() => new Calculator());
+ *
+ * // 2. Main Thread Code (main.ts)
+ * import { Worker } from 'node:worker_threads';
+ * import { WorkerWrapper } from '@reactive/utils-nodejs/WorkerWrapper/WorkerWrapper';
+ *
+ * const wrapper = new WorkerWrapper<typeof import('./CalculatorWorker')>(
+ *     new Worker(new URL('./CalculatorWorker.ts', import.meta.url)),
+ *     undefined // No init data
+ * );
+ *
+ * const sum = await wrapper.proxy.add(10, 20);
+ * console.log(sum); // 30
+ */
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
 export class WorkerWrapper<FT extends { default: WorkerFactory<any, any> }> {
     private readonly worker: Worker;
@@ -126,6 +161,30 @@ export class WorkerWrapper<FT extends { default: WorkerFactory<any, any> }> {
 }
 
 
+/**
+ * Helper function to type-safely "install" a worker.
+ * Wraps a factory function that creates an instance of the business logic.
+ *
+ * @param factory A function that receives initialization data and returns the object containing worker methods.
+ *
+ * @example
+ * // Worker with initialization (LoggerWorker.ts)
+ * import { installWorker } from '@reactive/utils-nodejs/WorkerWrapper';
+ *
+ * interface Config {
+ *     prefix: string;
+ * }
+ *
+ * class Logger {
+ *     constructor(private config: Config) {}
+ *
+ *     async log(message: string): Promise<string> {
+ *         return `${this.config.prefix} ${message}`;
+ *     }
+ * }
+ *
+ * export default installWorker((config: Config) => new Logger(config));
+ */
 export const installWorker = <InitData, T extends MethodsObject>(
     factory: WorkerFactory<InitData, T>
 ): WorkerFactory<InitData, T> => {
