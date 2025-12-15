@@ -1,6 +1,6 @@
 import { PromiseBoxOptimistic } from '../PromiseBox.ts';
 import { AsyncQuery } from "../AsyncQuery.ts";
-import type { AsyncQueryIterator } from "../AsyncQuery.ts";
+
 import { AutoId } from "../AutoId.ts";
 
 export interface AsyncWebSocketType {
@@ -85,7 +85,7 @@ export class AsyncWebSocket {
         this.onAbort = this.query.onAbort;
     }
 
-    subscribe(): AsyncQueryIterator<string> {
+    subscribe(): AsyncIterable<string> {
         return this.query.subscribe();
     }
 

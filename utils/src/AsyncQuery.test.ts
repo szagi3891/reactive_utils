@@ -1,8 +1,8 @@
-import { AsyncQuery, AsyncQueryIterator } from "./AsyncQuery.ts";
+import { AsyncQuery } from "./AsyncQuery.ts";
 import { expect } from "jsr:@std/expect";
 import { timeout } from "./timeout.ts";
 
-const subscribeTo = <K>(query: AsyncQuery<K>, result: Array<K>): AsyncQueryIterator<K> => {
+const subscribeTo = <K>(query: AsyncQuery<K>, result: Array<K>): AsyncIterable<K> => {
     const iterator = query.subscribe();
 
     (async () => {

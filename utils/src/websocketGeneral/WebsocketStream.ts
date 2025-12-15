@@ -1,4 +1,4 @@
-import { AsyncQuery, AsyncQueryIterator } from "../AsyncQuery.ts";
+import { AsyncQuery } from "../AsyncQuery.ts";
 import { EventEmitter } from "../EventEmitter.ts";
 import { AsyncWebSocket } from "./AsyncWebsocket.ts";
 import { addEventOffline } from "./WebsocketStream/offline.ts";
@@ -235,7 +235,7 @@ export class WebsocketStream {
         });
     }
 
-    public messages(): AsyncQueryIterator<WebsocketStreamMessageReceived> {
+    public messages(): AsyncIterable<WebsocketStreamMessageReceived> {
         return this.receivedMessage.subscribe();
     }
 
