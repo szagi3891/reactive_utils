@@ -50,7 +50,7 @@ const buildMap = <T>(iterator2: () => AsyncIteratorType<T>): (<K>(mapFn: (value:
     };
 };
 
-interface AsyncQueryIteratorResult<T> {
+export interface AsyncQueryIteratorResult<T> {
     next(): Promise<IteratorResult<T>>,
 }
 
