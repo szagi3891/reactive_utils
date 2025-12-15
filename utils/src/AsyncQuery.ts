@@ -2,18 +2,19 @@ import { AbortBox } from "./AbortBox.ts";
 import { PromiseBox } from "./PromiseBox.ts";
 import { Result } from "./Result.ts";
 
-export interface AsyncIteratorType<T> {
-    [Symbol.asyncIterator](): { next: () => Promise<IteratorResult<T>> },
-}
+// export interface AsyncIteratorType<T> {
+//     [Symbol.asyncIterator](): { next: () => Promise<IteratorResult<T>> },
+// }
 
-export interface AsyncQueryIteratorResult<T> {
-    next(): Promise<IteratorResult<T>>,
-}
+// export interface AsyncQueryIteratorResult<T> {
+//     next(): Promise<IteratorResult<T>>,
+// }
 
 export class AsyncQueryIterator<T> implements AsyncIterable<T> {
     constructor(private readonly get: () => PromiseBox<Result<T, null>>) {}
 
-    public [Symbol.asyncIterator](): AsyncQueryIteratorResult<T> {
+    public [Symbol.asyncIterator](): AsyncIterator<T, void, void> {
+    // public [Symbol.asyncIterator](): AsyncQueryIteratorResult<T> {
         const next = async (): Promise<IteratorResult<T>> => {
             const box = this.get();
             const value = await box.promise;
