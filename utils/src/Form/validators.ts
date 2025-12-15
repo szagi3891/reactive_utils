@@ -46,19 +46,25 @@ export const validateConvertToNumeric = (value: string): Result<string, string> 
     return Result.ok(newValue);
 };
 
-export const validateConvertToNumber = (message: string) => (value: string): Result<number, string> => {
-    const valueNumber = parseNumber(value);
-    return valueNumber === null ? Result.error(message) : Result.ok(valueNumber);
+export const validateConvertToNumber = (message: string): ((value: string) => Result<number, string>) => {
+    return (value: string): Result<number, string> => {
+        const valueNumber = parseNumber(value);
+        return valueNumber === null ? Result.error(message) : Result.ok(valueNumber);
+    }
 }
 
-export const validateNotEmpty = (message: string) => (value: string): Result<string, string> => {
-    const valueTrim = value.trim();
-    return valueTrim === '' ? Result.error(message) : Result.ok(valueTrim)
+export const validateNotEmpty = (message: string): ((value: string) => Result<string, string>) => {
+    return (value: string): Result<string, string> => {
+        const valueTrim = value.trim();
+        return valueTrim === '' ? Result.error(message) : Result.ok(valueTrim);
+    }
 };
 
-export const validateRange = (from: number, to: number, message: string) => (value: number): Result<number, string> =>
-    from <= value && value <= to ? Result.ok(value) : Result.error(message)
-;
+export const validateRange = (from: number, to: number, message: string): ((value: number) => Result<number, string>) => {
+    return (value: number): Result<number, string> => {
+        return from <= value && value <= to ? Result.ok(value) : Result.error(message);
+    };
+};
 
 export const validateNotNull = <T>(value: T | null): Result<T, string> => {
     if (value === null) {
