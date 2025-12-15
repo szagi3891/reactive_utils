@@ -68,12 +68,15 @@ export const validateNotNull = <T>(value: T | null): Result<T, string> => {
     }
 }
 
-export const validateMinLength = (minLength: number) => (value: string): Result<string, string> => {
-    if (value.length < minLength) {
-        return Result.error(`Oczekiwano przynajmniej ${minLength} znaków`);
-    }
+export const validateMinLength = (minLength: number): ((value: string) => Result<string, string>) => {
+    
+    return (value: string): Result<string, string> => {
+        if (value.length < minLength) {
+            return Result.error(`Oczekiwano przynajmniej ${minLength} znaków`);
+        }
 
-    return Result.ok(value);
+        return Result.ok(value);
+    };
 };
 
 export const validateEmail = (value: string): Result<string, string> => {
