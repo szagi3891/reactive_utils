@@ -50,13 +50,17 @@ const buildMap = <T>(iterator2: () => AsyncIteratorType<T>): (<K>(mapFn: (value:
     };
 };
 
+interface AsyncQueryIteratorResult<T> {
+    next(): Promise<IteratorResult<T>>,
+}
+
 export class AsyncQueryIterator<T> {
     private isSubscribe: boolean = true;
     private currentBox: PromiseBox<Result<T, null>> | null = null;
 
     constructor(private readonly get: () => PromiseBox<Result<T, null>>) {}
 
-    [Symbol.asyncIterator](): { next: () => Promise<IteratorResult<T>> } {
+    public [Symbol.asyncIterator](): AsyncQueryIteratorResult<T> {
         const next = async (): Promise<IteratorResult<T>> => {
             if (this.isSubscribe === false) {
                 return {
