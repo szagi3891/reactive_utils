@@ -37,8 +37,6 @@ const buildMap = <T>(iterator2: () => AsyncIteratorType<T>): (<K>(mapFn: (value:
             }
         };
     
-        // throw Error('TODO');
-
         const result: AsyncIteratorType<K> = {
             [Symbol.asyncIterator]: () => {
                 return {
@@ -50,11 +48,9 @@ const buildMap = <T>(iterator2: () => AsyncIteratorType<T>): (<K>(mapFn: (value:
 
         return result;
     };
-
-    // throw Error('');
 };
 
-export class AsyncQueryIterator<T> implements AsyncIteratorType<T> {
+export class AsyncQueryIterator<T> {
     private isSubscribe: boolean = true;
     private currentBox: PromiseBox<Result<T, null>> | null = null;
 
