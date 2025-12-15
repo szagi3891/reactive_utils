@@ -180,7 +180,6 @@ Deno.test('refresh-in-connect', async () => {
 
 
             return () => {
-                sub.unsubscribe();
             };
         }
     );
@@ -203,6 +202,7 @@ Deno.test('refresh-in-connect', async () => {
 
     dispose();
     await timeout(100);
+    refreshTriggers.close();
 });
 
 Deno.test('autorun', async () => {

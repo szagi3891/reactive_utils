@@ -4,76 +4,19 @@ import { Result } from "./Result.ts";
 
 export interface AsyncIteratorType<T> {
     [Symbol.asyncIterator](): { next: () => Promise<IteratorResult<T>> },
-    map<K>(mapFn: (value: T) => Result<K, null>): AsyncIteratorType<K>,
 }
-
-const buildMap = <T>(iterator2: () => AsyncIteratorType<T>): (<K>(mapFn: (value: T) => Result<K, null>) => AsyncIteratorType<K>) => {
-
-    return <K>(mapFn: (value: T) => Result<K, null>): AsyncIteratorType<K> => {
-
-        const iterator = iterator2()[Symbol.asyncIterator]();
-
-        const next = async (): Promise<IteratorResult<K>> => {
-            while (true) {
-                const value = await iterator.next();
-
-                if (value.done === false) {
-                    const result = mapFn(value.value);
-
-                    if (result.type === 'ok') {
-                        return {
-                            value: result.data,
-                            done: false,
-                        };
-                    }
-
-                    continue;
-                }
-
-                return {
-                    value: undefined,
-                    done: true,
-                };
-            }
-        };
-    
-        const result: AsyncIteratorType<K> = {
-            [Symbol.asyncIterator]: () => {
-                return {
-                    next,
-                };
-            },
-            map: buildMap(() => result),
-        };
-
-        return result;
-    };
-};
 
 export interface AsyncQueryIteratorResult<T> {
     next(): Promise<IteratorResult<T>>,
 }
 
-export class AsyncQueryIterator<T> {
-    private isSubscribe: boolean = true;
-    private currentBox: PromiseBox<Result<T, null>> | null = null;
-
+export class AsyncQueryIterator<T> implements AsyncIterable<T> {
     constructor(private readonly get: () => PromiseBox<Result<T, null>>) {}
 
     public [Symbol.asyncIterator](): AsyncQueryIteratorResult<T> {
         const next = async (): Promise<IteratorResult<T>> => {
-            if (this.isSubscribe === false) {
-                return {
-                    value: undefined,
-                    done: true,
-                };
-            }
-
             const box = this.get();
-            this.currentBox = box;
-
             const value = await box.promise;
-            
             
             if (value.type === 'error') {
                 return {
@@ -92,15 +35,6 @@ export class AsyncQueryIterator<T> {
             next,
         };
     }
-
-    unsubscribe() {
-        if (this.isSubscribe === true) {
-            this.isSubscribe = false;
-            this.currentBox?.resolve(Result.error(null));
-        }
-    }
-
-    public map: <K>(mapFn: (value: T) => Result<K, null>) => AsyncIteratorType<K> = buildMap(() => this);
 }
 
 export class AsyncQuery<T> {
@@ -109,8 +43,14 @@ export class AsyncQuery<T> {
     private readonly abort: AbortBox = new AbortBox();
     public onAbort: (callback: () => void) => (() => void);
 
-    constructor() {
+    constructor(controller?: AbortController) {
         this.onAbort = this.abort.onAbort;
+
+        if (controller) {
+            controller.signal.addEventListener('abort', () => {
+                this.close();
+            });
+        }
     }
 
     [Symbol.dispose]() {
