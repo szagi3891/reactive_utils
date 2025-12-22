@@ -94,7 +94,7 @@ export class AsyncQuery<T> {
         }
     }
 
-    private get = (): PromiseBox<Result<T, null>> => {
+    private getBox = (): PromiseBox<Result<T, null>> => {
         if (this.senders === null) {
             const box = new PromiseBox<Result<T, null>>();
             box.resolve(Result.error(null));
@@ -113,6 +113,11 @@ export class AsyncQuery<T> {
     };
 
     public subscribe(): AsyncIterable<T> {
-        return new AsyncQueryIterator(this.get);
+        return new AsyncQueryIterator(this.getBox);
+    }
+
+    public async get(): Promise<Result<T, null>> {
+        const box = await this.getBox().promise;
+        return box;
     }
 }
