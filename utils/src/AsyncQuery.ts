@@ -8,7 +8,6 @@ interface QueueNode<T> {
 class FastQueue<T> {
     private head: QueueNode<T> | null = null;
     private tail: QueueNode<T> | null = null;
-    private _length: number = 0;
 
     public push(value: T): void {
         const node: QueueNode<T> = { value, next: null };
@@ -19,7 +18,6 @@ class FastQueue<T> {
             this.head = node;
             this.tail = node;
         }
-        this._length++;
     }
 
     public shift(): T | undefined {
@@ -27,25 +25,7 @@ class FastQueue<T> {
         const value = this.head.value;
         this.head = this.head.next;
         if (!this.head) this.tail = null;
-        this._length--;
         return value;
-    }
-
-    public get length(): number {
-        return this._length;
-    }
-
-    public clear(): T[] {
-        const result: T[] = [];
-        let curr = this.head;
-        while (curr) {
-            result.push(curr.value);
-            curr = curr.next;
-        }
-        this.head = null;
-        this.tail = null;
-        this._length = 0;
-        return result;
     }
 }
 
@@ -139,11 +119,16 @@ export class AsyncQuery<T> {
             return;
         }
 
-        const consumers = this.waitingConsumers.clear();
+        const consumers = this.waitingConsumers;
         this.waitingConsumers = null;
 
-        for (const consumer of consumers) {
-            consumer.resolve(Result.error(null));
+        while (true) {
+            const first = consumers.shift();
+            if (first === undefined) {
+                return;
+            }
+
+            first.resolve(Result.error(null));
         }
     }
 
