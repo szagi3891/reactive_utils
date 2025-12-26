@@ -150,4 +150,25 @@ Deno.test('AbortController', async () => {
     expect(list).toEqual([1]);
 });
 
+Deno.test('dropWaitingMessages', async () => {
+    const query = new AsyncQuery<number>();
 
+    query.push(33);
+    query.push(44);
+
+    const message1 = await query.get();
+    expect(message1).toEqual({
+        type: 'ok',
+        data: 33
+    });
+
+    query.dropWaitingMessages();
+
+    query.push(55);
+
+    const message2 = await query.get();
+    expect(message2).toEqual({
+        type: 'ok',
+        data: 55
+    });
+})

@@ -99,17 +99,14 @@ export class AsyncQuery<T> {
             return;
         }
 
-        while (true) {
-            const consumer = this.waitingConsumers.shift();
+        const consumer = this.waitingConsumers.shift();
 
-            if (consumer === undefined) {
-                this.buffer.push(value);
-                return;
-            }
-
-            consumer.resolve(Result.ok(value));
+        if (consumer === undefined) {
+            this.buffer.push(value);
             return;
         }
+
+        consumer.resolve(Result.ok(value));
     }
 
     public close(): void {
@@ -122,17 +119,19 @@ export class AsyncQuery<T> {
         const consumers = this.waitingConsumers;
         this.waitingConsumers = null;
 
-        while (true) {
-            const first = consumers.shift();
-            if (first === undefined) {
-                return;
-            }
-
-            first.resolve(Result.error(null));
+        const first = consumers.shift();
+        if (first === undefined) {
+            return;
         }
+
+        first.resolve(Result.error(null));
     }
 
-    private getNext = (): Promise<Result<T, null>> => {
+    public subscribe(): AsyncIterable<T> {
+        return new AsyncQueryIterator(this.get);
+    }
+
+    public get = (): Promise<Result<T, null>> => {
         if (this.waitingConsumers === null) {
             return Promise.resolve(Result.error(null));
         }
@@ -146,15 +145,12 @@ export class AsyncQuery<T> {
         }
 
         return Promise.resolve(Result.ok(value));
-    };
-
-    public subscribe(): AsyncIterable<T> {
-        return new AsyncQueryIterator(this.getNext);
     }
 
-    public get(): Promise<Result<T, null>> {
-        return this.getNext();
+    public dropWaitingMessages() {
+        this.buffer = new FastQueue();
     }
+
 }
 
 
