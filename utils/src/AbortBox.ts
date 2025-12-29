@@ -9,9 +9,13 @@ export class AbortBox {
         this.emmit = new EventEmitter();
     }
 
-    public isAborted = (): boolean => this.emmit === null;
+    public isAborted = (): boolean => {
+        return this.emmit === null;
+    };
 
-    public isActive = (): boolean => this.emmit !== null;
+    public isActive = (): boolean => {
+        return this.emmit !== null;
+    };
 
     onAbort = (callback: () => void): (() => void) => {
 
