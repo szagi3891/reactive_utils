@@ -11,6 +11,8 @@ export class AbortBox {
 
     public isAborted = () => this.emmit === null;
 
+    public isActive = () => this.emmit !== null;
+
     onAbort = (callback: () => void): (() => void) => {
 
         if (this.emmit === null) {
