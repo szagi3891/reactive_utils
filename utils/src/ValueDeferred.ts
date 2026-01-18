@@ -8,25 +8,31 @@ export class ValueDeferred<T> {
     public constructor(initValue: T, timeIntervalMs: number) {
         this.value = initValue;
 
-        this.valueDeferred = new Signal(initValue, (setValue) => {
+        const valueDeferred = new Signal<T>(initValue, (setValue) => {
 
             setValue(this.value);
 
             const timer = setInterval(() => {
-                setValue(this.value);
+                const current = valueDeferred.get();
+
+                if (current !== this.value) {
+                    valueDeferred.set(this.value)
+                }
             }, timeIntervalMs);
 
             return () => {
                 clearInterval(timer);
             };
         });
+
+        this.valueDeferred = valueDeferred;
     }
 
     public set(newValue: T) {
         this.value = newValue;
     }
 
-    public get(): T {
+    public getUnobserved(): T {
         return this.value;
     }
 
