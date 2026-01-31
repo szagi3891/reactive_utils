@@ -12,10 +12,6 @@ export { getValueCache } from './src/getValueCache.ts';
 export { Result } from './src/Result.ts';
 export type { ResultOk, ResultError } from './src/Result.ts';
 export { AutoId } from './src/AutoId.ts';
-/**
- * @deprecated Use Stream instead
- */
-export { AsyncQuery } from './src/AsyncQuery.ts';
 export { Stream } from './src/Stream.ts';
 export { AsyncWebSocket, type AsyncWebSocketType } from './src/websocketGeneral/AsyncWebsocket.ts';
 export { WebsocketStream, type WebsocketStreamMessageReceived, type WebsocketStreamMessageSend } from './src/websocketGeneral/WebsocketStream.ts';

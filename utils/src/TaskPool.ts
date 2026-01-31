@@ -1,4 +1,4 @@
-import { AsyncQuery } from "./AsyncQuery.ts";
+import { Stream } from "./Stream.ts";
 import { PromiseBox } from "./PromiseBox.ts";
 import { timeout } from "./timeout.ts";
 
@@ -37,31 +37,31 @@ const execTask = async <RESOURCE>(
 
 const startWorker = async <RESOURCE>(
     retryCount: number,
-    query: AsyncQuery<(page: RESOURCE) => Promise<void>>,
+    stream: Stream<(page: RESOURCE) => Promise<void>>,
     createResource: () => Promise<RESOURCE>
 ) => {
     let resource: RESOURCE | null = null;
 
-    for await (const task of query.subscribe()) {
+    for await (const task of stream.readable) {
         resource = await execTask(retryCount, task, resource, createResource);
     }
 };
 
 export class TaskPool<RESOURCE> {
-    private readonly query: AsyncQuery<(page: RESOURCE) => Promise<void>>;
+    private readonly stream: Stream<(page: RESOURCE) => Promise<void>>;
 
     constructor(size: number, retryCount: number, createResource: () => Promise<RESOURCE>) {
-        this.query = new AsyncQuery();
+        this.stream = new Stream();
 
         for (let i=1; i<=size; i++) {
-            startWorker(retryCount, this.query, createResource).catch(console.error);
+            startWorker(retryCount, this.stream, createResource).catch(console.error);
         }
     }
 
     public execScenario<R>(scenario: (page: RESOURCE) => Promise<R>): Promise<R> {
         const [task, result] = createTask(scenario);
 
-        this.query.push(task);
+        this.stream.push(task);
         return result;
     }
 
@@ -83,7 +83,7 @@ export class TaskPool<RESOURCE> {
             return result;
 
         } finally {
-            pool.query.close();
+            pool.stream.close();
         }
     }
 }

@@ -1,4 +1,4 @@
-import { AsyncQuery } from "../AsyncQuery.ts";
+import { Stream } from "../Stream.ts";
 import { EventEmitter } from "../EventEmitter.ts";
 import { AsyncWebSocket } from "./AsyncWebsocket.ts";
 import { addEventOffline } from "./WebsocketStream/offline.ts";
@@ -93,7 +93,7 @@ class PingPongManager {
 };
 
 const initEvents = (
-    receivedMessage: AsyncQuery<WebsocketStreamMessageReceived>,
+    receivedMessage: Stream<WebsocketStreamMessageReceived>,
     sentMessage: EventEmitter<WebsocketStreamMessageSend>,
     socket: AsyncWebSocket
 ) => {
@@ -137,9 +137,14 @@ const createStream = (
     connectionTimeoutMs: number,
     reconnectTimeoutMs: number,
     pingPong: PingPongParamsType | null,
-    log: boolean
-): AsyncQuery<WebsocketStreamMessageReceived> => {
-    const receivedMessage = new AsyncQuery<WebsocketStreamMessageReceived>();
+    log: boolean,
+    signal: AbortSignal
+): AsyncIterable<WebsocketStreamMessageReceived> => {
+    const receivedMessage = new Stream<WebsocketStreamMessageReceived>();
+    
+    signal.addEventListener('abort', () => {
+        receivedMessage.close();
+    });
 
     (async () => {
         const onlineSemafor = new OnlineSemafor();
@@ -209,12 +214,13 @@ const createStream = (
         console.error(error);
     });
 
-    return receivedMessage;
+    return receivedMessage.readable;
 };
 
 export class WebsocketStream {
     private readonly sentMessage: EventEmitter<WebsocketStreamMessageSend>;
-    private readonly receivedMessage: AsyncQuery<WebsocketStreamMessageReceived>;
+    private readonly receivedMessage: AsyncIterable<WebsocketStreamMessageReceived>;
+    private readonly abortController: AbortController;
 
     constructor(
         wsHost: string,
@@ -224,8 +230,18 @@ export class WebsocketStream {
         pingPong: PingPongParamsType | null,
         log: boolean
     ) {
-        this.sentMessage = new EventEmitter<WebsocketStreamMessageSend>();
-        this.receivedMessage = createStream(this.sentMessage, wsHost, getProtocol, connectionTimeoutMs, reconnectTimeoutMs, pingPong, log);
+        this.sentMessage = new EventEmitter<WebsocketStreamMessageSend>;
+        this.abortController = new AbortController();
+        this.receivedMessage = createStream(
+            this.sentMessage,
+            wsHost,
+            getProtocol,
+            connectionTimeoutMs,
+            reconnectTimeoutMs,
+            pingPong,
+            log,
+            this.abortController.signal
+        );
     }
 
     public send(data: string | BufferSource): void {
@@ -236,11 +252,11 @@ export class WebsocketStream {
     }
 
     public messages(): AsyncIterable<WebsocketStreamMessageReceived> {
-        return this.receivedMessage.subscribe();
+        return this.receivedMessage;
     }
 
     public close(): void {
-        this.receivedMessage.close();
+        this.abortController.abort();
     }
 
     public reconnect(): void {

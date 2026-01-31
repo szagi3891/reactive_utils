@@ -1,13 +1,13 @@
-import { EventEmitter, EventEmitterReceiver } from "./EventEmitter.ts";
+import { EventEmitter } from "./EventEmitter.ts";
 
 export class Stream<T> {
     /**
      * Native ReadableStream for consumption (read-only access).
      */
-    public readonly readable: ReadableStream<T>;
+    private readonly _readable: ReadableStream<T>;
     private readonly controller: ReadableStreamDefaultController<T>;
     private readonly whenClose: EventEmitter<void>;
-    public readonly onWhenClose: EventEmitterReceiver<void>;
+    private open: boolean = true;
 
     constructor(highWaterMark?: number) {
         const whenClose = new EventEmitter<void>();
@@ -22,7 +22,8 @@ export class Stream<T> {
             start(c) {
                 controller = c;
             },
-            cancel() {
+            cancel: () => {
+                this.open = false;
                 whenClose.trigger();
             }
         }, strategy);
@@ -31,18 +32,45 @@ export class Stream<T> {
             throw Error('Controller expected');
         }
 
-        this.readable = stream;
+        this._readable = stream;
         this.controller = controller;
         this.whenClose = whenClose;
+    }
 
-        this.onWhenClose = this.whenClose.on;
+    public get readable(): AsyncIterable<T> {
+        return this._readable;
+    }
+
+
+    public onAbort = (callback: () => void): (() => void) => {
+        if (!this.open) {
+            callback();
+            return () => {};
+        }
+
+        return this.whenClose.on(callback);
+    }
+
+    public isOpen(): boolean {
+        return this.open;
     }
 
     public push(value: T) {
-        this.controller.enqueue(value);
+        if (!this.open) {
+           console.warn('Stream is closed');
+           return; 
+        }
+
+        try {
+            this.controller.enqueue(value);
+        } catch (e) {
+            console.warn('Stream enqueue error', e);
+        }
     }
 
     public close() {
+        if (!this.open) return;
+        this.open = false;
         try {
             this.controller.close();
         } catch (_e) {

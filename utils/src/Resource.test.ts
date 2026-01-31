@@ -1,7 +1,7 @@
 import { expect } from "jsr:@std/expect";
 import { Resource } from './Resource.ts';
 import { timeout } from './timeout.ts';
-import { AsyncQuery, AutoId } from "../index.ts";
+import { Stream, AutoId } from "../index.ts";
 import { autorun } from 'mobx';
 
 Deno.test('refresh on an uninitialized resource should not send any request', async () => {
@@ -160,7 +160,7 @@ Deno.test('refresh-and-count', async () => {
 Deno.test('refresh-in-connect', async () => {
     let execCounter: number = 0;
 
-    const refreshTriggers = new AsyncQuery<void>();
+    const refreshTriggers = new Stream<void>();
 
     const inst = Resource.browserAndServer(
         async () => {
@@ -170,7 +170,7 @@ Deno.test('refresh-in-connect', async () => {
         },
         () => {
 
-            const sub = refreshTriggers.subscribe();
+            const sub = refreshTriggers.readable;
 
             (async () => {
                 for await (const _ of sub) {
@@ -192,11 +192,11 @@ Deno.test('refresh-in-connect', async () => {
 
     expect(execCounter).toBe(1);
 
-    refreshTriggers.push();
+    refreshTriggers.push(undefined);
     await timeout(100);
     expect(execCounter).toBe(2);
 
-    refreshTriggers.push();
+    refreshTriggers.push(undefined);
     await timeout(100);
     expect(execCounter).toBe(3);
 

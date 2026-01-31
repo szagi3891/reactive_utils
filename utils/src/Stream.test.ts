@@ -2,7 +2,7 @@ import { Stream } from "./Stream.ts";
 import { expect } from "jsr:@std/expect";
 import { timeout } from "./timeout.ts";
 
-const collectFromStream = <T>(stream: ReadableStream<T>, result: T[]) => {
+const collectFromStream = <T>(stream: AsyncIterable<T>, result: T[]) => {
     (async () => {
         try {
             for await (const chunk of stream) {
@@ -47,7 +47,7 @@ Deno.test('Stream - close behavior', async () => {
     const streamWrapper = new Stream<string>();
     let closed = false;
 
-    streamWrapper.onWhenClose(() => {
+    streamWrapper.onAbort(() => {
         closed = true;
     });
 
@@ -67,17 +67,10 @@ Deno.test('Stream - close behavior', async () => {
     await timeout(0);
     expect(closed).toBe(true);
     
-    // Pushing after close might throw on controller or be ignored depending on implementation,
-    // but controller.enqueue throws if closed. Let's verify safety if desired or expect throw.
-    // Our wrapper implementation calls controller.desciredSize or enqueue directly.
-    // ReadableStreamDefaultController throws if 'close' state.
-    // However, users should check logic. Let's see if it throws.
-    try {
-        streamWrapper.push('b');
-        // If it didn't throw, list shouldn't update anyway?
-    } catch (e) {
-        expect(e).toBeDefined(); // Standard stream behavior is to throw on enqueue after close
-    }
+    // Pushing after close should be safe and ignored (with warning)
+    streamWrapper.push('b');
+    // List should remain unchanged
+    expect(list).toEqual(['a']);
 });
 
 
@@ -101,18 +94,35 @@ Deno.test('Stream - backpressure (desiredSize)', async () => {
     expect(streamWrapper.desiredSize).toBe(-1);
 });
 
-Deno.test('Stream - onWhenClose triggered on cancel', async () => {
+Deno.test('Stream - onAbort triggered on cancel (loop break)', async () => {
     const streamWrapper = new Stream<number>();
     let closed = false;
 
-    streamWrapper.onWhenClose(() => {
+    streamWrapper.onAbort(() => {
         closed = true;
     });
 
-    const reader = streamWrapper.readable.getReader();
-    
-    // Consumer cancels the stream
-    await reader.cancel('consumer cancelled');
+    (async () => {
+        for await (const _ of streamWrapper.readable) {
+            break; // This triggers return() which calls cancel()
+        }
+    })();
 
+    streamWrapper.push(1); // Push one item so loop starts and breaks
+
+    await timeout(0);
     expect(closed).toBe(true);
+});
+
+Deno.test('Stream - onAbort immediate execution on closed stream', async () => {
+    const streamWrapper = new Stream<number>();
+    let callCount = 0;
+
+    streamWrapper.close();
+
+    streamWrapper.onAbort(() => {
+        callCount++;
+    });
+
+    expect(callCount).toBe(1);
 });

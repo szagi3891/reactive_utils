@@ -1,5 +1,5 @@
 import { PromiseBoxOptimistic } from '../PromiseBox.ts';
-import { AsyncQuery } from "../AsyncQuery.ts";
+import { Stream } from "../Stream.ts";
 
 import { AutoId } from "../AutoId.ts";
 
@@ -43,17 +43,17 @@ class Log {
 const setupHanlders = (
     log: Log,
     socket: AsyncWebSocketType,
-    query: AsyncQuery<string>,
+    stream: Stream<string>,
     whenClose?: () => void,
 ) => {
-    query.onAbort(() => {
+    stream.onAbort(() => {
         socket.close();
     });
 
     socket.addEventListener('message', (data) => {
         if (typeof data.data === 'string') {
             log.debug(`RECEIVED -> string -> ${data.data}`);
-            query.push(data.data);
+            stream.push(data.data);
             return;
         }
 
@@ -62,13 +62,13 @@ const setupHanlders = (
 
     socket.addEventListener('error', (data: Event) => {
         log.error(`Error connection for ${socket.url}, error=${String(data)}`, data);
-        query.close();
+        stream.close();
         whenClose?.();
     });
 
     socket.addEventListener('close', () => {
         log.debug(`Close connection for ${socket.url}`);
-        query.close();
+        stream.close();
         whenClose?.();
     });
 }
@@ -78,15 +78,15 @@ export class AsyncWebSocket {
 
     private constructor(
         private log: Log,
-        private readonly query: AsyncQuery<string>,
+        private readonly stream: Stream<string>,
         private readonly sendFn: (data: string | BufferSource) => void,
         public readonly protocol: string | null,
     ) {
-        this.onAbort = this.query.onAbort;
+        this.onAbort = this.stream.onAbort;
     }
 
     subscribe(): AsyncIterable<string> {
-        return this.query.subscribe();
+        return this.stream.readable;
     }
 
     [Symbol.dispose]() {
@@ -94,12 +94,12 @@ export class AsyncWebSocket {
     }
 
     public isClose(): boolean {
-        return this.query.isClose();
+        return !this.stream.isOpen();
     }
 
     public close() {
         this.log.debug('close');
-        this.query.close();
+        this.stream.close();
     }
 
     public send = (data: string | BufferSource): void => {
@@ -120,15 +120,15 @@ export class AsyncWebSocket {
         socket: AsyncWebSocket,
     } {
         const log = new Log(showDebugLog);
-        const query = new AsyncQuery<string>();
+        const stream = new Stream<string>();
 
         return {
             send: (data: string) => {
-                query.push(data);
+                stream.push(data);
             },
             socket: new AsyncWebSocket(
                 log,
-                query,
+                stream,
                 (data: string | BufferSource) => {
                     onReceived(data);
                 },
@@ -139,17 +139,17 @@ export class AsyncWebSocket {
 
     static fromWebSocket(socket: AsyncWebSocketType, showDebugLog: boolean): AsyncWebSocket {
         const log = new Log(showDebugLog);
-        const query = new AsyncQuery<string>();
+        const stream = new Stream<string>();
 
         setupHanlders(
             log,
             socket,
-            query,
+            stream,
         );
 
         return new AsyncWebSocket(
             log,
-            query,
+            stream,
             (data: string | BufferSource) => {
                 socket.send(data);
             },
@@ -181,28 +181,38 @@ export class AsyncWebSocket {
             return null;
         }
 
-        const query = new AsyncQuery<string>();
+        const stream = new Stream<string>();
 
         const returnInst = new AsyncWebSocket(
             log,
-            query,
+            stream,
             (data: string | BufferSource) => {
                 socket.send(data);
             },
             protocol,
         );
 
-        setTimeout(() => {
+        let timerId: number | undefined = undefined;
+
+        const clearTimer = () => {
+             if (timerId !== undefined) {
+                 clearTimeout(timerId);
+                 timerId = undefined;
+             }
+        };
+
+        timerId = setTimeout(() => {
             if (result.isFulfilled()) {
                 return;
             }
 
             log.error(`Timeout connection for ${host}, timeout=${timeout}`);
             result.resolve(null);
-            query.close();
+            stream.close();
         }, timeout);
 
         socket.addEventListener('open', () => {
+            clearTimer();
             const timeEnd = new Date();
             const timeOpening = timeEnd.getTime() - timeStart.getTime();
             log.info(`connected to ${host} in ${timeOpening}ms`);
@@ -213,10 +223,11 @@ export class AsyncWebSocket {
         setupHanlders(
             log,
             socket,
-            query,
+            stream,
             () => {
+                clearTimer();
                 result.resolve(null);
-                query.close();
+                stream.close();
             }
         );
 
