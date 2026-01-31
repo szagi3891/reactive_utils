@@ -1,34 +1,9 @@
 import { Result } from "./Result.ts";
+import { Stream } from "./Stream.ts";
 
-interface QueueNode<T> {
-    value: T;
-    next: QueueNode<T> | null;
-}
-
-class FastQueue<T> {
-    private head: QueueNode<T> | null = null;
-    private tail: QueueNode<T> | null = null;
-
-    public push(value: T): void {
-        const node: QueueNode<T> = { value, next: null };
-        if (this.tail) {
-            this.tail.next = node;
-            this.tail = node;
-        } else {
-            this.head = node;
-            this.tail = node;
-        }
-    }
-
-    public shift(): T | undefined {
-        if (!this.head) return undefined;
-        const value = this.head.value;
-        this.head = this.head.next;
-        if (!this.head) this.tail = null;
-        return value;
-    }
-}
-
+/**
+ * @deprecated Use Stream instead
+ */
 export class AsyncQueryIterator<T> implements AsyncIterable<T> {
     constructor(private readonly getNext: () => Promise<Result<T, null>>) {}
 
@@ -53,18 +28,26 @@ export class AsyncQueryIterator<T> implements AsyncIterable<T> {
     }
 }
 
-type Consumer<T> = ReturnType<typeof Promise.withResolvers<Result<T, null>>>;
-
+/**
+ * @deprecated Use Stream instead
+ */
 export class AsyncQuery<T> {
-    private buffer: FastQueue<T> = new FastQueue();
-    private waitingConsumers: FastQueue<Consumer<T>> | null = new FastQueue(); // null means query is closed
-    private readonly controller: AbortController = new AbortController();
+    private readonly stream: Stream<T>;
+    private readonly reader: ReadableStreamDefaultReader<T>;
+    private readonly controller: AbortController;
+    private _isOpen: boolean = true;
 
     constructor(controller?: AbortController) {
+        this.stream = new Stream<T>();
+        this.reader = this.stream.readable.getReader();
+
         if (controller) {
-            controller.signal.addEventListener('abort', () => {
+            this.controller = controller;
+            this.controller.signal.addEventListener('abort', () => {
                 this.close();
             });
+        } else {
+            this.controller = new AbortController();
         }
     }
 
@@ -86,71 +69,51 @@ export class AsyncQuery<T> {
     }
 
     public isClose(): boolean {
-        return this.waitingConsumers === null;
+        return !this._isOpen;
     }
 
     public isOpen(): boolean {
-        return this.waitingConsumers !== null;
+        return this._isOpen;
     }
 
     public push(value: T): void {
-        if (this.waitingConsumers === null) {
+        if (!this._isOpen) {
             console.warn('AsyncQuery is closed');
             return;
         }
 
-        const consumer = this.waitingConsumers.shift();
-
-        if (consumer === undefined) {
-            this.buffer.push(value);
-            return;
+        try {
+            this.stream.push(value);
+        } catch (_e) {
+            // ignore if stream closed/errored
         }
-
-        consumer.resolve(Result.ok(value));
     }
 
     public close(): void {
+        if (!this._isOpen) return;
+        
+        this._isOpen = false;
+        this.stream.close();
         this.controller.abort();
-
-        if (this.waitingConsumers === null) {
-            return;
-        }
-
-        const consumers = this.waitingConsumers;
-        this.waitingConsumers = null;
-
-        const first = consumers.shift();
-        if (first === undefined) {
-            return;
-        }
-
-        first.resolve(Result.error(null));
     }
 
     public subscribe(): AsyncIterable<T> {
         return new AsyncQueryIterator(this.get);
     }
 
-    public get = (): Promise<Result<T, null>> => {
-        if (this.waitingConsumers === null) {
-            return Promise.resolve(Result.error(null));
+    public get = async (): Promise<Result<T, null>> => {
+        try {
+            const { value, done } = await this.reader.read();
+            
+            if (done) {
+                return Result.error(null);
+            }
+            
+            return Result.ok(value);
+        } catch (_e) {
+            return Result.error(null);
         }
-
-        const value = this.buffer.shift();
-
-        if (value === undefined) {
-            const consumer = Promise.withResolvers<Result<T, null>>();
-            this.waitingConsumers.push(consumer);
-            return consumer.promise;
-        }
-
-        return Promise.resolve(Result.ok(value));
     }
-
-    public dropWaitingMessages() {
-        this.buffer = new FastQueue();
-    }
-
 }
 
 
