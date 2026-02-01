@@ -4,7 +4,7 @@ export class Stream<T> {
     /**
      * Native ReadableStream for consumption (read-only access).
      */
-    private readonly _readable: ReadableStream<T>;
+    public readonly readableStream: ReadableStream<T>;
     private readonly controller: ReadableStreamDefaultController<T>;
     private readonly whenClose: EventEmitter<void>;
     private open: boolean = true;
@@ -32,13 +32,13 @@ export class Stream<T> {
             throw Error('Controller expected');
         }
 
-        this._readable = stream;
+        this.readableStream = stream;
         this.controller = controller;
         this.whenClose = whenClose;
     }
 
     public get readable(): AsyncIterable<T> {
-        return this._readable;
+        return this.readableStream;
     }
 
 
