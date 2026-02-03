@@ -144,7 +144,7 @@ const createStream = (
     
     signal.addEventListener('abort', () => {
         receivedMessage.close();
-    });
+    }, { once: true });
 
     (async () => {
         const onlineSemafor = new OnlineSemafor();
