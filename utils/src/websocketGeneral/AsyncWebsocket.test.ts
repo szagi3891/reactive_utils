@@ -1,6 +1,8 @@
 import { expect } from "jsr:@std/expect";
 import { AsyncWebSocket } from "./AsyncWebsocket.ts";
 import { timeout } from "../timeout.ts";
+import { CheckByZod } from "../checkByZod.ts";
+import { z } from "zod";
 
 /**
  * Mock WebSocket implementation for testing
@@ -72,11 +74,20 @@ class MockWebSocket {
 // @ts-ignore: Deno global
 globalThis.WebSocket = MockWebSocket;
 
+const stringValidator = CheckByZod.create('String', z.string());
+
 Deno.test('AsyncWebSocket - create and connect', async () => {
     MockWebSocket.instances = [];
     
     // Create socket
-    const socket = await AsyncWebSocket.create('ws://test.local', null, 1000, true);
+    const socket = await AsyncWebSocket.create({
+        host: 'ws://test.local', 
+        protocol: null, 
+        timeout: 1000, 
+        showDebugLog: true,
+        receiveValidator: stringValidator,
+        sendValidator: stringValidator
+    });
     
     expect(socket).not.toBeNull();
     expect(MockWebSocket.instances.length).toBe(1);
@@ -88,7 +99,14 @@ Deno.test('AsyncWebSocket - create and connect', async () => {
 
 Deno.test('AsyncWebSocket - send and receive messages', async () => {
     MockWebSocket.instances = [];
-    const socket = await AsyncWebSocket.create('ws://test.local', null, 1000, false);
+    const socket = await AsyncWebSocket.create({
+        host: 'ws://test.local', 
+        protocol: null, 
+        timeout: 1000, 
+        showDebugLog: false,
+        receiveValidator: stringValidator,
+        sendValidator: stringValidator
+    });
     
     if (!socket) throw new Error('Socket creation failed');
     
@@ -108,10 +126,11 @@ Deno.test('AsyncWebSocket - send and receive messages', async () => {
         throw Error('Expected socket instance');
     }
 
-    expect(mockWs.sentMessages).toContain('hello');
+    expect(mockWs.sentMessages).toContain(JSON.stringify('hello'));
 
     // Test receive
-    mockWs.simulateMessage('world');
+    mockWs.simulateMessage(JSON.stringify('world'));
+    
     await timeout(0);
     expect(messages).toEqual(['world']);
 
@@ -120,7 +139,14 @@ Deno.test('AsyncWebSocket - send and receive messages', async () => {
 
 Deno.test('AsyncWebSocket - close behavior', async () => {
     MockWebSocket.instances = [];
-    const socket = await AsyncWebSocket.create('ws://test.local', null, 1000, false);
+    const socket = await AsyncWebSocket.create({
+        host: 'ws://test.local', 
+        protocol: null, 
+        timeout: 1000, 
+        showDebugLog: false,
+        receiveValidator: stringValidator,
+        sendValidator: stringValidator
+    });
     
     if (!socket) throw new Error('Socket creation failed');
     
@@ -133,4 +159,34 @@ Deno.test('AsyncWebSocket - close behavior', async () => {
 
     socket.close();
     expect(mockWs.closed).toBe(true);
+});
+
+Deno.test('AsyncWebSocket - createForTest', async () => {
+    const [control, socket] = AsyncWebSocket.createForTest({
+        receiveValidator: stringValidator,
+        sendValidator: stringValidator,
+        showDebugLog: false
+    });
+
+    const messages: string[] = [];
+    (async () => {
+        for await (const msg of socket.subscribe()) {
+            messages.push(msg);
+        }
+    })();
+
+    // Test send from control (receive in socket)
+    control.send('from-control');
+    await timeout(0);
+    expect(messages).toEqual(['from-control']);
+
+    // Test send from socket (receive in control)
+    socket.send('from-socket');
+    const sent = control.takeSendMessages();
+    expect(sent).toEqual(['from-socket']);
+
+    // Test buffer clearing
+    expect(control.takeSendMessages()).toEqual([]);
+
+    socket.close();
 });

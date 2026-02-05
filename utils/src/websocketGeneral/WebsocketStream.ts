@@ -4,40 +4,42 @@ import { AsyncWebSocket } from "./AsyncWebsocket.ts";
 import { addEventOffline } from "./WebsocketStream/offline.ts";
 import { OnlineSemafor } from "./WebsocketStream/onlineSemafor.ts";
 import { timeoutSemafor } from "./WebsocketStream/timeout.ts";
+import { CheckByZod } from "../checkByZod.ts";
 
-export type WebsocketStreamMessageReceived = {
+
+export type WebsocketStreamMessageReceived<ReceiveT, SendT> = {
     type: 'message',
-    data: string,
+    data: ReceiveT,
 } | {
     type: 'offline'
 } | {
     type: 'connecting',
 } | {
     type: 'connected',
-    send: (data: string) => void,
+    send: (data: SendT) => void,
     reconnect: () => void,
 } | {
     type: 'disconnected',
 }
 
-export type WebsocketStreamMessageSend = {
+export type WebsocketStreamMessageSend<SendT> = {
     type: 'message',
-    value: string | BufferSource
+    value: SendT
 } | {
     type: 'reconnect',
 };
 
-interface PingPongParamsType {
+export interface PingPongParamsType {
     timeoutPingMs: number,
     timeoutCloseMs: number,
     formatPingMessage: () => string,
 }
 
-class PingPongManager {
+class PingPongManager<ReceiveT, SendT> {
     lastActionTime: number;
     lastAction: 'ping' | 'message' = 'message';
 
-    constructor(socket: AsyncWebSocket, config: PingPongParamsType, showLog: boolean) {
+    constructor(socket: AsyncWebSocket<ReceiveT, SendT>, config: PingPongParamsType, showLog: boolean) {
         this.lastActionTime = new Date().getTime();
         
         if (config.timeoutPingMs < config.timeoutCloseMs) {
@@ -65,6 +67,7 @@ class PingPongManager {
                             console.info('WebsocketStream - PingPongManager: send ping')
                         }
                         this.lastAction = 'ping';
+                        //@ts-expect-error - Ping message type mismatch with SendT is intentional 
                         socket.send(config.formatPingMessage());
                         return;
                     }
@@ -92,10 +95,10 @@ class PingPongManager {
     }
 };
 
-const initEvents = (
-    receivedMessage: Stream<WebsocketStreamMessageReceived>,
-    sentMessage: EventEmitter<WebsocketStreamMessageSend>,
-    socket: AsyncWebSocket
+const initEvents = <ReceiveT, SendT>(
+    receivedMessage: Stream<WebsocketStreamMessageReceived<ReceiveT, SendT>>,
+    sentMessage: EventEmitter<WebsocketStreamMessageSend<SendT>>,
+    socket: AsyncWebSocket<ReceiveT, SendT>
 ) => {
 
     const unsubscribe = receivedMessage.onAbort(() => {
@@ -109,7 +112,7 @@ const initEvents = (
 
         switch (message.type) {
             case 'message': {
-                socket.send(message.value);
+                     socket.send(message.value); 
                 return;
             }
             case 'reconnect': {
@@ -130,17 +133,18 @@ const initEvents = (
     });
 };
 
-const createStream = (
-    sentMessage: EventEmitter<WebsocketStreamMessageSend>,
+const createStream = <ReceiveT, SendT>(
+    sentMessage: EventEmitter<WebsocketStreamMessageSend<SendT>>,
     wsHost: string,
-    getProtocol: () => string | null,
     connectionTimeoutMs: number,
     reconnectTimeoutMs: number,
     pingPong: PingPongParamsType | null,
     log: boolean,
-    signal: AbortSignal
-): AsyncIterable<WebsocketStreamMessageReceived> => {
-    const receivedMessage = new Stream<WebsocketStreamMessageReceived>();
+    signal: AbortSignal,
+    receiveValidator: CheckByZod<ReceiveT>,
+    sendValidator: CheckByZod<SendT>,
+): AsyncIterable<WebsocketStreamMessageReceived<ReceiveT, SendT>> => {
+    const receivedMessage = new Stream<WebsocketStreamMessageReceived<ReceiveT, SendT>>();
     
     signal.addEventListener('abort', () => {
         receivedMessage.close();
@@ -161,7 +165,14 @@ const createStream = (
                     type: 'connecting'
                 });
 
-                const socket = await AsyncWebSocket.create(wsHost, getProtocol(), connectionTimeoutMs, log);
+                const socket = await AsyncWebSocket.create<ReceiveT, SendT>({
+                    host: wsHost, 
+                    protocol: null, 
+                    timeout: connectionTimeoutMs, 
+                    showDebugLog: log,
+                    receiveValidator,
+                    sendValidator
+                });
 
                 if (socket === null) {
                     receivedMessage.push({
@@ -180,7 +191,7 @@ const createStream = (
 
                 receivedMessage.push({
                     type: 'connected',
-                    send: (data: string) => {
+                    send: (data: SendT) => {
                         socket.send(data);
                     },
                     reconnect: () => {
@@ -217,41 +228,43 @@ const createStream = (
     return receivedMessage.readable;
 };
 
-export class WebsocketStream {
-    private readonly sentMessage: EventEmitter<WebsocketStreamMessageSend>;
-    private readonly receivedMessage: AsyncIterable<WebsocketStreamMessageReceived>;
+export class WebsocketStream<ReceiveT, SendT> {
+    private readonly sentMessage: EventEmitter<WebsocketStreamMessageSend<SendT>>;
+    private readonly receivedMessage: AsyncIterable<WebsocketStreamMessageReceived<ReceiveT, SendT>>;
     private readonly abortController: AbortController;
 
     constructor(
         wsHost: string,
-        getProtocol: () => string | null,
         connectionTimeoutMs: number,
         reconnectTimeoutMs: number,
         pingPong: PingPongParamsType | null,
-        log: boolean
+        log: boolean,
+        receiveValidator: CheckByZod<ReceiveT>,
+        sendValidator: CheckByZod<SendT>,
     ) {
-        this.sentMessage = new EventEmitter<WebsocketStreamMessageSend>;
+        this.sentMessage = new EventEmitter<WebsocketStreamMessageSend<SendT>>;
         this.abortController = new AbortController();
         this.receivedMessage = createStream(
             this.sentMessage,
             wsHost,
-            getProtocol,
             connectionTimeoutMs,
             reconnectTimeoutMs,
             pingPong,
             log,
-            this.abortController.signal
+            this.abortController.signal,
+            receiveValidator,
+            sendValidator,
         );
     }
 
-    public send(data: string | BufferSource): void {
+    public send(data: SendT): void {
         this.sentMessage.trigger({
             type: 'message',
             value: data
         });
     }
 
-    public messages(): AsyncIterable<WebsocketStreamMessageReceived> {
+    public messages(): AsyncIterable<WebsocketStreamMessageReceived<ReceiveT, SendT>> {
         return this.receivedMessage;
     }
 

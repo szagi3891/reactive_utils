@@ -1,15 +1,16 @@
 import { PromiseBoxOptimistic } from '../PromiseBox.ts';
 import { Stream } from "../Stream.ts";
+import { CheckByZod } from "../checkByZod.ts";
 
 import { AutoId } from "../AutoId.ts";
 
-export interface AsyncWebSocketType {
-    addEventListener : WebSocket['addEventListener'],
-    close: WebSocket['close'],
-    url: WebSocket['url'],
-    send: WebSocket['send'],
-    protocol: WebSocket['protocol'],
-}
+// export interface AsyncWebSocketType {
+//     addEventListener : WebSocket['addEventListener'],
+//     close: WebSocket['close'],
+//     url: WebSocket['url'],
+//     send: WebSocket['send'],
+//     protocol: WebSocket['protocol'],
+// }
 
 const autoId = new AutoId();
 
@@ -40,20 +41,98 @@ class Log {
     }
 }
 
-const setupHanlders = (
+const createWebsocket = (log: Log, host: string, protocol: string | null): WebSocket | null => {
+    try {
+        return new WebSocket(host, protocol ?? undefined);
+    } catch (error: unknown) {
+        log.error(String(error));
+        return null;
+    }
+};
+
+const createStream = async <ReceiveT>(
     log: Log,
-    socket: AsyncWebSocketType,
-    stream: Stream<string>,
-    whenClose?: () => void,
-) => {
+    from: {
+        type: 'connectFrom',
+        host: string,
+        protocol: string | null,
+        timeout: number,
+    } | {
+        type: 'websocket',
+        socket: WebSocket,
+    },
+    receiveValidator: CheckByZod<ReceiveT>,
+): Promise<[WebSocket, Stream<ReceiveT>] | null> => {
+
+    const socket = from.type === 'connectFrom'
+        ? createWebsocket(log, from.host, from.protocol)
+        : from.socket;
+
+    const stream = new Stream<ReceiveT>();
+
+    if (socket === null) {
+        stream.close();
+        return null;
+    }
+
     stream.onAbort(() => {
         socket.close();
     });
 
+    let timerId: number | undefined = undefined;
+    const result = new PromiseBoxOptimistic<[WebSocket, Stream<ReceiveT>] | null>();
+
+    const clearTimer = () => {
+        if (timerId !== undefined) {
+            clearTimeout(timerId);
+            timerId = undefined;
+        }
+    };
+
+    timerId = from.type === 'connectFrom'
+        ? setTimeout(() => {
+            if (result.isFulfilled() === false) {
+                log.error(`Timeout connection for ${from.host}, timeout=${from.timeout}`);
+                stream.close();
+                socket.close();
+                result.resolve(null);
+            }
+        }, from.timeout)
+        : undefined;
+
+    switch (from.type) {
+        case 'connectFrom': {
+            const timeStart = new Date();
+            log.info(`connect to host=${from.host}, protocol=${from.protocol}, timeout=${from.timeout}`);
+
+            socket.addEventListener('open', () => {
+                clearTimer();
+                const timeEnd = new Date();
+                const timeOpening = timeEnd.getTime() - timeStart.getTime();
+                log.info(`connected to ${from.host} in ${timeOpening}ms`);
+
+                result.resolve([socket, stream]);
+            });
+            break;
+        }
+        case 'websocket': {
+            result.resolve([socket, stream]);
+            break;
+        }
+    }
+
     socket.addEventListener('message', (data) => {
         if (typeof data.data === 'string') {
             log.debug(`RECEIVED -> string -> ${data.data}`);
-            stream.push(data.data);
+            
+            const result = receiveValidator.jsonParse(data.data);
+
+            if (result.type === 'error') {
+                log.error(`RECEIVED -> validation error`, result.error);
+                return;
+            }
+
+            stream.push(result.data);
             return;
         }
 
@@ -63,29 +142,32 @@ const setupHanlders = (
     socket.addEventListener('error', (data: Event) => {
         log.error(`Error connection for ${socket.url}, error=${String(data)}`, data);
         stream.close();
-        whenClose?.();
     });
 
     socket.addEventListener('close', () => {
         log.debug(`Close connection for ${socket.url}`);
         stream.close();
-        whenClose?.();
     });
-}
 
-export class AsyncWebSocket {
+    return result.promise;
+};
+
+
+export class AsyncWebSocket<ReceiveT, SendT> {
     public onAbort: (callback: () => void) => (() => void);
 
     private constructor(
         private log: Log,
-        private readonly stream: Stream<string>,
-        private readonly sendFn: (data: string | BufferSource) => void,
-        public readonly protocol: string | null,
+        private readonly stream: Stream<ReceiveT>,
+        private readonly socket: {
+            send: (message: string) => void,
+        },
+        private readonly sendValidator: CheckByZod<SendT>,
     ) {
         this.onAbort = this.stream.onAbort;
     }
 
-    subscribe(): AsyncIterable<string> {
+    subscribe(): AsyncIterable<ReceiveT> {
         return this.stream.readable;
     }
 
@@ -102,136 +184,146 @@ export class AsyncWebSocket {
         this.stream.close();
     }
 
-    public send = (data: string | BufferSource): void => {
+    public send = (data: SendT): void => {
         if (this.isClose()) {
             this.log.warn(`Ignore send message (socket is close)`, data);
         } else {
-            this.log.debug('SEND ->', data);
-            this.sendFn(data);
+            const check = this.sendValidator.check(data);
+
+            if (check.type === 'error') {
+                this.log.error('Send validation error', check.error);
+                return;
+            }
+
+            const stringified = JSON.stringify(data);
+            this.log.debug('SEND ->', stringified);
+            this.socket.send(stringified);
         }
     }
 
-    static custom(
-        showDebugLog: boolean,
-        protocol: string,
-        onReceived: (message: string | BufferSource) => void,
-    ): {
-        send: (data: string) => void,
-        socket: AsyncWebSocket,
-    } {
-        const log = new Log(showDebugLog);
-        const stream = new Stream<string>();
+    static async fromWebSocket<ReceiveT, SendT>(
+        options: {
+            socket: WebSocket,
+            showDebugLog: boolean,
+            receiveValidator: CheckByZod<ReceiveT>,
+            sendValidator: CheckByZod<SendT>,
+        }
+    ): Promise<AsyncWebSocket<ReceiveT, SendT> | null> {
+        const log = new Log(options.showDebugLog);
 
-        return {
-            send: (data: string) => {
-                stream.push(data);
-            },
-            socket: new AsyncWebSocket(
-                log,
-                stream,
-                (data: string | BufferSource) => {
-                    onReceived(data);
-                },
-                protocol,
-            )
-        };
-    }
-
-    static fromWebSocket(socket: AsyncWebSocketType, showDebugLog: boolean): AsyncWebSocket {
-        const log = new Log(showDebugLog);
-        const stream = new Stream<string>();
-
-        setupHanlders(
+        const result = await createStream(
             log,
-            socket,
-            stream,
+            {
+                type: 'websocket',
+                socket: options.socket,
+            },
+            options.receiveValidator
         );
+
+        if (result === null) {
+            return null;
+        }
+
+        const [ socketOut, stream ] = result;
 
         return new AsyncWebSocket(
             log,
             stream,
-            (data: string | BufferSource) => {
-                socket.send(data);
-            },
-            socket.protocol,
+            socketOut,
+            options.sendValidator
         );
     }
 
-    private static createWebsocket(host: string, protocol: string | null): WebSocket | null {
-        try {
-            return new WebSocket(host, protocol ?? undefined);
-        } catch (_error: unknown) {
+    static async create<ReceiveT, SendT>(
+        options: {
+            host: string,
+            protocol: string | null,
+            timeout: number,
+            showDebugLog: boolean,
+            receiveValidator: CheckByZod<ReceiveT>,
+            sendValidator: CheckByZod<SendT>,
+        }
+    ): Promise<AsyncWebSocket<ReceiveT, SendT> | null> {
+        const log = new Log(options.showDebugLog);
+
+        const result = await createStream(
+            log,
+            {
+                type: 'connectFrom',
+                host: options.host,
+                protocol: options.protocol,
+                timeout: options.timeout,
+            },
+            options.receiveValidator
+        );
+
+        if (result === null) {
             return null;
         }
-    }
 
-    static async create(
-        host: string,
-        protocol: string | null,
-        timeout: number,
-        showDebugLog: boolean
-    ): Promise<AsyncWebSocket | null> {
-        const result = new PromiseBoxOptimistic<AsyncWebSocket | null>();
-        const log = new Log(showDebugLog);
-        log.info(`connect to host=${host}, protocol=${protocol}, timeout=${timeout}`);
+        const [ socketOut, stream ] = result;
 
-        const timeStart = new Date();
-        const socket = AsyncWebSocket.createWebsocket(host, protocol);
-        if (socket === null) {
-            return null;
-        }
-
-        const stream = new Stream<string>();
-
-        const returnInst = new AsyncWebSocket(
+        return new AsyncWebSocket(
             log,
             stream,
-            (data: string | BufferSource) => {
-                socket.send(data);
+            socketOut,
+            options.sendValidator
+        );
+    }
+
+    static createForTest<ReceiveT, SendT>(
+        options: {
+            receiveValidator: CheckByZod<ReceiveT>,
+            sendValidator: CheckByZod<SendT>,
+            showDebugLog?: boolean,
+        }
+    ): [ControlWebSocket<ReceiveT, SendT>, AsyncWebSocket<ReceiveT, SendT>] {
+        const log = new Log(options.showDebugLog ?? false);
+        const stream = new Stream<ReceiveT>();
+        let sentMessages: Array<SendT> = [];
+        const control = new ControlWebSocket<ReceiveT, SendT>(
+            stream,
+            (): Array<SendT> => {
+                const messages = sentMessages;
+                sentMessages = [];
+                return messages;
             },
-            protocol,
         );
 
-        let timerId: number | undefined = undefined;
-
-        const clearTimer = () => {
-             if (timerId !== undefined) {
-                 clearTimeout(timerId);
-                 timerId = undefined;
-             }
+        const mockSocket = {
+            send: (data: string) => {
+                const parsed = JSON.parse(data);
+                sentMessages.push(parsed as SendT); //TODO
+            },
         };
 
-        timerId = setTimeout(() => {
-            if (result.isFulfilled()) {
-                return;
-            }
+        return [
+            control,
+            new AsyncWebSocket(
+                log,
+                stream,
+                mockSocket,
+                options.sendValidator
+            )
+        ];
+    }
+}
 
-            log.error(`Timeout connection for ${host}, timeout=${timeout}`);
-            result.resolve(null);
-            stream.close();
-        }, timeout);
+class ControlWebSocket<ReceiveT, SendT> {
+    constructor(
+        private readonly stream: Stream<ReceiveT>,
+        private readonly getSentMessages: () => Array<SendT>,
+    ) {}
 
-        socket.addEventListener('open', () => {
-            clearTimer();
-            const timeEnd = new Date();
-            const timeOpening = timeEnd.getTime() - timeStart.getTime();
-            log.info(`connected to ${host} in ${timeOpening}ms`);
+    takeSendMessages(): Array<SendT> {
+        return this.getSentMessages();
+    }
 
-            result.resolve(returnInst);
-        });
+    send(message: ReceiveT) {
+        this.stream.push(message);
+    }
 
-        setupHanlders(
-            log,
-            socket,
-            stream,
-            () => {
-                clearTimer();
-                result.resolve(null);
-                stream.close();
-            }
-        );
-
-        const response = await result.promise;
-        return response;
+    close() {
+        this.stream.close();
     }
 }

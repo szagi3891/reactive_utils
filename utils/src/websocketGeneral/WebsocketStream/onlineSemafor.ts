@@ -1,3 +1,4 @@
+/// <reference lib="dom" />
 import { PromiseBox } from "../../PromiseBox.ts";
 
 const assert = (logicalCondition: boolean, label: string) => {
@@ -21,7 +22,7 @@ export class OnlineSemafor {
     private waitingFor: Array<WaitingItem> = [];
 
     constructor() {
-        if (typeof window === 'undefined' || typeof navigator === 'undefined' || typeof document === 'undefined') {
+        if (typeof globalThis === 'undefined' || typeof navigator === 'undefined' || typeof document === 'undefined') {
             this.onlineFlag = false;
             this.visibleFlag = false;
             return;
@@ -30,8 +31,8 @@ export class OnlineSemafor {
         this.onlineFlag = navigator.onLine;
         this.visibleFlag = document.visibilityState === 'visible';
 
-        window.addEventListener('online', this.onlineFn);
-        window.addEventListener('offline', this.offlineFn);
+        globalThis.addEventListener('online', this.onlineFn);
+        globalThis.addEventListener('offline', this.offlineFn);
         document.addEventListener('visibilitychange', this.visibilityChangeFn);
     }
 
@@ -64,14 +65,14 @@ export class OnlineSemafor {
             return;
         }
 
-        window.removeEventListener('online', this.onlineFn);
-        window.removeEventListener('offline', this.offlineFn);
+        globalThis.removeEventListener('online', this.onlineFn);
+        globalThis.removeEventListener('offline', this.offlineFn);
         document.removeEventListener('visibilitychange', this.visibilityChangeFn);
     }
 
-    public async waitFor(state: boolean): Promise<void> {
+    public waitFor(state: boolean): Promise<void> {
         if (this.onlineFlag === state) {
-            return;
+            return Promise.resolve();
         }
 
         const result = new PromiseBox<void>();

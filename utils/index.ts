@@ -13,7 +13,7 @@ export { Result } from './src/Result.ts';
 export type { ResultOk, ResultError } from './src/Result.ts';
 export { AutoId } from './src/AutoId.ts';
 export { Stream } from './src/Stream.ts';
-export { AsyncWebSocket, type AsyncWebSocketType } from './src/websocketGeneral/AsyncWebsocket.ts';
+export { AsyncWebSocket } from './src/websocketGeneral/AsyncWebsocket.ts';
 export { WebsocketStream, type WebsocketStreamMessageReceived, type WebsocketStreamMessageSend } from './src/websocketGeneral/WebsocketStream.ts';
 export { Defer } from './src/Defer.ts';
 export { stringifySort, JSONValueZod } from './src/Json.ts';
