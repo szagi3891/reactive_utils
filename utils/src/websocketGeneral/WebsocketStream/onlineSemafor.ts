@@ -1,4 +1,3 @@
-/// <reference lib="dom" />
 import { PromiseBox } from "../../PromiseBox.ts";
 
 const assert = (logicalCondition: boolean, label: string) => {
