@@ -8,9 +8,9 @@ export class ValueDeferred<T> {
     public constructor(initValue: T, timeIntervalMs: number) {
         this.value = initValue;
 
-        const valueDeferred = new Signal<T>(initValue, (setValue) => {
+        const valueDeferred = new Signal<T>(initValue, () => {
 
-            setValue(this.value);
+            valueDeferred.set(this.value);
 
             const timer = setInterval(() => {
                 const current = valueDeferred.get();

@@ -1,8 +1,8 @@
-import { autorun } from 'mobx';
+import { autorun, IAtom } from 'mobx';
 import { PromiseBox } from './PromiseBox.ts';
-import { ValueUnsafe } from './ValueUnsafe.ts';
 import { Result } from "./Result.ts";
 import { assertNever } from "./assertNever.ts";
+import { createConnectAtom } from "./reactive/createConnectAtom.ts";
 
 const TIMEOUT = 10000;
 
@@ -58,24 +58,26 @@ const send = <T>(loadValue: () => Promise<T>): Promise<ResourceResult<T>> => {
     return response.promise;
 };
 
-interface ValueVersion<T> {
-    revision: number,
-    type: 'optimistic' | 'value',
-    value: ResourceResult<T>,
-}
+// interface ValueVersion<T> {
+//     revision: number,
+//     type: 'optimistic' | 'value',
+//     value: ResourceResult<T>,
+// }
 
 export class Resource<T> {
-    private current: ValueUnsafe<ValueVersion<T>>;
+    private readonly atom: IAtom;
+    // private data: ValueVersion<T>;
+    private revision: number;
+    // private type: 'optimistic' | 'value';
+    private value: ResourceResult<T>;
+    
+    // private current: ValueUnsafe<ValueVersion<T>>;
 
     private constructor(private readonly loadValue: () => Promise<T>, onConnect?: () => (() => void)) {
-        this.current = new ValueUnsafe(
-            {
-                revision: 0,
-                type: 'optimistic',
-                value: ResourceResult.loaading()
-            },
-            onConnect
-        );
+        this.atom = createConnectAtom('resource', onConnect);
+        this.revision = 0;
+        // this.type = 'optimistic';
+        this.value = ResourceResult.loaading();
     }
 
     public static browserAndServer<T>(loadValue: () => Promise<T>, onConnect?: () => (() => void)): Resource<T> {
@@ -94,26 +96,20 @@ export class Resource<T> {
     private requestData = async (revision: number): Promise<void> => {
         const response = await send(this.loadValue);
 
-        const prevValue = this.current.value;
+        if (this.revision <= revision) {
+            this.revision = revision;
+            // this.type = 'value';
+            this.value = response;
 
-        if (prevValue.revision <= revision) {
-            this.current.value = {
-                revision,
-                type: 'value',
-                value: response
-            };
-
-            this.current.atom.reportChanged();
+            this.atom.reportChanged();
         }
     }
 
     private init() {
-        if (this.current.value.revision === 0) {
-            this.current.value = {
-                revision: 1,
-                type: 'optimistic',
-                value: ResourceResult.loaading(),
-            };
+        if (this.revision === 0) {
+            this.revision = 1;
+            // this.type = 'optimistic';
+            this.value = ResourceResult.loaading();
 
             setTimeout(() => {
                 this.requestData(1);
@@ -126,10 +122,8 @@ export class Resource<T> {
     public get(): ResourceResult<T> {
         this.init();
 
-        const value = this.current.value;
-        this.current.atom.reportObserved();
-
-        return value.value;
+        this.atom.reportObserved();
+        return this.value;
     }
 
     private applyOptimisticUpdate(
@@ -145,24 +139,22 @@ export class Resource<T> {
     }
 
     public async refresh(optimisticUpdate?: (prevValue: T) => T): Promise<void> {
-        if (this.current.value.revision === 0) {
+        if (this.revision === 0) {
             return;
         }
 
-        const nextRevision = this.current.value.revision + 1;
+        const nextRevision = this.revision + 1;
         const [needTrigger, optimisticNextValue] = this.applyOptimisticUpdate(
-            this.current.value.value,
+            this.value,
             optimisticUpdate
         );
 
-        this.current.value = {
-            type: 'optimistic',
-            revision: nextRevision,
-            value: optimisticNextValue,
-        };
+        // this.type = 'optimistic';
+        this.revision = nextRevision;
+        this.value = optimisticNextValue;
 
         if (needTrigger) {
-            this.current.atom.reportChanged();
+            this.atom.reportChanged();
         }
 
         await this.requestData(nextRevision);

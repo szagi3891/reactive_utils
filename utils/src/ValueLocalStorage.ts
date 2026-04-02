@@ -1,11 +1,12 @@
 import z from 'zod';
-import { Signal } from './reactive/Signal.ts';
-import { autorun } from 'mobx';
+import { IAtom } from 'mobx';
+import { createConnectAtom } from "./reactive/createConnectAtom.ts";
 
 type UnsubscrbeType = () => void;
-type ConnectType<T> = (setValue: (newValue: T) => void) => UnsubscrbeType;
+type ConnectType = () => UnsubscrbeType;
 
 const isServer = () => typeof window === 'undefined';
+const isBrowser = () => !isServer();
 
 class Storage {
     constructor(private readonly storage: 'localStorage' | 'sessionStorage') {}
@@ -60,28 +61,32 @@ const getInitValue = <T>(storage: Storage, localStorageKey: string, value: T, de
 };
 
 export class ValueLocalStorage<T> {
-    private readonly value: Signal<T>;
+    private readonly atom: IAtom;
+    private readonly storage: Storage;
+    private value: T;
 
-    constructor(storageType: 'localStorage' | 'sessionStorage', localStorageKey: string, value: T, decoder: z.ZodType<T>, onConnect?: ConnectType<T>) {
-        const storage = new Storage(storageType);
-
-        const initValue = getInitValue(storage, localStorageKey, value, decoder);
-
-        this.value = new Signal(initValue, onConnect);
-
-        if (!isServer()) {
-            autorun(() => {
-                const serialized = JSON.stringify(this.value.get());
-                storage.set(localStorageKey, serialized);
-            });
-        }
+    constructor(
+        storageType: 'localStorage' | 'sessionStorage',
+        private readonly localStorageKey: string,
+        value: T,
+        decoder: z.ZodType<T>,
+        onConnect?: ConnectType
+    ) {
+        this.atom = createConnectAtom('valueLocalStorage', onConnect);
+        this.storage = new Storage(storageType);
+        this.value = getInitValue(this.storage, localStorageKey, value, decoder);
     }
 
     public set(value: T) {
-        this.value.set(value);
+        this.value = value;
+        if (isBrowser()) {
+            this.storage.set(this.localStorageKey, JSON.stringify(value));
+        }
+        this.atom.reportChanged();
     }
 
     public get(): T {
-        return this.value.get();
+        this.atom.reportObserved();
+        return this.value;
     }
 }

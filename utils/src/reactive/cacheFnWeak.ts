@@ -10,10 +10,10 @@ export const cacheFnWeak = <P extends Array<unknown>, R extends WeakKey>(fn: (..
         const valueRef = data.get(key);
 
         if (valueRef !== undefined) {
-            const valuue = valueRef.deref();
+            const value = valueRef.deref();
 
-            if (valuue !== undefined) {
-                return valuue;
+            if (value !== undefined) {
+                return value;
             }
         }
 

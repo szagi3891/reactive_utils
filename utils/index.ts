@@ -1,5 +1,5 @@
 export { assertNever } from './src/assertNever.ts';
-export { Signal } from './src/reactive/Signal.ts';
+export { Signal, SignalSource } from './src/reactive/Signal.ts';
 export { ValueLocalStorage } from './src/ValueLocalStorage.ts';
 export { ValueDeferred } from './src/ValueDeferred.ts';
 export { Resource } from './src/Resource.ts';
@@ -37,7 +37,6 @@ export { FormState } from './src/Form/FormState.ts';
 export { sort } from './src/sort.ts';
 export { AbortBox } from './src/AbortBox.ts';
 export type { AbortBoxFn } from './src/AbortBox.ts';
-export { ValueList, type ValueListUpdateType} from './src/ValueList.ts';
 export { ResizableUint8Array } from './src/ResizableUint8Array.ts';
 export { CheckByZod, CheckByZodError } from './src/checkByZod.ts';
 export { getCssPropertiesForClasses } from './src/css/getCSSRuleForClass.ts';

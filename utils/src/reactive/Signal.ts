@@ -1,29 +1,59 @@
 
+import { createAtom } from "mobx";
+import type { IAtom } from "mobx";
 import { assertNever } from "../assertNever.ts";
-import { ValueUnsafe, type ConnectType, type UnsubscrbeType } from "../ValueUnsafe.ts";
+import { ConnectType, createConnectAtom, UnsubscrbeType } from "./createConnectAtom.ts";
 
-export class Signal<T> {
-    private readonly valueUnsafe: ValueUnsafe<T>;
+export class SignalSource<T> {
+    public readonly atom: IAtom;
 
-    public constructor(value: NoInfer<T>, onConnect?: ConnectType<T>) {
-        this.valueUnsafe = new ValueUnsafe(value, onConnect);
+    public constructor(private readonly options: {
+        set: (value: T) => void,
+        get: () => T,
+    }) {
+        this.atom = createAtom('signalSource');
     }
 
     public set(value: T): void {
-        this.valueUnsafe.value = value;
-        this.valueUnsafe.atom.reportChanged();
+        this.options.set(value);
+        this.atom.reportChanged();
     }
 
     public get(): T {
-        this.valueUnsafe.atom.reportObserved();
-        return this.valueUnsafe.value;
+        this.atom.reportObserved();
+        return this.options.get();
     }
 
     public isObserved(): boolean {
-        return this.valueUnsafe.atom.isBeingObserved;
+        return this.atom.isBeingObserved;
+    }
+}
+
+export class Signal<T> {
+    // private readonly valueUnsafe: ValueUnsafe<T>;
+    private readonly atom: IAtom;
+    private value: T;
+
+    public constructor(value: NoInfer<T>, onConnect?: ConnectType) {
+        this.atom = createConnectAtom('signal', onConnect);
+        this.value = value;
     }
 
-    public static withKeepAlive<T>(timeMs: number, value: T, onConnect: ConnectType<T>): Signal<T> {
+    public set(value: T): void {
+        this.value = value;
+        this.atom.reportChanged();
+    }
+
+    public get(): T {
+        this.atom.reportObserved();
+        return this.value;
+    }
+
+    public isObserved(): boolean {
+        return this.atom.isBeingObserved;
+    }
+
+    public static withKeepAlive<T>(timeMs: number, value: T, onConnect: ConnectType): Signal<T> {
         let state: {
             type: 'off',
         } | {
@@ -37,12 +67,12 @@ export class Signal<T> {
             type: 'off',
         };
 
-        return new Signal(value, (setValue: (value: T) => void): (() => void) => {
+        return new Signal(value, (): (() => void) => {
         
             if (state.type === 'off') {
                 state = {
                     type: 'on',
-                    unsubscribe: onConnect(setValue)
+                    unsubscribe: onConnect()
                 };
             } else if (state.type === 'on') {
                 throw Error('withKeepAlive -> connect -> Incorrect state - on');
