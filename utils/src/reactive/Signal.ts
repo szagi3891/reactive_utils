@@ -4,7 +4,14 @@ import type { IAtom } from "mobx";
 import { assertNever } from "../assertNever.ts";
 import { ConnectType, createConnectAtom, UnsubscrbeType } from "./createConnectAtom.ts";
 
-export class SignalSource<T> {
+export type SignalBase<T> = {
+    readonly atom: IAtom;
+    get(): T;
+    set(value: T): void;
+    isObserved(): boolean;
+};
+
+export class SignalSource<T> implements SignalBase<T> {
     public readonly atom: IAtom;
 
     public constructor(private readonly options: {
@@ -29,9 +36,8 @@ export class SignalSource<T> {
     }
 }
 
-export class Signal<T> {
-    // private readonly valueUnsafe: ValueUnsafe<T>;
-    private readonly atom: IAtom;
+export class Signal<T> implements SignalBase<T> {
+    public readonly atom: IAtom;
     private value: T;
 
     public constructor(value: NoInfer<T>, onConnect?: ConnectType) {
@@ -114,4 +120,3 @@ export class Signal<T> {
         });
     }
 }
-
