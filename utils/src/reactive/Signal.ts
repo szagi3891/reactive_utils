@@ -75,7 +75,7 @@ export class Signal<T> implements SignalBase<T> {
         localStorageKey: string,
         value: T,
         decoder: z.ZodType<T>,
-        onConnect: ConnectType
+        onConnect?: ConnectType
     ): Signal<T> {
         const storage = new Storage(storageType);
         let innerValue = getInitValue(storage, localStorageKey, value, decoder);
@@ -97,7 +97,7 @@ export class Signal<T> implements SignalBase<T> {
         localStorageKey: string,
         value: T,
         decoder: z.ZodType<T>,
-        onConnect: ConnectType
+        onConnect?: ConnectType
     ): Signal<T> {
         return Signal.withLocalStorageKind('localStorage', localStorageKey, value, decoder, onConnect);
     }
@@ -106,7 +106,7 @@ export class Signal<T> implements SignalBase<T> {
         localStorageKey: string,
         value: T,
         decoder: z.ZodType<T>,
-        onConnect: ConnectType
+        onConnect?: ConnectType
     ): Signal<T> {
         return Signal.withLocalStorageKind('sessionStorage', localStorageKey, value, decoder, onConnect);
     }
