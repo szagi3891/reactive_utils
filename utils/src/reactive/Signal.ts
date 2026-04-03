@@ -3,6 +3,7 @@ import { ConnectType, createConnectAtom } from "./createConnectAtom.ts";
 import { withKeepAlive } from "./Signal/withKeepAlive.ts";
 import z from "zod";
 import { Storage, getInitValue, isBrowser } from "./Signal/localStorage.ts";
+import { Computed } from "./Computed.ts";
 
 /** Shared contract for {@link Signal} — use for parameters that accept any signal instance. */
 export type SignalBase<T> = {
@@ -29,6 +30,24 @@ export class Signal<T> implements SignalBase<T> {
 
     public static createSource<T>(value: { value: T }, onConnect?: ConnectType): Signal<T> {
         return new Signal(value, onConnect);
+    }
+
+    public static withDefferedRead<T>(initValue: T, timeIntervalMs: number): Signal<T> {
+
+        let value = initValue;
+
+        const comp = Computed.withPollingSync(timeIntervalMs, () => {
+            return value;
+        });
+        
+        return new Signal({
+            get value() {
+                return comp.get();
+            },
+            set value(newValue: T) {
+                value = newValue;
+            }
+        });
     }
 
     public set(value: T): void {
