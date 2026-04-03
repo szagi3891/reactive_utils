@@ -5,15 +5,7 @@ import z from "zod";
 import { Storage, getInitValue, isBrowser } from "./Signal/localStorage.ts";
 import { Computed } from "./Computed.ts";
 
-/** Shared contract for {@link Signal} — use for parameters that accept any signal instance. */
-export type SignalBase<T> = {
-    readonly atom: IAtom;
-    get(): T;
-    set(value: T): void;
-    isObserved(): boolean;
-};
-
-export class Signal<T> implements SignalBase<T> {
+export class Signal<T> {
     public readonly atom: IAtom;
     private readonly value: {
         value: T
