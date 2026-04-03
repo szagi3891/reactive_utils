@@ -1,9 +1,8 @@
-
-import { createAtom } from "mobx";
 import type { IAtom } from "mobx";
 import { assertNever } from "../assertNever.ts";
 import { ConnectType, createConnectAtom, UnsubscrbeType } from "./createConnectAtom.ts";
 
+/** Shared contract for {@link Signal} — use for parameters that accept any signal instance. */
 export type SignalBase<T> = {
     readonly atom: IAtom;
     get(): T;
@@ -11,48 +10,33 @@ export type SignalBase<T> = {
     isObserved(): boolean;
 };
 
-export class SignalSource<T> implements SignalBase<T> {
-    public readonly atom: IAtom;
-
-    public constructor(private readonly options: {
-        set: (value: T) => void,
-        get: () => T,
-    }) {
-        this.atom = createAtom('signalSource');
-    }
-
-    public set(value: T): void {
-        this.options.set(value);
-        this.atom.reportChanged();
-    }
-
-    public get(): T {
-        this.atom.reportObserved();
-        return this.options.get();
-    }
-
-    public isObserved(): boolean {
-        return this.atom.isBeingObserved;
-    }
-}
-
 export class Signal<T> implements SignalBase<T> {
     public readonly atom: IAtom;
-    private value: T;
+    private readonly value: {
+        value: T
+    };
 
-    public constructor(value: NoInfer<T>, onConnect?: ConnectType) {
+    private constructor(value: { value: NoInfer<T> }, onConnect?: ConnectType) {
         this.atom = createConnectAtom('signal', onConnect);
         this.value = value;
     }
 
+    public static create<T>(value: NoInfer<T>, onConnect?: ConnectType): Signal<T> {
+        return new Signal({ value }, onConnect);
+    }
+
+    public static createSource<T>(value: { value: T }, onConnect?: ConnectType): Signal<T> {
+        return new Signal(value, onConnect);
+    }
+
     public set(value: T): void {
-        this.value = value;
+        this.value.value = value;
         this.atom.reportChanged();
     }
 
     public get(): T {
         this.atom.reportObserved();
-        return this.value;
+        return this.value.value;
     }
 
     public isObserved(): boolean {
@@ -73,7 +57,7 @@ export class Signal<T> implements SignalBase<T> {
             type: 'off',
         };
 
-        return new Signal(value, (): (() => void) => {
+        return new Signal({ value }, (): (() => void) => {
         
             if (state.type === 'off') {
                 state = {

@@ -15,10 +15,10 @@ export class FormBoxValue<K> {
     private visited: Signal<boolean>;
 
     public constructor(private readonly getInitValue: () => Result<K, string>) {
-        this.value = new Signal({
+        this.value = Signal.create<Option<K>>({
             type: 'none',
         });
-        this.visited = new Signal(false);
+        this.visited = Signal.create(false);
     }
 
     public setAsVisited(): void {

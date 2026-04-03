@@ -1,11 +1,10 @@
 import { expect } from "jsr:@std/expect";
-// import { timeout } from './timeout';
-import { Signal, SignalSource } from './Signal.ts';
+import { Signal } from './Signal.ts';
 import { autorun } from 'mobx';
 import { timeout } from '../timeout.ts';
 
 Deno.test('basic', () => {
-    const value = new Signal<number>(1);
+    const value = Signal.create(1);
     expect(value.get()).toBe(1);
     value.set(444);
     expect(value.get()).toBe(444);
@@ -13,9 +12,13 @@ Deno.test('basic', () => {
 
 Deno.test('SignalSource basic', () => {
     let n = 1;
-    const src = new SignalSource<number>({
-        get: () => n,
-        set: (v) => { n = v; },
+    const src = Signal.createSource({
+        get value() {
+            return n;
+        },
+        set value(v) {
+            n = v;
+        },
     });
     expect(src.get()).toBe(1);
     src.set(2);
@@ -24,9 +27,13 @@ Deno.test('SignalSource basic', () => {
 });
 
 Deno.test('SignalSource observed', () => {
-    const src = new SignalSource<number>({
-        get: () => 0,
-        set: () => {},
+    const src = Signal.createSource<number>({
+        get value() {
+            return 0;
+        },
+        set value(_v) {
+            return;
+        },
     });
     expect(src.isObserved()).toBe(false);
     const dispose = autorun(() => {
@@ -39,9 +46,13 @@ Deno.test('SignalSource observed', () => {
 
 Deno.test('SignalSource autorun reacts to set', () => {
     let n = 0;
-    const src = new SignalSource<number>({
-        get: () => n,
-        set: (v) => { n = v; },
+    const src = Signal.createSource({
+        get value() {
+            return n;
+        },
+        set value(v: number) {
+            n = v;
+        },
     });
     let runs = 0;
     const dispose = autorun(() => {
@@ -57,9 +68,13 @@ Deno.test('SignalSource autorun reacts to set', () => {
 
 Deno.test('SignalSource atom.reportChanged notifies when backing store mutates outside set', () => {
     let n = 0;
-    const src = new SignalSource<number>({
-        get: () => n,
-        set: (v) => { n = v; },
+    const src = Signal.createSource({
+        get value() {
+            return n;
+        },
+        set value(v: number) {
+            n = v;
+        },
     });
     let runs = 0;
     const dispose = autorun(() => {
@@ -76,9 +91,13 @@ Deno.test('SignalSource atom.reportChanged notifies when backing store mutates o
 
 Deno.test('SignalSource autorun ignores silent backing mutation without reportChanged', () => {
     let n = 0;
-    const src = new SignalSource<number>({
-        get: () => n,
-        set: (v) => { n = v; },
+    const src = Signal.createSource({
+        get value() {
+            return n;
+        },
+        set value(v: number) {
+            n = v;
+        },
     });
     let runs = 0;
     const dispose = autorun(() => {
@@ -93,9 +112,13 @@ Deno.test('SignalSource autorun ignores silent backing mutation without reportCh
 
 Deno.test('SignalSource object value', () => {
     const state = { tag: 'a' as string };
-    const src = new SignalSource<{ tag: string }>({
-        get: () => state,
-        set: (v) => { state.tag = v.tag; },
+    const src = Signal.createSource<{ tag: string }>({
+        get value() {
+            return state;
+        },
+        set value(v) {
+            state.tag = v.tag;
+        },
     });
     expect(src.get().tag).toBe('a');
     src.set({ tag: 'b' });
@@ -103,7 +126,7 @@ Deno.test('SignalSource object value', () => {
 });
 
 Deno.test('observed', () => {
-    const value = new Signal<number>(1);
+    const value = Signal.create(1);
 
     expect(value.isObserved()).toBe(false);
     const dispose = autorun(() => {
@@ -119,7 +142,7 @@ Deno.test('observed', () => {
 Deno.test('connect', () => {
     let connect: boolean = false;
 
-    const value = new Signal(1, () => {
+    const value = Signal.create(1, () => {
         connect = true;
 
         return () => {

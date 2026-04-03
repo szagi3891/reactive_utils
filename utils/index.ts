@@ -1,5 +1,5 @@
 export { assertNever } from './src/assertNever.ts';
-export { Signal, SignalSource, type SignalBase } from './src/reactive/Signal.ts';
+export { Signal, type SignalBase } from './src/reactive/Signal.ts';
 export { ValueLocalStorage } from './src/ValueLocalStorage.ts';
 export { ValueDeferred } from './src/ValueDeferred.ts';
 export { Resource } from './src/Resource.ts';

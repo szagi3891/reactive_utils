@@ -4,7 +4,7 @@ import { autorun } from 'mobx';
 import { expect } from "jsr:@std/expect";
 
 Deno.test('ComputedStruct', () => {
-    const sourceValue = new Signal<Array<{name: string}>>([]);
+    const sourceValue = Signal.create<Array<{ name: string }>>([]);
 
     const computed = Computed.initStructural(() => {
         return sourceValue.get();

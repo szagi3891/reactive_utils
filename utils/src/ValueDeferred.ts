@@ -8,7 +8,7 @@ export class ValueDeferred<T> {
     public constructor(initValue: T, timeIntervalMs: number) {
         this.value = initValue;
 
-        const valueDeferred = new Signal<T>(initValue, () => {
+        const valueDeferred = Signal.create<T>(initValue, () => {
 
             valueDeferred.set(this.value);
 
