@@ -1,6 +1,8 @@
 import type { IAtom } from "mobx";
 import { ConnectType, createConnectAtom } from "./createConnectAtom.ts";
 import { withKeepAlive } from "./Signal/withKeepAlive.ts";
+import z from "zod";
+import { Storage, getInitValue, isBrowser } from "./Signal/localStorage.ts";
 
 /** Shared contract for {@link Signal} — use for parameters that accept any signal instance. */
 export type SignalBase<T> = {
@@ -49,4 +51,26 @@ export class Signal<T> implements SignalBase<T> {
     }
 
 
+    public static withLocalStorage<T>(
+        storageType: 'localStorage' | 'sessionStorage',
+        localStorageKey: string,
+        value: T,
+        decoder: z.ZodType<T>,
+        onConnect: ConnectType
+    ): Signal<T> {
+        const storage = new Storage(storageType);
+        let innerValue = getInitValue(storage, localStorageKey, value, decoder);
+
+        return new Signal({
+            get value() {
+                return innerValue;
+            },
+            set value(newValue: T) {
+                innerValue = newValue;
+                if (isBrowser()) {
+                    storage.set(localStorageKey, JSON.stringify(newValue));
+                }
+            }
+        }, onConnect);
+    }
 }
