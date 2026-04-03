@@ -39,7 +39,6 @@ export { ResizableUint8Array } from './src/ResizableUint8Array.ts';
 export { CheckByZod, CheckByZodError } from './src/checkByZod.ts';
 export { getCssPropertiesForClasses } from './src/css/getCSSRuleForClass.ts';
 export { Computed } from './src/reactive/Computed.ts';
-export { tryFn, tryFnSync } from './src/tryFn.ts';
 
 export { AllocationCounter } from './src/reactive/AllocationCounter.ts';
 export { whenDrop } from './src/reactive/whenDrop.ts';
@@ -48,6 +47,4 @@ export { whenDrop } from './src/reactive/whenDrop.ts';
 export { cacheFnStrong, cacheFnNeverRelease } from './src/reactive/cacheFnStrong.ts';
 export { cacheFnWeak } from './src/reactive/cacheFnWeak.ts';
 
-
-export { TaskPool } from './src/TaskPool.ts';
 
