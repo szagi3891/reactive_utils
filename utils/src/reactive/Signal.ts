@@ -51,7 +51,7 @@ export class Signal<T> implements SignalBase<T> {
     }
 
 
-    public static withLocalStorage<T>(
+    private static withLocalStorageKind<T>(
         storageType: 'localStorage' | 'sessionStorage',
         localStorageKey: string,
         value: T,
@@ -73,4 +73,23 @@ export class Signal<T> implements SignalBase<T> {
             }
         }, onConnect);
     }
+
+    public static withLocalStorage<T>(
+        localStorageKey: string,
+        value: T,
+        decoder: z.ZodType<T>,
+        onConnect: ConnectType
+    ): Signal<T> {
+        return Signal.withLocalStorageKind('localStorage', localStorageKey, value, decoder, onConnect);
+    }
+
+    public static withSessionStorage<T>(
+        localStorageKey: string,
+        value: T,
+        decoder: z.ZodType<T>,
+        onConnect: ConnectType
+    ): Signal<T> {
+        return Signal.withLocalStorageKind('sessionStorage', localStorageKey, value, decoder, onConnect);
+    }
 }
+
