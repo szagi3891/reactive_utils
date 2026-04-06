@@ -29,17 +29,17 @@ export type WebsocketStreamMessageSend<SendT> = {
     type: 'reconnect',
 };
 
-export interface PingPongParamsType {
+export interface PingPongParamsType<SendT> {
     timeoutPingMs: number,
     timeoutCloseMs: number,
-    formatPingMessage: () => string,
+    formatPingMessage: () => SendT,
 }
 
 class PingPongManager<ReceiveT, SendT> {
     lastActionTime: number;
     lastAction: 'ping' | 'message' = 'message';
 
-    constructor(socket: AsyncWebSocket<ReceiveT, SendT>, config: PingPongParamsType, showLog: boolean) {
+    constructor(socket: AsyncWebSocket<ReceiveT, SendT>, config: PingPongParamsType<SendT>, showLog: boolean) {
         this.lastActionTime = new Date().getTime();
         
         if (config.timeoutPingMs < config.timeoutCloseMs) {
@@ -67,7 +67,6 @@ class PingPongManager<ReceiveT, SendT> {
                             console.info('WebsocketStream - PingPongManager: send ping')
                         }
                         this.lastAction = 'ping';
-                        //@ts-expect-error - Ping message type mismatch with SendT is intentional 
                         socket.send(config.formatPingMessage());
                         return;
                     }
@@ -138,7 +137,7 @@ const createStream = <ReceiveT, SendT>(
     wsHost: string,
     connectionTimeoutMs: number,
     reconnectTimeoutMs: number,
-    pingPong: PingPongParamsType | null,
+    pingPong: PingPongParamsType<SendT> | null,
     log: boolean,
     signal: AbortSignal,
     receiveValidator: CheckByZod<ReceiveT>,
@@ -237,7 +236,7 @@ export class WebsocketStream<ReceiveT, SendT> {
         wsHost: string,
         connectionTimeoutMs: number,
         reconnectTimeoutMs: number,
-        pingPong: PingPongParamsType | null,
+        pingPong: PingPongParamsType<SendT> | null,
         log: boolean,
         receiveValidator: CheckByZod<ReceiveT>,
         sendValidator: CheckByZod<SendT>,
