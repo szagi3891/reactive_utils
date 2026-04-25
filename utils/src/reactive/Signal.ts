@@ -67,10 +67,21 @@ export class Signal<T> {
         localStorageKey: string,
         value: T,
         decoder: z.ZodType<T>,
-        onConnect?: ConnectType
+        asyncInit: boolean,
+        onConnect: ConnectType | undefined
     ): Signal<T> {
         const storage = new Storage(storageType);
-        let innerValue = getInitValue(storage, localStorageKey, value, decoder);
+        let innerValue = value;
+        
+        const initFromLocalStorage = getInitValue(storage, localStorageKey, value, decoder);
+
+        if (asyncInit) {
+            setTimeout(() => {
+                innerValue = initFromLocalStorage;
+            }, 0);
+        } else {
+            innerValue = initFromLocalStorage;
+        }
 
         return new Signal({
             get value() {
@@ -85,22 +96,23 @@ export class Signal<T> {
         }, onConnect);
     }
 
-    public static withLocalStorage<T>(
-        localStorageKey: string,
-        value: T,
-        decoder: z.ZodType<T>,
-        onConnect?: ConnectType
-    ): Signal<T> {
-        return Signal.withLocalStorageKind('localStorage', localStorageKey, value, decoder, onConnect);
+    public static withLocalStorage<T>(params: LocalStorageParams<T>): Signal<T> {
+        const { localStorageKey, value, decoder, asyncInit, onConnect } = params;
+
+        return Signal.withLocalStorageKind('localStorage', localStorageKey, value, decoder, asyncInit ?? false, onConnect);
     }
 
-    public static withSessionStorage<T>(
-        localStorageKey: string,
-        value: T,
-        decoder: z.ZodType<T>,
-        onConnect?: ConnectType
-    ): Signal<T> {
-        return Signal.withLocalStorageKind('sessionStorage', localStorageKey, value, decoder, onConnect);
+    public static withSessionStorage<T>(params: LocalStorageParams<T>): Signal<T> {
+        const { localStorageKey, value, decoder, asyncInit, onConnect } = params;
+
+        return Signal.withLocalStorageKind('sessionStorage', localStorageKey, value, decoder, asyncInit ?? false, onConnect);
     }
 }
 
+interface LocalStorageParams<T> {
+    localStorageKey: string;
+    value: T;
+    decoder: z.ZodType<T>;
+    asyncInit?: boolean,
+    onConnect?: ConnectType;
+}
