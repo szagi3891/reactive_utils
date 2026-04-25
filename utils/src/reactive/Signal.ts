@@ -75,15 +75,11 @@ export class Signal<T> {
         
         const initFromLocalStorage = getInitValue(storage, localStorageKey, value, decoder);
 
-        if (asyncInit) {
-            setTimeout(() => {
-                innerValue = initFromLocalStorage;
-            }, 0);
-        } else {
+        if (asyncInit === false) {
             innerValue = initFromLocalStorage;
         }
 
-        return new Signal({
+        const signal = new Signal({
             get value() {
                 return innerValue;
             },
@@ -94,6 +90,14 @@ export class Signal<T> {
                 }
             }
         }, onConnect);
+
+        if (asyncInit) {
+            setTimeout(() => {
+                signal.set(initFromLocalStorage);
+            }, 0);
+        }
+
+        return signal as Signal<T>;
     }
 
     public static withLocalStorage<T>(params: LocalStorageParams<T>): Signal<T> {
