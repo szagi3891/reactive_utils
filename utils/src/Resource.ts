@@ -119,7 +119,7 @@ export class Resource<T> {
 
     //TODO - zamoenić na Result<T, loding | error>
 
-    public get(): ResourceResult<T> {
+    public get = (): ResourceResult<T> => {
         this.init();
 
         this.atom.reportObserved();
@@ -138,7 +138,7 @@ export class Resource<T> {
         return [false, prevValue];
     }
 
-    public async refresh(optimisticUpdate?: (prevValue: T) => T): Promise<void> {
+    public refresh = async (optimisticUpdate?: (prevValue: T) => T): Promise<void> => {
         if (this.revision === 0) {
             return;
         }
@@ -164,7 +164,7 @@ export class Resource<T> {
     //wtórne metody bazujące na .get()
     //---------------------------------------------------------------------------------------------------------
 
-    public getAsync(): Promise<T> {
+    public getAsync = (): Promise<T> => {
         const result = new PromiseBox<T>();
 
         const dispose = autorun((dispose) => {
@@ -204,7 +204,7 @@ export class Resource<T> {
         return result.promise;
     }
 
-    public getReady(): T | null {
+    public getReady = (): T | null => {
         const result = this.get();
 
         if (result.type === 'ok') {
