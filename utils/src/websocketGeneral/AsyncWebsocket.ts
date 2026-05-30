@@ -79,7 +79,7 @@ const createStream = async <ReceiveT>(
         socket.close();
     });
 
-    let timerId: number | undefined = undefined;
+    let timerId: ReturnType<typeof setTimeout> | undefined = undefined;
     const result = new PromiseBoxOptimistic<[WebSocket, Stream<ReceiveT>] | null>();
 
     const clearTimer = () => {
