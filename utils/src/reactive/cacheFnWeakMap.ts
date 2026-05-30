@@ -41,7 +41,7 @@ const free = <T extends WeakKey>(key: T) => {
 
 //----------------------------------------------------------------
 
-class WeakMapWrapper<T extends WeakKey> {
+export class CacheFnWeakMapWrapper<T extends WeakKey> {
 
     constructor(public readonly inst: T) {
         register(inst);
@@ -59,8 +59,6 @@ export const cacheFnWeakMap = <K extends WeakKey, R>(fn: (key: K) => R): ((targe
     const cache = new CacheFnWeakMap<K, R>(fn);
     return cache.get;
 };
-
-cacheFnWeakMap.Wrapper = WeakMapWrapper;
 
 class CacheFnWeakMap<K extends WeakKey, R> {
     private readonly cache = new WeakMap<symbol, R>();
