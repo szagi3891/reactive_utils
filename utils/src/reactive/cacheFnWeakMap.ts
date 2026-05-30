@@ -1,5 +1,7 @@
 
-export const cacheFnWeakMap = <K extends WeakKey, R>(fn: (target: K) => R): ((target: K) => R) => {
+export const cacheFnWeakMap = <K extends { getTarget: () => Target }, Target, R>(
+    fn: (target: Target) => R
+): ((target: K) => R) => {
     const cache = new WeakMap<K, R>();
 
     return (target: K): R => {
@@ -9,7 +11,7 @@ export const cacheFnWeakMap = <K extends WeakKey, R>(fn: (target: K) => R): ((ta
             return value;
         }
 
-        const newValue = fn(target);
+        const newValue = fn(target.getTarget());
 
         cache.set(target, newValue);
 
