@@ -33,7 +33,7 @@ export const cacheFnWeak = <P extends Array<unknown>, R extends WeakKey>(fn: (..
     };
 };
 
-export const cacheFnWeakOptional = <P extends Array<unknown>, R extends WeakKey>(fn: (...params: P) => R | null): ((...params: P) => R | null) => {
+export const cacheFnWeakOptional = <P extends Array<unknown>, R extends WeakKey | null>(fn: (...params: P) => R | null): ((...params: P) => R | null) => {
     const innerCache = cacheFnWeak((...params: P): Result<R, null> => {
         const result = fn(...params);
         if (result === null) {
