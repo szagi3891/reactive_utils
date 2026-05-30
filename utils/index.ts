@@ -45,6 +45,6 @@ export { whenDrop } from './src/reactive/whenDrop.ts';
 
 
 export { cacheFnStrong, cacheFnNeverRelease } from './src/reactive/cacheFnStrong.ts';
-export { cacheFnWeak, cacheFnWeakOptional } from './src/reactive/cacheFnWeak.ts';
+export { cacheFnWeak } from './src/reactive/cacheFnWeak.ts';
 
 

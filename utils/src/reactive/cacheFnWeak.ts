@@ -1,6 +1,5 @@
 import { whenDrop } from './whenDrop.ts';
 import { stringifyValue } from "./stringifyValue.ts";
-import { Result } from "../Result.ts";
 
 export const cacheFnWeak = <P extends Array<unknown>, R extends WeakKey>(fn: (...params: P) => R): ((...params: P) => R) => {
     const data: Map<string, WeakRef<R>> = new Map();
@@ -30,23 +29,5 @@ export const cacheFnWeak = <P extends Array<unknown>, R extends WeakKey>(fn: (..
         data.set(key, new WeakRef(newValue));
 
         return newValue;
-    };
-};
-
-export const cacheFnWeakOptional = <P extends Array<unknown>, R extends WeakKey | null>(fn: (...params: P) => R | null): ((...params: P) => R | null) => {
-    const innerCache = cacheFnWeak((...params: P): Result<R, null> => {
-        const result = fn(...params);
-        if (result === null) {
-            return Result.error(null);
-        }
-        return Result.ok(result);
-    });
-
-    return (...params: P): R | null => {
-        const result = innerCache(...params);
-        if (result.type === 'ok') {
-            return result.data;
-        }
-        return null;
     };
 };
