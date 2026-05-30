@@ -2,6 +2,7 @@ import { whenDrop } from './whenDrop.ts';
 import { stringifyValue } from "./stringifyValue.ts";
 
 //TODO - add tests for cacheFeWeak
+//TODO - do wywalenia ?
 
 export const cacheFnWeak = <P extends Array<unknown>, R extends WeakKey>(fn: (...params: P) => R): ((...params: P) => R) => {
     const data: Map<string, WeakRef<R>> = new Map();
