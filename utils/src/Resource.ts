@@ -4,72 +4,29 @@ import { Result } from "./Result.ts";
 import { assertNever } from "./assertNever.ts";
 import { createConnectAtom } from "./reactive/createConnectAtom.ts";
 
-const TIMEOUT = 10000;
-
-type ResultError = {
-    type: 'error',
-    message: string,
-} | {
-    type: 'loading',
-}
-
-export const ResourceResult = {
-    ok: <T>(value: T): Result<T, ResultError> => {
-        return Result.ok(value);
-    },
-  
-    error: <T>(message: string): Result<T, ResultError> => {
-        return Result.error({
-            type: 'error',
-            message,
-        });
-    },
-
-    loaading: <T>(): Result<T, ResultError> => {
-        return Result.error({
-            type: 'loading'
-        });
-    }
-};
-
-export type ResourceResult<T> = Result<T, ResultError>;
-
-const send = <T>(loadValue: () => Promise<T>): Promise<ResourceResult<T>> => {
-    const response = new PromiseBox<ResourceResult<T>>();
-
-    const timer = setTimeout(() => {
-        response.resolve(ResourceResult.error('timeout'));
-    }, TIMEOUT);
+const send = <T>(loadValue: () => Promise<T>): Promise<Result<T, null>> => {
+    const response = new PromiseBox<Result<T, null>>();
 
     (async () => {
         try {
             const loadedValue = await loadValue();
-
-            clearTimeout(timer);
             response.resolve(Result.ok(loadedValue));
         } catch (err) {
             console.error(err);
-
-            clearTimeout(timer);
-            response.resolve(ResourceResult.error(String(err)));
+            response.resolve(Result.error(null));
         }
     })();
 
     return response.promise;
 };
 
-// interface ValueVersion<T> {
-//     revision: number,
-//     type: 'optimistic' | 'value',
-//     value: ResourceResult<T>,
-// }
 
 export class Resource<T> {
     private readonly atom: IAtom;
     // private data: ValueVersion<T>;
     private revision: number;
     // private type: 'optimistic' | 'value';
-    private value: ResourceResult<T>;
+    private value: Result<T, null>;
     
     // private current: ValueUnsafe<ValueVersion<T>>;
 
@@ -77,7 +34,7 @@ export class Resource<T> {
         this.atom = createConnectAtom('resource', onConnect);
         this.revision = 0;
         // this.type = 'optimistic';
-        this.value = ResourceResult.loaading();
+        this.value = Result.error(null);
     }
 
     public static browserAndServer<T>(loadValue: () => Promise<T>, onConnect?: () => (() => void)): Resource<T> {
@@ -109,7 +66,7 @@ export class Resource<T> {
         if (this.revision === 0) {
             this.revision = 1;
             // this.type = 'optimistic';
-            this.value = ResourceResult.loaading();
+            this.value = Result.error(null);
 
             setTimeout(() => {
                 this.requestData(1);
@@ -117,9 +74,7 @@ export class Resource<T> {
         }
     }
 
-    //TODO - zamoenić na Result<T, loding | error>
-
-    public get = (): ResourceResult<T> => {
+    public get = (): Result<T, null> => {
         this.init();
 
         this.atom.reportObserved();
@@ -127,12 +82,12 @@ export class Resource<T> {
     }
 
     private applyOptimisticUpdate(
-        prevValue: ResourceResult<T>,
+        prevValue: Result<T, null>,
         optimisticUpdate?: (prevValue: T) => T
-    ): [boolean, ResourceResult<T>] {
+    ): [boolean, Result<T, null>] {
 
         if (prevValue.type === 'ok' && optimisticUpdate !== undefined) {
-            return [true, ResourceResult.ok(optimisticUpdate(prevValue.data))];
+            return [true, Result.ok(optimisticUpdate(prevValue.data))];
         }
 
         return [false, prevValue];
@@ -164,6 +119,9 @@ export class Resource<T> {
     //wtórne metody bazujące na .get()
     //---------------------------------------------------------------------------------------------------------
 
+    /**
+     * @deprecated - please stop using this method
+     */
     public getAsync = (): Promise<T> => {
         const result = new PromiseBox<T>();
 
@@ -177,20 +135,9 @@ export class Resource<T> {
             }
 
             if (data.type === 'error') {
-                const error = data.error;
-
-                if (error.type === 'loading') {
-                    return;
-                }
-
-                if (error.type === 'error') {
-                    result.reject(error.message);
-                    dispose.dispose();
-                    return;
-                }
-                return assertNever(error);
+                return;
             }
-            
+
             return assertNever(data);
         });
 

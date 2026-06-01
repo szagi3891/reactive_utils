@@ -114,11 +114,8 @@ Deno.test('error-catch', async () => {
 
     await inst.refresh();
     expect(inst.get()).toEqual({
-        type: 'error', 
-        error: {
-            message: "Error: fail fetch data",
-            type: "error",
-        },
+        type: 'error',
+        error: null,
     });
 
     await inst.refresh();

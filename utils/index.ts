@@ -1,7 +1,6 @@
 export { assertNever } from './src/assertNever.ts';
 export { Signal } from './src/reactive/Signal.ts';
 export { Resource } from './src/Resource.ts';
-export { ResourceResult } from './src/Resource.ts';
 export { PromiseBox, PromiseBoxOptimistic } from './src/PromiseBox.ts';
 
 export { EventEmitter, ValueEmitter, type EventEmitterReceiver } from './src/EventEmitter.ts';
