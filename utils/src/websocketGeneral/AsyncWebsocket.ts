@@ -89,17 +89,8 @@ const createStream = async <ReceiveT>(
         }
     };
 
-    timerId = from.type === 'connectFrom'
-        ? setTimeout(() => {
-            if (result.isFulfilled() === false) {
-                log.error(`Timeout connection for ${from.host}, timeout=${from.timeout}`);
-                stream.close();
-                socket.close();
-                result.resolve(null);
-            }
-        }, from.timeout)
-        : undefined;
-
+    // Register listeners before setTimeout — the first timer registration can
+    // flush microtasks (e.g. a mock WebSocket open), so open must already be wired.
     switch (from.type) {
         case 'connectFrom': {
             const timeStart = new Date();
@@ -148,6 +139,17 @@ const createStream = async <ReceiveT>(
         log.debug(`Close connection for ${socket.url}`);
         stream.close();
     });
+
+    if (from.type === 'connectFrom') {
+        timerId = setTimeout(() => {
+            if (result.isFulfilled() === false) {
+                log.error(`Timeout connection for ${from.host}, timeout=${from.timeout}`);
+                stream.close();
+                socket.close();
+                result.resolve(null);
+            }
+        }, from.timeout);
+    }
 
     return result.promise;
 };

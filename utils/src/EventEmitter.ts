@@ -44,6 +44,10 @@ export class EventEmitter<T> {
             }
         }
     }
+
+    public isEmpty(): boolean {
+        return this.events.size === 0;
+    }
 }
 
 export class ValueEmitter<T> {
