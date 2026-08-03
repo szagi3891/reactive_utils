@@ -48,3 +48,4 @@ export { cacheFnWeak } from './src/reactive/cacheFnWeak.ts';
 export { cacheFnWeakMap, CacheFnWeakMapWrapper } from './src/reactive/cacheFnWeakMap.ts';
 
 
+export { jsonParse } from './src/jsonParse.ts';
