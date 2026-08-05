@@ -1,4 +1,10 @@
-import { computed, comparer, type IComputedValue } from "mobx";
+import {
+    computed,
+    compareIdentity,
+    compareShallow,
+    compareStructural,
+    type IComputedValue,
+} from "mobx";
 import { Signal } from "./Signal.ts";
 
 export const compareArray = <T>(list1: Array<T>, list2: Array<T>): boolean => {
@@ -32,11 +38,11 @@ export class Computed<T> {
     //https://mobx.js.org/computeds.html#built-in-comparers
 
     static initIdentity<T>(value: () => T): Computed<T> {
-        return new Computed(value, comparer.identity);
+        return new Computed(value, compareIdentity);
     }
 
     static initShallow<T>(value: () => T): Computed<T> {
-        return new Computed(value, comparer.shallow);
+        return new Computed(value, compareShallow);
     }
 
     static initShallowArray<K extends Array<unknown> | null>(value: () => K): Computed<K> {
@@ -50,7 +56,7 @@ export class Computed<T> {
     }
 
     static initStructural<T>(value: () => T): Computed<T> {
-        return new Computed(value, comparer.structural);
+        return new Computed(value, compareStructural);
     }
 
     public static withPollingSync<T>(
