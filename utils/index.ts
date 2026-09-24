@@ -38,6 +38,8 @@ export { ResizableUint8Array } from './src/ResizableUint8Array.ts';
 export { CheckByZod, CheckByZodError } from './src/checkByZod.ts';
 export { getCssPropertiesForClasses } from './src/css/getCSSRuleForClass.ts';
 export { Computed } from './src/reactive/Computed.ts';
+export { ComputedAsync } from './src/reactive/ComputedAsync/ComputedAsync.ts';
+export type { Snapshot } from './src/reactive/ComputedAsync/ComputedAsync.ts';
 
 export { AllocationCounter } from './src/reactive/AllocationCounter.ts';
 export { whenDrop } from './src/reactive/whenDrop.ts';

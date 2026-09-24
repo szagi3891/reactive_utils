@@ -120,7 +120,7 @@ Deno.test('basic', () => {
                 },
                 {
                     field: "sub.sub2.type",
-                    message: "Invalid input",
+                    message: "Invalid discriminator value. Expected 'ver1' | 'ver2' | 'ver3'",
                 },
             ],
             "data": {
@@ -154,7 +154,7 @@ Deno.test('basic', () => {
             "errors": [
                 {
                     field: "sub.sub2.type",
-                    message: "Invalid input",
+                    message: "Invalid discriminator value. Expected 'ver1' | 'ver2' | 'ver3'",
                 },
             ],
             "data": {

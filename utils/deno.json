@@ -1,5 +1,5 @@
 {
-    "version": "0.5.368",
+    "version": "0.5.369",
     "name": "@reactive/utils",
     "exports": {
         ".": "./index.ts"
@@ -18,7 +18,7 @@
         "mobx": "npm:mobx@^*",
         "mobx-react-lite": "npm:mobx-react-lite@^*",
         "react": "npm:react@^*",
-        "zod": "npm:zod@^4.0.0",
+        "zod": "npm:zod@^4.5.0",
         "chalk": "npm:chalk@^*"
     },
     "tasks": {

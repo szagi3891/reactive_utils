@@ -14,7 +14,10 @@
     "npm:mobx-react-lite@*": "5.0.0_mobx@7.0.0_react@19.2.0",
     "npm:mobx@*": "7.0.0",
     "npm:react@*": "19.2.0",
-    "npm:zod@4": "4.0.10"
+    "npm:zod@4.4.0": "4.4.0",
+    "npm:zod@4.5.0": "4.5.0",
+    "npm:zod@4.6.4": "4.6.4",
+    "npm:zod@^4.5.0": "4.6.4"
   },
   "jsr": {
     "@std/assert@1.0.6": {
@@ -86,8 +89,14 @@
     "undici-types@6.19.8": {
       "integrity": "sha512-ve2KP6f/JnbPBFyobGHuerC9g1FYGn/F8n1LWTwNxCEzd6IfqTwUQcNXgEtmmQ6DlRrC1hrSrBnCZPokRrDHjw=="
     },
-    "zod@4.0.10": {
-      "integrity": "sha512-3vB+UU3/VmLL2lvwcY/4RV2i9z/YU0DTV/tDuYjrwmx5WeJ7hwy+rGEEx8glHp6Yxw7ibRbKSaIFBgReRPe5KA=="
+    "zod@4.4.0": {
+      "integrity": "sha512-932TE3dEKhhYkEZFv6meaxLaCyg1m6LSI0ETKCIyUqIim+KgIsB/kha/4CKwDEbYgMzS5QxAe2mtDPpaHLHdsQ=="
+    },
+    "zod@4.5.0": {
+      "integrity": "sha512-FSVkRSv3SBc0aefry5kxuD46ExRwtWWyUPjyXHZt00YRF81+MX8rdQm8aJwlL4NLMqcJABseHr66OJuc+0LkDw=="
+    },
+    "zod@4.6.4": {
+      "integrity": "sha512-AXSD6hvGdvRjajG/l1cC+d6IrhH+sjmPKtYeQdJIK8MFJl3LyClzS+o/YsVC+zQZPupAaeH5skwwm8YqYH7BqA=="
     }
   },
   "workspace": {
@@ -97,7 +106,7 @@
       "npm:mobx-react-lite@*",
       "npm:mobx@*",
       "npm:react@*",
-      "npm:zod@4"
+      "npm:zod@^4.5.0"
     ]
   }
 }
