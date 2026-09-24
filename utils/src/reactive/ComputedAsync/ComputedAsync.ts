@@ -7,7 +7,10 @@ export type Snapshot<K> =
     | { status: 'value'; value: K; fetching: boolean }
     | SnapshotErrorOrLoading;
 
-export type RefreshMode = 'keep' | 'replace';
+export type RefreshMode = 'refresh' | 'reload';
+
+/** Polityka poprzedniego snapshotu przy podłączeniu obserwatora. `'nothing'` nie wchodzi do `refresh()`. */
+export type ConnectMode = 'nothing' | RefreshMode;
 
 export type SnapshotError = {
     message: string;
@@ -192,12 +195,12 @@ const snapshotFromResult = <T>(
 
 type AsyncTask<T> = () => Promise<Result<T, string>>;
 
-/** API `ComputedAsync.browser` / `ComputedAsync.server`. */
-export type ComputedAsyncSide = {
+/** API `ComputedAsync.browser` / `ComputedAsync.server` / `onConnect`. */
+export type ComputedAsyncBuilder = {
+    readonly browser: ComputedAsyncBuilder;
+    readonly server: ComputedAsyncBuilder;
+    onConnect(mode: ConnectMode): ComputedAsyncBuilder;
     fromAsync<T>(run: () => Promise<Result<T, string>>): ComputedAsync<T>;
-    computeAsync<T>(
-        createTask: (unbox: Unbox) => () => Promise<Result<T, string>>,
-    ): ComputedAsync<T>;
 };
 
 class FromAsyncRuntime<T> {
@@ -205,6 +208,10 @@ class FromAsyncRuntime<T> {
     private requestId = 0;
     /** Sztuczna zależność: `refresh()` podbija tick, gdy nie odświeżył źródeł. */
     private readonly bump = Signal.create<number>(0);
+    /** `bump` z ostatniego settle. `'nothing'` przy reconnect pomija request, gdy się zgadza. */
+    private settledBump = -1;
+    /** Pierwszy tick autorun po `connect` stosuje `connectMode`. */
+    private connectTick = false;
     /** Źródła z ostatniego udanego `unbox`. Przy wartości `refresh` woła je wszystkie. */
     private sources: SourceRefresh[] = [];
     /** Reaktywny snapshot. `onConnect` startuje autorun, cleanup go gasi. */
@@ -212,6 +219,7 @@ class FromAsyncRuntime<T> {
 
     constructor(
         private readonly createTask: (unbox: Unbox) => AsyncTask<T>,
+        private readonly connectMode: ConnectMode,
     ) {
         this.state = Signal.create<Snapshot<T>>({ status: 'loading' }, () => this.connect());
     }
@@ -220,7 +228,7 @@ class FromAsyncRuntime<T> {
         return this.state.get();
     }
 
-    refresh = (mode: RefreshMode = 'keep'): void => {
+    refresh = (mode: RefreshMode = 'refresh'): void => {
         untracked(() => {
             const prevAllowStateReads = _allowStateReadsStart(true);
             try {
@@ -231,7 +239,7 @@ class FromAsyncRuntime<T> {
                 }
             }
 
-            if (mode === 'replace') {
+            if (mode === 'reload') {
                 this.state.set({ status: 'loading' });
             }
 
@@ -247,6 +255,7 @@ class FromAsyncRuntime<T> {
     };
 
     private connect(): () => void {
+        this.connectTick = true;
         const dispose = autorun(() => this.tick());
         return () => {
             this.requestId += 1;
@@ -255,22 +264,56 @@ class FromAsyncRuntime<T> {
     }
 
     private tick(): void {
-        this.bump.get();
+        const bump = this.bump.get();
+        const isConnect = this.connectTick;
+        this.connectTick = false;
         const scoped = createUnbox();
 
         try {
             const task = this.createTask(scoped.unbox);
             this.sources = scoped.sources;
+
+            if (isConnect && this.skipConnect(bump)) {
+                return;
+            }
+
+            if (isConnect && this.connectMode === 'reload') {
+                this.state.set({ status: 'loading' });
+            }
+
             const id = ++this.requestId;
             const depsFetching = scoped.sawFetching;
             this.state.set(snapshotWhileFetching(untracked(() => this.state.get())));
             this.startRun(id, task, depsFetching);
         } catch (error) {
             this.requestId += 1;
+            this.settledBump = bump;
             this.state.set(unwrapUnbox(error, this.refresh));
         } finally {
             scoped.revoke();
         }
+    }
+
+    /** `'nothing'` zostawia settled snapshot, gdy od ostatniego settle nikt nie wołał `refresh()`. */
+    private skipConnect(bump: number): boolean {
+        if (this.connectMode !== 'nothing' || bump !== this.settledBump) {
+            return false;
+        }
+
+        const snapshot = untracked(() => this.state.get());
+        if (snapshot.status === 'loading') {
+            return false;
+        }
+
+        if (snapshot.status === 'value' && snapshot.fetching) {
+            this.state.set({
+                status: 'value',
+                value: snapshot.value,
+                fetching: false,
+            });
+        }
+
+        return true;
     }
 
     private startRun(id: number, task: AsyncTask<T>, depsFetching: boolean): void {
@@ -307,6 +350,8 @@ class FromAsyncRuntime<T> {
             return;
         }
 
+        this.settledBump = untracked(() => this.bump.get());
+
         if (depsFetching && snapshot.status === 'value') {
             this.state.set({
                 status: 'value',
@@ -325,7 +370,7 @@ class FromAsyncRuntime<T> {
  *
  * Trzy stany: value | loading | error. Jedyny odczyt to `get()` — snapshot.
  * `fetching` jest tylko na wartości i oznacza odświeżanie przy starej wartości
- * (`refresh('keep')`). Pierwsze ładowanie to `status: 'loading'`, bez flagi.
+ * (`refresh()`, czyli `'refresh'`). Pierwsze ładowanie to `status: 'loading'`, bez flagi.
  *
  * `get()` przy `fromAsync` i `computeAsync` nigdy nie rzuca — wolno go używać ze zwykłego Computed i z Reacta.
  * Przy `from` własny wyjątek wylatuje z `get()` i wywala obserwatora.
@@ -341,6 +386,7 @@ export class ComputedAsync<T> {
 
     private static finish<T>(
         side: RuntimeSide | undefined,
+        connect: ConnectMode,
         createTask: (unbox: Unbox) => AsyncTask<T>,
     ): ComputedAsync<T> {
         if (side !== undefined && currentSide() !== side) {
@@ -349,7 +395,7 @@ export class ComputedAsync<T> {
             );
         }
 
-        const runtime = new FromAsyncRuntime(createTask);
+        const runtime = new FromAsyncRuntime(createTask, connect);
 
         return new ComputedAsync(
             Computed.initShallow(() => runtime.read()),
@@ -357,20 +403,30 @@ export class ComputedAsync<T> {
         );
     }
 
-    private static gate(side: RuntimeSide): ComputedAsyncSide {
+    private static builder(side: RuntimeSide | undefined, connect: ConnectMode): ComputedAsyncBuilder {
         return {
-            fromAsync<T>(run: AsyncTask<T>): ComputedAsync<T> {
-                return ComputedAsync.finish(side, () => run);
+            get browser() {
+                return ComputedAsync.builder('browser', connect);
             },
-
-            computeAsync<T>(createTask: (unbox: Unbox) => AsyncTask<T>): ComputedAsync<T> {
-                return ComputedAsync.finish(side, createTask);
+            get server() {
+                return ComputedAsync.builder('server', connect);
+            },
+            onConnect(mode: ConnectMode): ComputedAsyncBuilder {
+                return ComputedAsync.builder(side, mode);
+            },
+            fromAsync<T>(run: AsyncTask<T>): ComputedAsync<T> {
+                return ComputedAsync.finish(side, connect, () => run);
             },
         };
     }
 
-    static readonly browser: ComputedAsyncSide = ComputedAsync.gate('browser');
-    static readonly server: ComputedAsyncSide = ComputedAsync.gate('server');
+    static readonly browser: ComputedAsyncBuilder = ComputedAsync.builder('browser', 'refresh');
+    static readonly server: ComputedAsyncBuilder = ComputedAsync.builder('server', 'refresh');
+
+    /** Co zrobić z poprzednim snapshotem, gdy pojawi się obserwator. */
+    static onConnect(mode: ConnectMode): ComputedAsyncBuilder {
+        return ComputedAsync.builder(undefined, mode);
+    }
 
     /**
      * Synchronizacja. `refresh` tylko odświeża źródła z `unbox`.
@@ -380,7 +436,7 @@ export class ComputedAsync<T> {
     static from<T>(getValue: (unbox: Unbox) => T): ComputedAsync<T> {
         let sources: SourceRefresh[] = [];
         let latest: Snapshot<T> = { status: 'loading' };
-        const refresh = (mode: RefreshMode = 'keep'): void => {
+        const refresh = (mode: RefreshMode = 'refresh'): void => {
             untracked(() => {
                 const prevAllowStateReads = _allowStateReadsStart(true);
                 try {
@@ -428,24 +484,26 @@ export class ComputedAsync<T> {
     /**
      * Uruchamia request przy pierwszej obserwacji. Zniknięcie observerów
      * zatrzymuje autorun i in-flight Promise, ale zostawia ostatnią wartość —
-     * ponowna obserwacja odświeża w trybie `keep`, bez wracania do loading.
+     * ponowna obserwacja odświeża w trybie `'refresh'`, bez wracania do loading.
      *
      * Sam fetch: `fromAsync(async () => Result.ok(...))` — task w `untracked`
      * z wyłączonym `allowStateReads`.
-     * Zależności: `computeAsync((unbox) => () => Promise)` — zewnętrzna funkcja
-     * w autorun, zwrócony task w `untracked`.
-     * Strona: `.browser` / `.server` przed `fromAsync` / `computeAsync`;
-     * mismatch = loading bez wołania callbacków.
+     * Zależności: `computeAsync((unbox) => () => Promise)` — osobno, bez buildera,
+     * jak zwykły computed. Zewnętrzna funkcja w autorun, zwrócony task w `untracked`.
+     * Strona: `.browser` / `.server` przed `fromAsync`;
+     * mismatch = loading bez wołania callbacka.
      *
-     * `refresh('keep')` (domyślnie) zostawia starą wartość z `fetching: true`.
+     * `refresh()` (domyślnie `'refresh'`) zostawia starą wartość z `fetching: true`.
      * Refresh ze snapshotu `error` od razu wchodzi w `loading` i startuje nowy request.
-     * `refresh('replace')` kasuje snapshot do `loading`. Zmiana zależności
-     * zostawia starą wartość (`fetching`), tak jak reconnect.
+     * `refresh('reload')` kasuje snapshot do `loading`. Zmiana zależności
+     * zostawia starą wartość (`fetching`), tak jak reconnect w trybie `'refresh'`.
+     * `onConnect('nothing')` przy kolejnym podłączeniu zostawia settled snapshot.
+     * `onConnect('reload')` wchodzi w `loading`. Bez `onConnect` zostaje `'refresh'`.
      * Koniec własnego requestu nie gasi `fetching`, dopóki zależność z `unbox`
      * nadal jedzie.
      */
     static fromAsync<T>(run: AsyncTask<T>): ComputedAsync<T> {
-        return ComputedAsync.finish(undefined, () => run);
+        return ComputedAsync.finish(undefined, 'refresh', () => run);
     }
 
     /**
@@ -453,10 +511,10 @@ export class ComputedAsync<T> {
      * należą do niej. Zwrócona funkcja async leci w `untracked`.
      */
     static computeAsync<T>(createTask: (unbox: Unbox) => AsyncTask<T>): ComputedAsync<T> {
-        return ComputedAsync.finish(undefined, createTask);
+        return ComputedAsync.finish(undefined, 'refresh', createTask);
     }
 
-    refresh(mode: RefreshMode = 'keep'): void {
+    refresh(mode: RefreshMode = 'refresh'): void {
         this.refreshFn(mode);
     }
 

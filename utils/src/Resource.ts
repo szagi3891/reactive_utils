@@ -21,6 +21,7 @@ const send = <T>(loadValue: () => Promise<T>): Promise<Result<T, null>> => {
 };
 
 
+/** @deprecated Zdeprecjonowany. Użyj `ComputedAsync.fromAsync`. */
 export class Resource<T> {
     private readonly atom: IAtom;
     // private data: ValueVersion<T>;

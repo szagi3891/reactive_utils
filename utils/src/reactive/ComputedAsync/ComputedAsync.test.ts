@@ -361,7 +361,7 @@ Deno.test('fromAsync: instancyjny refresh ponawia request', async () => {
     sub.dispose();
 });
 
-Deno.test('fromAsync: refresh(replace) idzie w loading', async () => {
+Deno.test('fromAsync: refresh(reload) idzie w loading', async () => {
     const ext = ComputedAsync.fromAsync(async () => {
         return Result.ok('ok');
     });
@@ -369,7 +369,7 @@ Deno.test('fromAsync: refresh(replace) idzie w loading', async () => {
 
     await waitFor(() => sub.current().status === 'value', 'first value');
 
-    ext.refresh('replace');
+    ext.refresh('reload');
     expect(sub.current()).toEqual({ status: 'loading' });
 
     await waitFor(() => {
@@ -609,7 +609,7 @@ Deno.test('computeAsync: refresh przy wartości startuje jeden request', async (
     sub.dispose();
 });
 
-Deno.test('computeAsync: refresh(keep) źródła startuje request potomka', async () => {
+Deno.test('computeAsync: refresh() źródła startuje request potomka', async () => {
     const sameValue = Promise.withResolvers<Result<number, string>>();
     const nextValue = Promise.withResolvers<Result<number, string>>();
     let sourceLoads = 0;
@@ -823,6 +823,127 @@ Deno.test('fromAsync: Promise po disconnect jest ignorowany', async () => {
     sub2.dispose();
 });
 
+Deno.test('onConnect(nothing): ponowna obserwacja nie startuje requestu', async () => {
+    let calls = 0;
+    const ext = ComputedAsync.onConnect('nothing').fromAsync(async () => {
+        calls += 1;
+        return Result.ok('kept');
+    });
+
+    const sub = observe(ext);
+    await waitFor(() => sub.current().status === 'value', 'first value');
+    expect(calls).toBe(1);
+    sub.dispose();
+
+    const sub2 = observe(ext);
+    await timeout(20);
+
+    expect(calls).toBe(1);
+    expect(sub2.current()).toEqual(valueOf('kept'));
+    sub2.dispose();
+});
+
+Deno.test('onConnect(nothing): error zostaje przy ponownej obserwacji', async () => {
+    let calls = 0;
+    const ext = ComputedAsync.onConnect('nothing').fromAsync(async () => {
+        calls += 1;
+        return Result.error('boom');
+    });
+
+    const sub = observe(ext);
+    await waitFor(() => sub.current().status === 'error', 'first error');
+    sub.dispose();
+
+    const sub2 = observe(ext);
+    await timeout(20);
+
+    expect(calls).toBe(1);
+    expect(sub2.current().status).toBe('error');
+    sub2.dispose();
+});
+
+Deno.test('onConnect(refresh): ponowna obserwacja zostawia wartość z fetching', async () => {
+    const boxes: Array<PromiseWithResolvers<Result<string, string>>> = [];
+    const ext = ComputedAsync.onConnect('refresh').fromAsync(async () => {
+        const box = Promise.withResolvers<Result<string, string>>();
+        boxes.push(box);
+        return box.promise;
+    });
+
+    const sub = observe(ext);
+    await waitFor(() => boxes.length === 1, 'first request');
+    boxes[0]?.resolve(Result.ok('v1'));
+    await waitFor(() => sub.current().status === 'value', 'v1');
+    sub.dispose();
+
+    const sub2 = observe(ext);
+    expect(sub2.current()).toEqual(valueOf('v1', true));
+    await waitFor(() => boxes.length === 2, 'second request');
+    sub2.dispose();
+});
+
+Deno.test('onConnect(reload): ponowna obserwacja wchodzi w loading', async () => {
+    const boxes: Array<PromiseWithResolvers<Result<string, string>>> = [];
+    const ext = ComputedAsync.onConnect('reload').fromAsync(async () => {
+        const box = Promise.withResolvers<Result<string, string>>();
+        boxes.push(box);
+        return box.promise;
+    });
+
+    const sub = observe(ext);
+    await waitFor(() => boxes.length === 1, 'first request');
+    boxes[0]?.resolve(Result.ok('v1'));
+    await waitFor(() => sub.current().status === 'value', 'v1');
+    sub.dispose();
+
+    const sub2 = observe(ext);
+    expect(sub2.current()).toEqual({ status: 'loading' });
+    await waitFor(() => boxes.length === 2, 'second request');
+    boxes[1]?.resolve(Result.ok('v2'));
+    await waitFor(() => {
+        const snapshot = sub2.current();
+        return snapshot.status === 'value' && snapshot.value === 'v2';
+    }, 'v2');
+    expect(sub2.current()).toEqual(valueOf('v2'));
+    sub2.dispose();
+});
+
+Deno.test('onConnect(nothing): refresh() wznawia request, także bez obserwatora', async () => {
+    const boxes: Array<PromiseWithResolvers<Result<string, string>>> = [];
+    const ext = ComputedAsync.onConnect('nothing').fromAsync(async () => {
+        const box = Promise.withResolvers<Result<string, string>>();
+        boxes.push(box);
+        return box.promise;
+    });
+
+    const sub = observe(ext);
+    await waitFor(() => boxes.length === 1, 'first request');
+    boxes[0]?.resolve(Result.ok('v1'));
+    await waitFor(() => {
+        const snapshot = sub.current();
+        return snapshot.status === 'value' && snapshot.fetching === false;
+    }, 'v1');
+
+    ext.refresh();
+    expect(sub.current()).toEqual(valueOf('v1', true));
+    await waitFor(() => boxes.length === 2, 'refresh while observed');
+    boxes[1]?.resolve(Result.ok('v2'));
+    await waitFor(() => {
+        const snapshot = sub.current();
+        return snapshot.status === 'value' && snapshot.value === 'v2' && snapshot.fetching === false;
+    }, 'v2');
+    sub.dispose();
+
+    ext.refresh('reload');
+    const sub2 = observe(ext);
+    expect(sub2.current()).toEqual({ status: 'loading' });
+    await waitFor(() => boxes.length === 3, 'reload while unobserved');
+    boxes[2]?.resolve(Result.ok('v3'));
+    await waitFor(() => sub2.current().status === 'value', 'v3');
+    expect(sub2.current()).toEqual(valueOf('v3'));
+    sub2.dispose();
+});
+
 let sideGate: Promise<void> = Promise.resolve();
 
 const withSide = async (
@@ -863,25 +984,41 @@ Deno.test('browser.fromAsync: na serwerze zostaje w loading i nie woła callback
     await withSide('server', async () => {
         let calls = 0;
         const id = Signal.create(1);
-        const ext = ComputedAsync.browser.computeAsync(() => {
+        const ext = ComputedAsync.browser.fromAsync(async () => {
             calls += 1;
             id.get();
-            return async () => {
-                calls += 1;
-                return Result.ok(calls);
-            };
+            return Result.ok(calls);
         });
         const sub = observe(ext);
 
         await timeout(20);
         ext.refresh();
-        ext.refresh('replace');
+        ext.refresh('reload');
         id.set(2);
         await timeout(20);
 
         expect(sub.current()).toEqual({ status: 'loading' });
         expect(calls).toBe(0);
         sub.dispose();
+    });
+});
+
+Deno.test('onConnect składa się z browser i server', async () => {
+    await withSide('browser', async () => {
+        let calls = 0;
+        const ext = ComputedAsync.onConnect('nothing').browser.onConnect('nothing').fromAsync(async () => {
+            calls += 1;
+            return Result.ok('side');
+        });
+        const sub = observe(ext);
+        await waitFor(() => sub.current().status === 'value', 'browser chain');
+        sub.dispose();
+
+        const sub2 = observe(ext);
+        await timeout(20);
+        expect(calls).toBe(1);
+        expect(sub2.current()).toEqual(valueOf('side'));
+        sub2.dispose();
     });
 });
 
