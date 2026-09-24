@@ -7,14 +7,25 @@ export type Snapshot<K> =
     | { status: 'value'; value: K; fetching: boolean }
     | SnapshotErrorOrLoading;
 
-const RefreshModeZod = z.enum(['keep', 'replace']);
-export type RefreshMode = z.infer<typeof RefreshModeZod>;
+export type RefreshMode = 'keep' | 'replace';
+
+export type SnapshotError = {
+    message: string;
+    refresh: (mode?: RefreshMode) => void;
+};
+
+export type SnapshotErrorOrLoading =
+    | { status: 'loading' }
+    | {
+        status: 'error';
+        jsRuntime: boolean;
+        error: SnapshotError;
+    };
 
 const SnapshotErrorZod = z.object({
     message: z.string(),
     refresh: z.custom<(mode?: RefreshMode) => void>((value) => typeof value === 'function'),
 });
-export type SnapshotError = z.infer<typeof SnapshotErrorZod>;
 
 const SnapshotErrorOrLoadingZod = z.discriminatedUnion('status', [
     z.object({
@@ -26,7 +37,6 @@ const SnapshotErrorOrLoadingZod = z.discriminatedUnion('status', [
         error: SnapshotErrorZod,
     }),
 ]);
-export type SnapshotErrorOrLoading = z.infer<typeof SnapshotErrorOrLoadingZod>;
 
 /** Rzucony przez `unbox` — `catch` rozpoznaje po tym symbolu, nie po `status`. */
 const unboxThrown = Symbol('ComputedAsync.unbox');
@@ -181,6 +191,14 @@ const snapshotFromResult = <T>(
 };
 
 type AsyncTask<T> = () => Promise<Result<T, string>>;
+
+/** API `ComputedAsync.browser` / `ComputedAsync.server`. */
+export type ComputedAsyncSide = {
+    fromAsync<T>(run: () => Promise<Result<T, string>>): ComputedAsync<T>;
+    computeAsync<T>(
+        createTask: (unbox: Unbox) => () => Promise<Result<T, string>>,
+    ): ComputedAsync<T>;
+};
 
 class FromAsyncRuntime<T> {
     /** Id bieżącego requestu. Stary Promise odpada, gdy `requestId` się zmieni (nowy tick / disconnect). */
@@ -339,7 +357,7 @@ export class ComputedAsync<T> {
         );
     }
 
-    private static gate(side: RuntimeSide) {
+    private static gate(side: RuntimeSide): ComputedAsyncSide {
         return {
             fromAsync<T>(run: AsyncTask<T>): ComputedAsync<T> {
                 return ComputedAsync.finish(side, () => run);
@@ -351,8 +369,8 @@ export class ComputedAsync<T> {
         };
     }
 
-    static readonly browser = ComputedAsync.gate('browser');
-    static readonly server = ComputedAsync.gate('server');
+    static readonly browser: ComputedAsyncSide = ComputedAsync.gate('browser');
+    static readonly server: ComputedAsyncSide = ComputedAsync.gate('server');
 
     /**
      * Synchronizacja. `refresh` tylko odświeża źródła z `unbox`.
