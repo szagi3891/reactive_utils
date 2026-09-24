@@ -759,16 +759,10 @@ Deno.test('fromAsync: zniknięcie obserwatora nie czyści wartości', async () =
     await waitFor(() => sub.current().status === 'value', 'kept value');
     sub.dispose();
 
-    const sub2 = observe(ext);
-    const snapshot = sub2.current();
-    expect(snapshot.status).toBe('value');
-    if (snapshot.status === 'value') {
-        expect(snapshot.value).toBe('kept');
-    }
-    sub2.dispose();
+    expect(peek(ext)).toEqual(valueOf('kept'));
 });
 
-Deno.test('fromAsync: ponowna obserwacja odświeża keep, nie loading', async () => {
+Deno.test('fromAsync: ponowna obserwacja wchodzi w loading', async () => {
     const boxes: Array<PromiseWithResolvers<Result<string, string>>> = [];
     const ext = ComputedAsync.fromAsync(async () => {
         const box = Promise.withResolvers<Result<string, string>>();
@@ -783,8 +777,7 @@ Deno.test('fromAsync: ponowna obserwacja odświeża keep, nie loading', async ()
     sub.dispose();
 
     const sub2 = observe(ext);
-    expect(sub2.current()).toEqual(valueOf('v1', true));
-    expect(sub2.current().status).not.toBe('loading');
+    expect(sub2.current()).toEqual({ status: 'loading' });
 
     await waitFor(() => boxes.length === 2, 'second request');
     boxes[1]?.resolve(Result.ok('v2'));

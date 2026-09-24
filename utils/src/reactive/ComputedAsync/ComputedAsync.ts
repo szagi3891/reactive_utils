@@ -420,8 +420,8 @@ export class ComputedAsync<T> {
         };
     }
 
-    static readonly browser: ComputedAsyncBuilder = ComputedAsync.builder('browser', 'refresh');
-    static readonly server: ComputedAsyncBuilder = ComputedAsync.builder('server', 'refresh');
+    static readonly browser: ComputedAsyncBuilder = ComputedAsync.builder('browser', 'reload');
+    static readonly server: ComputedAsyncBuilder = ComputedAsync.builder('server', 'reload');
 
     /** Co zrobić z poprzednim snapshotem, gdy pojawi się obserwator. */
     static onConnect(mode: ConnectMode): ComputedAsyncBuilder {
@@ -484,7 +484,7 @@ export class ComputedAsync<T> {
     /**
      * Uruchamia request przy pierwszej obserwacji. Zniknięcie observerów
      * zatrzymuje autorun i in-flight Promise, ale zostawia ostatnią wartość —
-     * ponowna obserwacja odświeża w trybie `'refresh'`, bez wracania do loading.
+     * ponowna obserwacja domyślnie robi `'reload'` i wchodzi w `loading`.
      *
      * Sam fetch: `fromAsync(async () => Result.ok(...))` — task w `untracked`
      * z wyłączonym `allowStateReads`.
@@ -496,14 +496,15 @@ export class ComputedAsync<T> {
      * `refresh()` (domyślnie `'refresh'`) zostawia starą wartość z `fetching: true`.
      * Refresh ze snapshotu `error` od razu wchodzi w `loading` i startuje nowy request.
      * `refresh('reload')` kasuje snapshot do `loading`. Zmiana zależności
-     * zostawia starą wartość (`fetching`), tak jak reconnect w trybie `'refresh'`.
+     * zostawia starą wartość (`fetching`).
      * `onConnect('nothing')` przy kolejnym podłączeniu zostawia settled snapshot.
-     * `onConnect('reload')` wchodzi w `loading`. Bez `onConnect` zostaje `'refresh'`.
+     * `onConnect('refresh')` zostawia wartość z `fetching: true`.
+     * Bez `onConnect` zostaje `'reload'`.
      * Koniec własnego requestu nie gasi `fetching`, dopóki zależność z `unbox`
      * nadal jedzie.
      */
     static fromAsync<T>(run: AsyncTask<T>): ComputedAsync<T> {
-        return ComputedAsync.finish(undefined, 'refresh', () => run);
+        return ComputedAsync.finish(undefined, 'reload', () => run);
     }
 
     /**
