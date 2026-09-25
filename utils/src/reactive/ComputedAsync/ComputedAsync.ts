@@ -527,4 +527,14 @@ export class ComputedAsync<T> {
     get(): Snapshot<T> {
         return this.inner.get();
     }
+
+    ready(): T | null {
+        const data = this.get();
+
+        if (data.status === 'value') {
+            return data.value;
+        }
+
+        return null;
+    }
 }
