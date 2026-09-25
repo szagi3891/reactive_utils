@@ -45,6 +45,55 @@ const valueOf = <T>(value: T, fetching = false): Snapshot<T> => ({
     fetching,
 });
 
+Deno.test('map: przelicza wartość źródła', async () => {
+    const box = Promise.withResolvers<Result<number, string>>();
+    const source = ComputedAsync.fromAsync(async () => box.promise);
+    const doubled = ComputedAsync.map(source, (value) => value * 2);
+    const sub = observe(doubled);
+
+    expect(sub.current()).toEqual({ status: 'loading' });
+
+    box.resolve(Result.ok(21));
+    await waitFor(() => sub.current().status === 'value', 'mapped value');
+
+    expect(sub.current()).toEqual(valueOf(42));
+    sub.dispose();
+});
+
+Deno.test('map: error zostawia refresh źródła i fetching przechodzi', async () => {
+    let calls = 0;
+    const source = ComputedAsync.fromAsync(async () => {
+        calls += 1;
+        if (calls === 1) {
+            return Result.error('boom');
+        }
+
+        return Result.ok(3);
+    });
+    const doubled = ComputedAsync.map(source, (value) => value * 2);
+    const sub = observe(doubled);
+
+    await waitFor(() => sub.current().status === 'error', 'mapped error');
+    const snapshot = sub.current();
+    if (snapshot.status !== 'error') {
+        throw new Error('expected error');
+    }
+
+    snapshot.error.refresh();
+    expect(sub.current()).toEqual({ status: 'loading' });
+    await waitFor(() => sub.current().status === 'value', 'mapped after refresh');
+    expect(sub.current()).toEqual(valueOf(6));
+
+    doubled.refresh();
+    expect(sub.current()).toEqual(valueOf(6, true));
+    await waitFor(() => {
+        const current = sub.current();
+        return current.status === 'value' && current.fetching === false;
+    }, 'mapped refresh settled');
+    expect(calls).toBe(3);
+    sub.dispose();
+});
+
 Deno.test('from: zwraca wartość synchronicznie', () => {
     const ext = ComputedAsync.from(() => 2 + 2);
 

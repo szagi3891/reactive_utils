@@ -482,6 +482,14 @@ export class ComputedAsync<T> {
     }
 
     /**
+     * Nowa pochodna. `loading` i `error` przechodzą ze źródła, `refresh` błędu woła źródło.
+     * Wartość jest wynikiem `mapValue`. `fetching` źródła zostaje na wyniku.
+     */
+    static map<T, R>(source: SnapshotSource<T>, mapValue: (value: T) => R): ComputedAsync<R> {
+        return ComputedAsync.from((unbox) => mapValue(unbox(source)));
+    }
+
+    /**
      * Uruchamia request przy pierwszej obserwacji. Zniknięcie observerów
      * zatrzymuje autorun i in-flight Promise, ale zostawia ostatnią wartość —
      * ponowna obserwacja domyślnie robi `'reload'` i wchodzi w `loading`.
