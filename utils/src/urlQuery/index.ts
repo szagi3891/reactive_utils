@@ -24,8 +24,20 @@ export type { Part } from "./part.ts";
 export { route, type Route, type RouterParams } from "./route.ts";
 export type { PageSearchParams, QuerySource } from "./source.ts";
 
-/** The parts a query is built of. */
-export const param = { text, int, number, boolean, oneOf, list, object, union };
+/**
+ * The parts a query is built of. Typed explicitly, as JSR, writing the types of the npm package, drops the members
+ * of an object written in shorthand, so `param` would be `{}` there.
+ */
+export const param: {
+  text: typeof text;
+  int: typeof int;
+  number: typeof number;
+  boolean: typeof boolean;
+  oneOf: typeof oneOf;
+  list: typeof list;
+  object: typeof object;
+  union: typeof union;
+} = { text, int, number, boolean, oneOf, list, object, union };
 
 /**
  * A query, typed as zod types a schema, by its output and its input. `Read` is what `read` gives: the values, defaults
