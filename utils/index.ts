@@ -52,3 +52,6 @@ export { cacheFnWeakMap, CacheFnWeakMapWrapper } from './src/reactive/cacheFnWea
 
 
 export { jsonParse } from './src/jsonParse.ts';
+
+export { urlQuery, param, route } from './src/urlQuery/index.ts';
+export type { UrlQuery, QueryOf, QueryInputOf, Part, PageSearchParams, QuerySource, Route, RouterParams } from './src/urlQuery/index.ts';
