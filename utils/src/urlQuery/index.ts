@@ -55,17 +55,18 @@ export type QueryOf<Q> = Q extends { read: (source: QuerySource) => infer Read }
 /** The values a query writes, those with a default left out if need be, as `z.input` gives them for a schema. */
 export type QueryInputOf<Q> = Q extends { write: (query: infer Input) => string } ? Input : never;
 
-/** The members of a query, whatever `read` gives, as the implementation of `urlQuery` builds them. */
-type AnyUrlQuery<T extends {}, Input> = Omit<UrlQuery<T | null, Input>, "part"> & { part: Part<T, boolean, Input> };
+/** The members of a query, whatever its values, as the implementation of `urlQuery` builds them. */
+type AnyUrlQuery = Omit<UrlQuery<{} | null, unknown>, "part"> & { part: Part<{}, boolean, unknown> };
 
 /** A query kept in the address bar, read and written through one part, mostly a `param.object` or a `param.union`. */
 export function urlQuery<T extends {}, Required extends boolean, Input>(
   part: Part<T, Required, Input>,
 ): UrlQuery<Required extends true ? T | null : T, Input>;
 // The signature above drops `null` from `read` for a query of nothing required, which TypeScript cannot follow from a
-// type parameter. It holds, as only a required part reads as `INVALID`.
-export function urlQuery<T extends {}, Input>(part: Part<T, boolean, Input>): AnyUrlQuery<T, Input> {
-  const write = (query: Input): string => {
+// type parameter. It holds, as only a required part reads as `INVALID`. The implementation takes no type parameters,
+// as JSR checks the published types with the implementation's body left out, so they would be unused.
+export function urlQuery(part: Part<{}, boolean, unknown>): AnyUrlQuery {
+  const write = (query: unknown): string => {
     const params = new URLSearchParams();
     part.write(params, "", query);
     return params.toString();
@@ -82,7 +83,7 @@ export function urlQuery<T extends {}, Input>(part: Part<T, boolean, Input>): An
       const search = write(query);
       return search === "" ? path : `${path}?${search}`;
     },
-    default: (fallback) => urlQuery<T, false, Input>({
+    default: (fallback) => urlQuery({
       required: false,
       read: (params, key) => {
         const value = part.read(params, key);
