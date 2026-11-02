@@ -76,7 +76,10 @@ export type Route<To, From, Read, Match = { path: string }> = {
   readonly pattern: string;
   href(...to: {} extends To ? [to?: To] : [to: To]): string;
   read(...from: {} extends From ? [from?: From] : [from: From]): Read;
-  /** The params and the query of the path, as `read` gives them; `null` for a path of another pattern, too. */
+  /**
+   * The params and the query of the path, as `read` gives them, a slash at its end left out, as the router opens the
+   * page with one too; `null` for a path of another pattern, too.
+   */
   match(from: Match): NonNullable<Read> | null;
 };
 
@@ -169,7 +172,8 @@ export function route(
     },
     read,
     match: ({ path, query: source = "" }: { path: string; query?: QuerySource }) => {
-      const segments = path.split("/");
+      // The router opens `/filmy/x/` as `/filmy/x`; `/` itself is the home page's path, not a slash at the end of one.
+      const segments = (path.length > 1 && path.endsWith("/") ? path.slice(0, -1) : path).split("/");
       if (segments.length !== pieces.length) {
         return null;
       }

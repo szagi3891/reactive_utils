@@ -65,9 +65,15 @@ describe("route", () => {
     assert.deepEqual(page.match({ path: "/seria/nasz-dom/2" }), { params: { slug: "nasz-dom", page: 2 }, query: { rodzaj: "fabularne" } });
   });
 
+  it("matches a path with a slash at its end as the one without, as the router does", () => {
+    assert.deepEqual(films.match({ path: "/filmy/", query: "rodzaj=dokumentalne" }), { query: { rodzaj: "dokumentalne" } });
+    assert.deepEqual(film.match({ path: "/filmy/QmP01eTau6o/" }), { params: { id: "QmP01eTau6o" } });
+    assert.deepEqual(page.match({ path: "/seria/nasz-dom/2/" }), { params: { slug: "nasz-dom", page: 2 }, query: { rodzaj: "fabularne" } });
+    assert.equal(film.match({ path: "/filmy/QmP01eTau6o//" }), null);
+  });
+
   it("matches no path of another pattern, an empty segment, nor a param it cannot read", () => {
     assert.equal(home.match({ path: "/filmy" }), null);
-    assert.equal(films.match({ path: "/filmy/" }), null);
     assert.equal(film.match({ path: "/filmy" }), null);
     assert.equal(film.match({ path: "/filmy/" }), null);
     assert.equal(film.match({ path: "/filmy/a/b" }), null);
