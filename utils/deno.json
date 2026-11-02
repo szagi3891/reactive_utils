@@ -1,8 +1,9 @@
 {
-    "version": "0.5.377",
+    "version": "0.5.378",
     "name": "@reactive/utils",
     "exports": {
-        ".": "./index.ts"
+        ".": "./index.ts",
+        "./urlQuery": "./src/urlQuery/index.ts"
     },
     "license": "MIT",
     "lint": {

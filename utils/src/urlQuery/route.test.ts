@@ -2,6 +2,7 @@
 import assert from "node:assert/strict";
 import { describe, it } from "node:test";
 import { param, route, urlQuery } from "./index.ts";
+import type { QuerySource } from "./source.ts";
 import { expectType, reported, type Equal } from "./testing.ts";
 
 describe("route", () => {
@@ -57,12 +58,43 @@ describe("route", () => {
     ]);
   });
 
+  it("matches a path as the router would, reading what read reads from the params it would match", () => {
+    assert.deepEqual(home.match({ path: "/" }), {});
+    assert.deepEqual(films.match({ path: "/filmy", query: "rodzaj=dokumentalne" }), { query: { rodzaj: "dokumentalne" } });
+    assert.deepEqual(film.match({ path: "/filmy/QmP01eTau6o" }), { params: { id: "QmP01eTau6o" } });
+    assert.deepEqual(page.match({ path: "/seria/nasz-dom/2" }), { params: { slug: "nasz-dom", page: 2 }, query: { rodzaj: "fabularne" } });
+  });
+
+  it("matches no path of another pattern, an empty segment, nor a param it cannot read", () => {
+    assert.equal(home.match({ path: "/filmy" }), null);
+    assert.equal(films.match({ path: "/filmy/" }), null);
+    assert.equal(film.match({ path: "/filmy" }), null);
+    assert.equal(film.match({ path: "/filmy/" }), null);
+    assert.equal(film.match({ path: "/filmy/a/b" }), null);
+    assert.equal(film.match({ path: "/seriale/a" }), null);
+    assert.equal(film.match({ path: "/filmy/%E0%A4%A" }), null);
+    assert.equal(page.match({ path: "/seria/nasz-dom/x" }), null);
+  });
+
+  it("matches the path href writes, reading back the same params", () => {
+    for (const id of ["zażółć gęślą", "a/b", "?#&=%", " ", "\uD83D", "\\"]) {
+      assert.deepEqual(film.match({ path: film.href({ params: { id } }) }), { params: { id } }, JSON.stringify(id));
+    }
+    const to = { params: { slug: "nasz-dom", page: 2 }, query: { rodzaj: "dokumentalne" as const } };
+    const [path, search] = page.href(to).split("?");
+    assert.deepEqual(page.match({ path: path ?? "", query: search }), to);
+  });
+
   it("types href and read by the pattern and the query, holding only what the route has", () => {
     expectType<Equal<Parameters<typeof film.href>, [to: { params: { id: string } }]>>();
     expectType<Equal<Parameters<typeof films.href>, [to?: { query?: { rodzaj?: "fabularne" | "dokumentalne" | undefined } | undefined } | undefined]>>();
     expectType<Equal<Parameters<typeof home.href>, [to?: {} | undefined]>>();
     expectType<Equal<ReturnType<typeof film.read>, { params: { id: string } } | null>>();
     expectType<Equal<ReturnType<typeof films.read>, { query: { rodzaj: "fabularne" | "dokumentalne" } }>>();
+    expectType<Equal<Parameters<typeof film.match>, [from: { path: string }]>>();
+    expectType<Equal<Parameters<typeof films.match>, [from: { path: string; query?: QuerySource }]>>();
+    expectType<Equal<ReturnType<typeof film.match>, { params: { id: string } } | null>>();
+    expectType<Equal<ReturnType<typeof home.match>, {} | null>>();
   });
 
   it("does not type-check a missing param, one the pattern lacks, or a part with nothing to read in place of a segment", () => {
@@ -76,5 +108,7 @@ describe("route", () => {
     film.href({ params: { id: "x" }, query: {} });
     // @ts-expect-error The route has no params.
     films.href({ params: {} });
+    // @ts-expect-error The route has no query.
+    film.match({ path: "/filmy/x", query: "" });
   });
 });

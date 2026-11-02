@@ -43,6 +43,9 @@ type ReadFrom<F, Q> = Simplify<
   (HasQuery<Q> extends true ? { query?: QuerySource } : {})
 >;
 
+/** What `match` takes: the path as the address holds it, still encoded, and the search params, when the route has a query. */
+type MatchFrom<Q> = Simplify<{ path: string } & (HasQuery<Q> extends true ? { query?: QuerySource } : {})>;
+
 /** What `read` gives: the params and the query, each when the route has them. */
 type ReadOf<F, Q> = Simplify<
   (HasParams<F> extends true ? { params: { [K in keyof F]: SegmentValue<F[K]> } } : {}) &
@@ -66,11 +69,15 @@ type NoParams<P extends string> = [ParamNames<P>] extends [never] ? unknown : "A
 /**
  * A page's address: its path, a param in a segment of its own, and the query after it. `href` and `read` take and give
  * one object of `params` and `query`, holding each only when the route has it, so every route is called the same way.
+ * `match` reads the same from a path instead of the params a router matched, so a page can tell its params, or whether
+ * an address is its own, without the router.
  */
-export type Route<To, From, Read> = {
+export type Route<To, From, Read, Match = { path: string }> = {
   readonly pattern: string;
   href(...to: {} extends To ? [to?: To] : [to: To]): string;
   read(...from: {} extends From ? [from?: From] : [from: From]): Read;
+  /** The params and the query of the path, as `read` gives them; `null` for a path of another pattern, too. */
+  match(from: Match): NonNullable<Read> | null;
 };
 
 /** A segment a path cannot hold as written: the browser drops an empty one, and reads `.` and `..` as a move. */
@@ -88,17 +95,17 @@ const SEGMENT = 'a segment other than "", "." and ".."';
 export function route<const P extends string, Q extends AnyQuery | undefined = undefined>(
   pattern: P & NoParams<P>,
   parts?: { query?: Q },
-): Route<HrefTo<{}, Q>, ReadFrom<{}, Q>, ReadOf<{}, Q> | NullOf<{}, Q>>;
+): Route<HrefTo<{}, Q>, ReadFrom<{}, Q>, ReadOf<{}, Q> | NullOf<{}, Q>, MatchFrom<Q>>;
 export function route<const P extends string, F extends Segments, Q extends AnyQuery | undefined = undefined>(
   pattern: P,
   parts: { params: F & ParamsCheck<P, F>; query?: Q },
-): Route<HrefTo<F, Q>, ReadFrom<F, Q>, ReadOf<F, Q> | NullOf<F, Q>>;
+): Route<HrefTo<F, Q>, ReadFrom<F, Q>, ReadOf<F, Q> | NullOf<F, Q>, MatchFrom<Q>>;
 // The signatures above type `href` and `read` by the pattern and the parts, which TypeScript cannot follow through
 // a loop over the segments.
 export function route(
   pattern: string,
   { params = {}, query }: { params?: Segments; query?: AnyQuery } = {},
-): Route<never, never, unknown> {
+): Route<never, never, unknown, never> {
   const pieces = pattern.split("/").map((piece) => {
     if (!piece.startsWith(":")) {
       return piece;
@@ -115,6 +122,28 @@ export function route(
       throw new Error(`The pattern "${pattern}" has no param "${name}"`);
     }
   }
+
+  const read = ({ params: matched = {}, query: source = "" }: { params?: RouterParams; query?: QuerySource } = {}): {} | null => {
+    const values: Record<string, Primitive> = {};
+    for (const piece of pieces) {
+      if (typeof piece !== "string") {
+        const value = parseSegment(piece.segment, matched[piece.name]);
+        if (value === undefined) {
+          return null;
+        }
+        values[piece.name] = value;
+      }
+    }
+    if (query === undefined) {
+      return Object.keys(params).length === 0 ? {} : { params: values };
+    }
+
+    const value = query.read(source);
+    if (value === null) {
+      return null;
+    }
+    return Object.keys(params).length === 0 ? { query: value } : { params: values, query: value };
+  };
 
   return {
     pattern,
@@ -138,26 +167,29 @@ export function route(
       }).join("/");
       return query === undefined ? path : query.href(path, queryValue);
     },
-    read: ({ params: matched = {}, query: source = "" }: { params?: RouterParams; query?: QuerySource } = {}) => {
-      const values: Record<string, Primitive> = {};
-      for (const piece of pieces) {
-        if (typeof piece !== "string") {
-          const value = parseSegment(piece.segment, matched[piece.name]);
-          if (value === undefined) {
-            return null;
-          }
-          values[piece.name] = value;
-        }
-      }
-      if (query === undefined) {
-        return Object.keys(params).length === 0 ? {} : { params: values };
-      }
-
-      const value = query.read(source);
-      if (value === null) {
+    read,
+    match: ({ path, query: source = "" }: { path: string; query?: QuerySource }) => {
+      const segments = path.split("/");
+      if (segments.length !== pieces.length) {
         return null;
       }
-      return Object.keys(params).length === 0 ? { query: value } : { params: values, query: value };
+      const matched: Record<string, string> = {};
+      for (const [index, piece] of pieces.entries()) {
+        const segment = segments[index] ?? "";
+        if (typeof piece === "string") {
+          if (segment !== piece) {
+            return null;
+          }
+        } else {
+          // A router matches no param of an empty segment.
+          if (segment === "") {
+            return null;
+          }
+          matched[piece.name] = segment;
+        }
+      }
+
+      return read({ params: matched, query: source });
     },
   };
 }
