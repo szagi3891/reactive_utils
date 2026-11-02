@@ -55,6 +55,39 @@ describe("object", () => {
     assert.deepEqual(readK(paged, writeK(paged, { category: "brakes" })), { category: "brakes", page: 1 });
   });
 
+  it("can be left out as a whole when it needs no value, writing nothing, so it reads as its fields do without one", () => {
+    const filter = object({ brand: text, price: object({ min: int.optional(), max: int.optional() }) });
+
+    expectType<Equal<InputOf<typeof filter>, { brand: string; price?: { min?: number | undefined; max?: number | undefined } | undefined }>>();
+    expectType<Equal<ValueOf<typeof filter>, { brand: string; price: { min?: number | undefined; max?: number | undefined } }>>();
+    assert.equal(writeK(filter, { brand: "bosch" }), "k-brand=bosch");
+    assert.deepEqual(readK(filter, writeK(filter, { brand: "bosch" })), { brand: "bosch", price: {} });
+  });
+
+  it("cannot be left out when it needs a value", () => {
+    expectType<Equal<InputOf<typeof listing>, { category: string; page?: number | undefined }>>();
+  });
+
+  it("reads undefined in place of an optional one the address holds no value it needs of, or holds one wrong", () => {
+    const filter = object({ order: object({ by: text, page: int }).optional() });
+
+    expectType<Equal<ValueOf<typeof filter>, { order?: { by: string; page: number } | undefined }>>();
+    expectType<Equal<InputOf<typeof filter>, { order?: { by: string; page: number } | undefined } | undefined>>();
+    assert.deepEqual(readK(filter, "k-order-by=name&k-order-page=2"), { order: { by: "name", page: 2 } });
+    assert.deepEqual(readK(filter, "k-order-by=name"), {});
+    assert.deepEqual(readK(filter, "k-order-by=name&k-order-page=x"), {});
+    assert.deepEqual(readK(filter, ""), {});
+    assert.equal(object({ order: object({ by: text }).optional() }).required, false);
+  });
+
+  it("writes an optional one, and nothing for undefined, so it reads back the same", () => {
+    const filter = object({ order: object({ by: text, page: int }).optional() });
+
+    assert.equal(writeK(filter, { order: { by: "name", page: 2 } }), "k-order-by=name&k-order-page=2");
+    assert.equal(writeK(filter, {}), "");
+    assert.deepEqual(readK(filter, writeK(filter, { order: { by: "name", page: 2 } })), { order: { by: "name", page: 2 } });
+  });
+
   it("does not type-check a key holding a hyphen", () => {
     // @ts-expect-error A hyphen would read as a nested key.
     object({ "search-box": text });

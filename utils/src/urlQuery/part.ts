@@ -20,6 +20,26 @@ export type Part<T, Required extends boolean = boolean, Input = T> = {
   write(params: URLSearchParams, key: string, value: Input): void;
 };
 
+/** A part that can be left out, as `.optional()` gives it. */
+export type OptionalPart<T, Input> = Part<T | undefined, false, Input | undefined>;
+
+/**
+ * The part, or `undefined` when the address holds none of it, or holds it wrong; `undefined` writes nothing, so it reads
+ * back the same. What `.optional()` of an object or a union gives; a leaf's checks its own string instead.
+ */
+export const optionalOf = <T, Input>(part: Part<T, boolean, Input>): OptionalPart<T, Input> => ({
+  required: false,
+  read: (params, key) => {
+    const value = part.read(params, key);
+    return value === INVALID ? undefined : value;
+  },
+  write: (params, key, value) => {
+    if (value !== undefined) {
+      part.write(params, key, value);
+    }
+  },
+});
+
 /** What a part reads, defaults filled in. */
 export type ValueOf<P> = P extends { read(params: Params, key: string): infer T } ? Exclude<T, typeof INVALID> : never;
 

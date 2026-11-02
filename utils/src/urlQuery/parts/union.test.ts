@@ -60,4 +60,32 @@ describe("union", () => {
     // @ts-expect-error A hyphen would read as a nested key.
     union("by-what", { a: object({ name: text }) });
   });
+
+  it("reads undefined in place of an optional one the address holds none of, an unknown tag of, or a variant without its values", () => {
+    const listing = object({ category: text.optional(), finder: vehicle.optional() });
+
+    expectType<Equal<ValueOf<typeof listing>, { category?: string | undefined; finder?: { by: "model"; brand: number; engine?: number | undefined } | { by: "kba"; kba: string } | undefined }>>();
+    assert.equal(listing.required, false);
+    assert.deepEqual(readK(listing, "k-finder-by=kba&k-finder-kba=0603BJS"), { finder: { by: "kba", kba: "0603BJS" } });
+    assert.deepEqual(readK(listing, "k-category=brakes"), { category: "brakes" });
+    assert.deepEqual(readK(listing, "k-category=brakes&k-finder-by=vin"), { category: "brakes" });
+    assert.deepEqual(readK(listing, "k-finder-by=kba"), {});
+  });
+
+  it("writes an optional one, and nothing for undefined, so it reads back the same", () => {
+    const listing = object({ category: text.optional(), finder: vehicle.optional() });
+
+    expectType<Equal<InputOf<typeof listing>, { category?: string | undefined; finder?: { by: "model"; brand: number; engine?: number | undefined } | { by: "kba"; kba: string } | undefined } | undefined>>();
+    assert.equal(writeK(listing, { finder: { by: "model", brand: 184 } }), "k-finder-by=model&k-finder-brand=184");
+    assert.equal(writeK(listing, { category: "brakes" }), "k-category=brakes");
+    assert.deepEqual(readK(listing, writeK(listing, { finder: { by: "kba", kba: "0603BJS" } })), { finder: { by: "kba", kba: "0603BJS" } });
+  });
+
+  it("takes a variant that needs no value", () => {
+    const sort = union("by", { name: object({ desc: text.optional() }), date: object({ from: int }) });
+
+    expectType<Equal<InputOf<typeof sort>, { by: "name"; desc?: string | undefined } | { by: "date"; from: number }>>();
+    assert.equal(writeK(sort, { by: "name" }), "k-by=name");
+    assert.deepEqual(readK(sort, "k-by=name"), { by: "name" });
+  });
 });
