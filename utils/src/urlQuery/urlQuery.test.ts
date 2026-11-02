@@ -35,7 +35,7 @@ it('basic route', () => {
 
   // A number holds a fraction, so 1.2 is written and read back as it is.
   assert.equal(aaaa, '/podstrona/1.2/322?category=32232');
-  assert.deepEqual(route2.read({ params: { id: '1.2', page: '322' }, query: 'category=32232' }), {
+  assert.deepEqual(route2.match({ path: '/podstrona/1.2/322', query: 'category=32232' }), {
     params: { id: 1.2, page: '322' },
     query: { category: '32232', page: 1 },
   });
@@ -49,7 +49,7 @@ it('basic route', () => {
     ['urlQuery: path param "id" expects a whole number between -(2^53 - 1) and 2^53 - 1, got 1.2; it is written anyway, so the address does not read back the same.'],
   ]);
   // So the address reads as no route.
-  assert.equal(route3.read({ params: { id: '1.2' } }), null);
+  assert.equal(route3.match({ path: inPath.result, query: '' }), null);
 
   // In the query 1.2 is left out, and reported, so it reads as its default.
   const inQuery = reported(() => route2.href({ params: { id: 1.2, page: '322' }, query: { category: '32232', page: 1.2 } }));
@@ -58,7 +58,7 @@ it('basic route', () => {
   assert.deepEqual(inQuery.errors, [
     cannotHold('page', 'a whole number between -(2^53 - 1) and 2^53 - 1', '1.2', 'nothing is written, so it reads as its default 1'),
   ]);
-  assert.deepEqual(route2.read({ params: { id: '1.2', page: '322' }, query: 'category=32232&page=1.2' })?.query, { category: '32232', page: 1 });
+  assert.deepEqual(route2.fromQuery('category=32232&page=1.2'), { category: '32232', page: 1 });
 });
 
 it('basic', () => {

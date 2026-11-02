@@ -11,6 +11,7 @@ describe("route", () => {
   const films = route("/filmy", { query: filmsQuery });
   const film = route("/filmy/:id", { params: { id: param.text } });
   const page = route("/seria/:slug/:page", { params: { slug: param.text, page: param.int }, query: filmsQuery });
+  const search = route("/szukaj", { query: urlQuery(param.object({ q: param.text })) });
 
   it("writes the path, each param in its segment, and the query after it", () => {
     assert.equal(home.href(), "/");
@@ -20,31 +21,19 @@ describe("route", () => {
     assert.equal(page.href({ params: { slug: "nasz-dom", page: 2 }, query: { rodzaj: "dokumentalne" } }), "/seria/nasz-dom/2?rodzaj=dokumentalne");
   });
 
-  it("reads the params the router matched, and the query", () => {
-    assert.deepEqual(home.read(), {});
-    assert.deepEqual(films.read({ query: "rodzaj=dokumentalne" }), { query: { rodzaj: "dokumentalne" } });
-    assert.deepEqual(films.read(), { query: { rodzaj: "fabularne" } });
-    assert.deepEqual(film.read({ params: { id: "QmP01eTau6o" } }), { params: { id: "QmP01eTau6o" } });
-    assert.deepEqual(page.read({ params: { slug: "nasz-dom", page: "2" }, query: "" }), { params: { slug: "nasz-dom", page: 2 }, query: { rodzaj: "fabularne" } });
+  it("reads the query of the search params, from any source, and {} for a route without a query", () => {
+    assert.deepEqual(films.fromQuery("rodzaj=dokumentalne"), { rodzaj: "dokumentalne" });
+    assert.deepEqual(films.fromQuery(new URLSearchParams({ rodzaj: "dokumentalne" })), { rodzaj: "dokumentalne" });
+    assert.deepEqual(films.fromQuery({ rodzaj: "dokumentalne" }), { rodzaj: "dokumentalne" });
+    assert.deepEqual(films.fromQuery(""), { rodzaj: "fabularne" });
+    assert.deepEqual(page.fromQuery("rodzaj=dokumentalne"), { rodzaj: "dokumentalne" });
+    assert.deepEqual(home.fromQuery("rodzaj=dokumentalne"), {});
+    assert.deepEqual(film.fromQuery(""), {});
   });
 
-  it("reads null for a param missing, wrong or wrongly encoded, or a query without a required value", () => {
-    const search = route("/szukaj", { query: urlQuery(param.object({ q: param.text })) });
-
-    assert.equal(film.read({ params: {} }), null);
-    assert.equal(page.read({ params: { slug: "nasz-dom", page: "x" } }), null);
-    assert.equal(film.read({ params: { id: "%E0%A4%A" } }), null);
-    assert.equal(search.read({ query: "" }), null);
-  });
-
-  it("encodes a param, and reads it back decoded, as the router hands it still encoded", () => {
-    for (const id of ["zażółć gęślą", "a/b", "?#&=%", " ", "\uD83D", "\\"]) {
-      const path = film.href({ params: { id } });
-      const [, , segment] = new URL(path, "https://site").pathname.split("/");
-
-      assert.equal(path.split("/").length, 3, path);
-      assert.deepEqual(film.read({ params: { id: segment } }), { params: { id } }, JSON.stringify(id));
-    }
+  it("reads null from the query without a required value", () => {
+    assert.equal(search.fromQuery(""), null);
+    assert.deepEqual(search.fromQuery("q=modlitwa"), { q: "modlitwa" });
   });
 
   it("writes a value it cannot hold anyway, reporting it", () => {
@@ -59,47 +48,51 @@ describe("route", () => {
   });
 
   it("matches a path as the router would, reading what read reads from the params it would match", () => {
-    assert.deepEqual(home.match({ path: "/" }), {});
+    assert.deepEqual(home.match({ path: "/", query: "" }), {});
     assert.deepEqual(films.match({ path: "/filmy", query: "rodzaj=dokumentalne" }), { query: { rodzaj: "dokumentalne" } });
-    assert.deepEqual(film.match({ path: "/filmy/QmP01eTau6o" }), { params: { id: "QmP01eTau6o" } });
-    assert.deepEqual(page.match({ path: "/seria/nasz-dom/2" }), { params: { slug: "nasz-dom", page: 2 }, query: { rodzaj: "fabularne" } });
+    assert.deepEqual(film.match({ path: "/filmy/QmP01eTau6o", query: "" }), { params: { id: "QmP01eTau6o" } });
+    assert.deepEqual(page.match({ path: "/seria/nasz-dom/2", query: "" }), { params: { slug: "nasz-dom", page: 2 }, query: { rodzaj: "fabularne" } });
   });
 
   it("matches a path with a slash at its end as the one without, as the router does", () => {
     assert.deepEqual(films.match({ path: "/filmy/", query: "rodzaj=dokumentalne" }), { query: { rodzaj: "dokumentalne" } });
-    assert.deepEqual(film.match({ path: "/filmy/QmP01eTau6o/" }), { params: { id: "QmP01eTau6o" } });
-    assert.deepEqual(page.match({ path: "/seria/nasz-dom/2/" }), { params: { slug: "nasz-dom", page: 2 }, query: { rodzaj: "fabularne" } });
-    assert.equal(film.match({ path: "/filmy/QmP01eTau6o//" }), null);
+    assert.deepEqual(film.match({ path: "/filmy/QmP01eTau6o/", query: "" }), { params: { id: "QmP01eTau6o" } });
+    assert.deepEqual(page.match({ path: "/seria/nasz-dom/2/", query: "" }), { params: { slug: "nasz-dom", page: 2 }, query: { rodzaj: "fabularne" } });
+    assert.equal(film.match({ path: "/filmy/QmP01eTau6o//", query: "" }), null);
   });
 
-  it("matches no path of another pattern, an empty segment, nor a param it cannot read", () => {
-    assert.equal(home.match({ path: "/filmy" }), null);
-    assert.equal(film.match({ path: "/filmy" }), null);
-    assert.equal(film.match({ path: "/filmy/" }), null);
-    assert.equal(film.match({ path: "/filmy/a/b" }), null);
-    assert.equal(film.match({ path: "/seriale/a" }), null);
-    assert.equal(film.match({ path: "/filmy/%E0%A4%A" }), null);
-    assert.equal(page.match({ path: "/seria/nasz-dom/x" }), null);
+  it("matches no path of another pattern, an empty segment, a param it cannot read, nor a query without a required value", () => {
+    assert.equal(search.match({ path: "/szukaj", query: "" }), null);
+    assert.equal(home.match({ path: "/filmy", query: "" }), null);
+    assert.equal(film.match({ path: "/filmy", query: "" }), null);
+    assert.equal(film.match({ path: "/filmy/", query: "" }), null);
+    assert.equal(film.match({ path: "/filmy/a/b", query: "" }), null);
+    assert.equal(film.match({ path: "/seriale/a", query: "" }), null);
+    assert.equal(film.match({ path: "/filmy/%E0%A4%A", query: "" }), null);
+    assert.equal(page.match({ path: "/seria/nasz-dom/x", query: "" }), null);
   });
 
-  it("matches the path href writes, reading back the same params", () => {
+  it("matches the path href writes, each param encoded in its segment, reading back the same params", () => {
     for (const id of ["zażółć gęślą", "a/b", "?#&=%", " ", "\uD83D", "\\"]) {
-      assert.deepEqual(film.match({ path: film.href({ params: { id } }) }), { params: { id } }, JSON.stringify(id));
+      assert.equal(film.href({ params: { id } }).split("/").length, 3, id);
+      assert.deepEqual(film.match({ path: film.href({ params: { id } }), query: "" }), { params: { id } }, JSON.stringify(id));
     }
     const to = { params: { slug: "nasz-dom", page: 2 }, query: { rodzaj: "dokumentalne" as const } };
     const [path, search] = page.href(to).split("?");
-    assert.deepEqual(page.match({ path: path ?? "", query: search }), to);
+    assert.deepEqual(page.match({ path: path ?? "", query: search ?? "" }), to);
   });
 
-  it("types href and read by the pattern and the query, holding only what the route has", () => {
+  it("types href, fromQuery and match by the pattern and the query, holding only what the route has", () => {
     expectType<Equal<Parameters<typeof film.href>, [to: { params: { id: string } }]>>();
     expectType<Equal<Parameters<typeof films.href>, [to?: { query?: { rodzaj?: "fabularne" | "dokumentalne" | undefined } | undefined } | undefined]>>();
     expectType<Equal<Parameters<typeof home.href>, [to?: {} | undefined]>>();
-    expectType<Equal<ReturnType<typeof film.read>, { params: { id: string } } | null>>();
-    expectType<Equal<ReturnType<typeof films.read>, { query: { rodzaj: "fabularne" | "dokumentalne" } }>>();
-    expectType<Equal<Parameters<typeof film.match>, [from: { path: string }]>>();
-    expectType<Equal<Parameters<typeof films.match>, [from: { path: string; query?: QuerySource }]>>();
+    expectType<Equal<ReturnType<typeof films.fromQuery>, { rodzaj: "fabularne" | "dokumentalne" }>>();
+    expectType<Equal<ReturnType<typeof film.fromQuery>, {}>>();
+    expectType<Equal<ReturnType<typeof search.fromQuery>, { q: string } | null>>();
+    expectType<Equal<Parameters<typeof film.match>, [from: { path: string; query: QuerySource }]>>();
+    expectType<Equal<Parameters<typeof films.match>, [from: { path: string; query: QuerySource }]>>();
     expectType<Equal<ReturnType<typeof film.match>, { params: { id: string } } | null>>();
+    expectType<Equal<ReturnType<typeof films.match>, { query: { rodzaj: "fabularne" | "dokumentalne" } } | null>>();
     expectType<Equal<ReturnType<typeof home.match>, {} | null>>();
   });
 
@@ -114,7 +107,9 @@ describe("route", () => {
     film.href({ params: { id: "x" }, query: {} });
     // @ts-expect-error The route has no params.
     films.href({ params: {} });
-    // @ts-expect-error The route has no query.
-    film.match({ path: "/filmy/x", query: "" });
+    // @ts-expect-error The search params are taken even by a route without a query.
+    film.match({ path: "/filmy/x" });
+    // @ts-expect-error The search params are taken by a route with a query.
+    films.match({ path: "/filmy" });
   });
 });

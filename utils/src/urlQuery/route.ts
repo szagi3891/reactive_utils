@@ -37,26 +37,14 @@ type HrefTo<F, Q> = Simplify<
   (HasQuery<Q> extends false ? {} : {} extends QueryInput<Q> ? { query?: QueryInput<Q> } : { query: QueryInput<Q> })
 >;
 
-/** What `read` takes: the params the router matched, when the pattern has any, and the search params. */
-type ReadFrom<F, Q> = Simplify<
-  (HasParams<F> extends true ? { params: RouterParams } : {}) &
-  (HasQuery<Q> extends true ? { query?: QuerySource } : {})
->;
+/** What `fromQuery` gives: the query as it reads, `null` only for one without a required value; `{}` for a route without a query. */
+type FromQueryOf<Q> = Q extends { read(source: QuerySource): infer R } ? R : {};
 
-/** What `match` takes: the path as the address holds it, still encoded, and the search params, when the route has a query. */
-type MatchFrom<Q> = Simplify<{ path: string } & (HasQuery<Q> extends true ? { query?: QuerySource } : {})>;
-
-/** What `read` gives: the params and the query, each when the route has them. */
-type ReadOf<F, Q> = Simplify<
+/** What `match` gives: the params and the query, each when the route has them. */
+type MatchOf<F, Q> = Simplify<
   (HasParams<F> extends true ? { params: { [K in keyof F]: SegmentValue<F[K]> } } : {}) &
   (HasQuery<Q> extends true ? { query: QueryValue<Q> } : {})
 >;
-
-/** `null` when `read` can read the route as none: a param it cannot parse, or a query without a required value. */
-type NullOf<F, Q> = HasParams<F> extends true ? null : Q extends { read(source: QuerySource): infer R } ? (null extends R ? null : never) : never;
-
-/** The params the router matched, as `useParams()` or a page's `props.params` hands them: each segment as written. */
-export type RouterParams = Readonly<Record<string, string | undefined>>;
 
 /** A segment for each of the pattern's params, and none the pattern lacks. */
 type ParamsCheck<P extends string, F> = { [K in ParamNames<P>]: Segment } & {
@@ -67,20 +55,22 @@ type ParamsCheck<P extends string, F> = { [K in ParamNames<P>]: Segment } & {
 type NoParams<P extends string> = [ParamNames<P>] extends [never] ? unknown : "A pattern with params takes their segments";
 
 /**
- * A page's address: its path, a param in a segment of its own, and the query after it. `href` and `read` take and give
+ * A page's address: its path, a param in a segment of its own, and the query after it. `href` and `match` take and give
  * one object of `params` and `query`, holding each only when the route has it, so every route is called the same way.
- * `match` reads the same from a path instead of the params a router matched, so a page can tell its params, or whether
- * an address is its own, without the router.
+ * `match` reads them from the address alone, without the router, so a page can tell its params, or whether an address
+ * is its own; `fromQuery` reads the query alone, for a page the router hands its search params but not its path.
  */
-export type Route<To, From, Read, Match = { path: string }> = {
-  readonly pattern: string;
+export type Route<To, FromQuery, Match> = {
   href(...to: {} extends To ? [to?: To] : [to: To]): string;
-  read(...from: {} extends From ? [from?: From] : [from: From]): Read;
+  /** The query of the search params, as the route's query reads it; `{}` for a route without one, read from nothing. */
+  fromQuery(source: QuerySource): FromQuery;
   /**
-   * The params and the query of the path, as `read` gives them, a slash at its end left out, as the router opens the
-   * page with one too; `null` for a path of another pattern, too.
+   * The params and the query of the address: the path as it holds it, still encoded, a slash at its end left out, as
+   * the router opens the page with one too, and the search params, taken even by a route without a query, so every
+   * route is called the same way. `null` for a path of another pattern, a param it cannot read, or a query without a
+   * required value.
    */
-  match(from: Match): NonNullable<Read> | null;
+  match(from: { path: string; query: QuerySource }): Match | null;
 };
 
 /** A segment a path cannot hold as written: the browser drops an empty one, and reads `.` and `..` as a move. */
@@ -98,17 +88,17 @@ const SEGMENT = 'a segment other than "", "." and ".."';
 export function route<const P extends string, Q extends AnyQuery | undefined = undefined>(
   pattern: P & NoParams<P>,
   parts?: { query?: Q },
-): Route<HrefTo<{}, Q>, ReadFrom<{}, Q>, ReadOf<{}, Q> | NullOf<{}, Q>, MatchFrom<Q>>;
+): Route<HrefTo<{}, Q>, FromQueryOf<Q>, MatchOf<{}, Q>>;
 export function route<const P extends string, F extends Segments, Q extends AnyQuery | undefined = undefined>(
   pattern: P,
   parts: { params: F & ParamsCheck<P, F>; query?: Q },
-): Route<HrefTo<F, Q>, ReadFrom<F, Q>, ReadOf<F, Q> | NullOf<F, Q>, MatchFrom<Q>>;
-// The signatures above type `href` and `read` by the pattern and the parts, which TypeScript cannot follow through
+): Route<HrefTo<F, Q>, FromQueryOf<Q>, MatchOf<F, Q>>;
+// The signatures above type `href`, `fromQuery` and `match` by the pattern and the parts, which TypeScript cannot follow through
 // a loop over the segments.
 export function route(
   pattern: string,
   { params = {}, query }: { params?: Segments; query?: AnyQuery } = {},
-): Route<never, never, unknown, never> {
+): Route<never, unknown, unknown> {
   const pieces = pattern.split("/").map((piece) => {
     if (!piece.startsWith(":")) {
       return piece;
@@ -126,7 +116,8 @@ export function route(
     }
   }
 
-  const read = ({ params: matched = {}, query: source = "" }: { params?: RouterParams; query?: QuerySource } = {}): {} | null => {
+  /** The params and the query from the segments the path matched, still encoded, and the search params. */
+  const read = (matched: Record<string, string>, source: QuerySource): {} | null => {
     const values: Record<string, Primitive> = {};
     for (const piece of pieces) {
       if (typeof piece !== "string") {
@@ -149,7 +140,6 @@ export function route(
   };
 
   return {
-    pattern,
     // The query is left out only when it can be empty, so it is written as one.
     href: ({ params: values = {}, query: queryValue = {} }: { params?: Record<string, Primitive>; query?: unknown } = {}) => {
       const path = pieces.map((piece) => {
@@ -170,7 +160,8 @@ export function route(
       }).join("/");
       return query === undefined ? path : query.href(path, queryValue);
     },
-    read,
+    fromQuery: (source: QuerySource) => (query === undefined ? {} : query.read(source)),
+    // The type takes the search params; without them, as from untyped code, it reads none.
     match: ({ path, query: source = "" }: { path: string; query?: QuerySource }) => {
       // The router opens `/filmy/x/` as `/filmy/x`; `/` itself is the home page's path, not a slash at the end of one.
       const segments = (path.length > 1 && path.endsWith("/") ? path.slice(0, -1) : path).split("/");
@@ -193,12 +184,12 @@ export function route(
         }
       }
 
-      return read({ params: matched, query: source });
+      return read(matched, source);
     },
   };
 }
 
-/** The value of a segment as the router matched it, still encoded; `undefined` for none, or one wrongly encoded. */
+/** The value of a segment as the path holds it, still encoded; `undefined` for none, or one wrongly encoded. */
 const parseSegment = (segment: Segment, matched: string | undefined): Primitive | undefined => {
   if (matched === undefined) {
     return undefined;

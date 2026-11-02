@@ -21,7 +21,7 @@ import { union } from "./parts/union.ts";
 import { paramsOf, type QuerySource } from "./source.ts";
 
 export type { Part } from "./part.ts";
-export { route, type Route, type RouterParams } from "./route.ts";
+export { route, type Route } from "./route.ts";
 export type { PageSearchParams, QuerySource } from "./source.ts";
 
 /**
